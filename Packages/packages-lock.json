@@ -1,21 +1,19 @@
 {
   "dependencies": {
     "com.cysharp.unitask": {
-      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "version": "file:com.cysharp.unitask.2.5.11",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "ceac8d6946b1125fe782cd171fbcb245b567dbf9"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.playeveryware.eos": {
-      "version": "https://github.com/EOS-Contrib/eos_plugin_for_unity_upm.git",
+      "version": "file:com.playeveryware.eos.6.1.0",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.editorcoroutines": "1.0.0"
-      },
-      "hash": "12a5d3b48911341787116e87eb76b46e7f5a64a5"
+      }
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
@@ -177,14 +175,13 @@
       }
     },
     "com.unitynative.sharing": {
-      "version": "https://github.com/NicholasSheehan/Unity-Native-Sharing.git",
+      "version": "file:com.unitynative.sharing.1.0.7",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.modules.screencapture": "1.0.0",
         "com.unity.modules.imageconversion": "1.0.0"
-      },
-      "hash": "688fa653cc68ed24fbc3ec926b127c2dfa4c8b96"
+      }
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
