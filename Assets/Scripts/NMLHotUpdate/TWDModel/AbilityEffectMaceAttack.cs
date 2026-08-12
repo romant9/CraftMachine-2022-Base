@@ -1,0 +1,44 @@
+using System.Collections.Generic;
+
+namespace TWDModel
+{
+	public class AbilityEffectMaceAttack : AbilityEffect
+	{
+		public override bool ApplyEffect(CombatModel combatModel, ActorModel source, GridCoordinate targetCell, ActorModel targetActor = null, Dictionary<RollDiceType, PlayerRandomChanceResult> resolvedRolls = null, OOTType ootType = OOTType.None, bool isAssistAttack = false, bool isTriggerExtraAttackDamage = false)
+		{
+			bool flag = (combatModel.Manager as TWDModelManager).ExecuteAction(new FireWeaponAction(source, targetActor, targetCell, ownerAbility));
+			if (flag && ownerAbility.CanAbilityBePerformedOnGridCell(combatModel, source, source.GridCoordinate, targetCell) == AbilityResult.Success)
+			{
+				List<ActorModel> listOfActorsToBeTargetted = combatModel.AbilityManager.GetListOfActorsToBeTargetted(ownerAbility, source, source.GridCoordinate, targetCell);
+				if (listOfActorsToBeTargetted.Count > 0)
+				{
+					if (resolvedRolls == null)
+					{
+						resolvedRolls = new Dictionary<RollDiceType, PlayerRandomChanceResult>();
+					}
+					if (!resolvedRolls.ContainsKey(RollDiceType.BodyShot))
+					{
+						resolvedRolls.Add(RollDiceType.BodyShot, PlayerRandomChanceResult.Failed);
+					}
+					flag = CombatHelpers.AttackTarget(combatModel, source, listOfActorsToBeTargetted[0], ownerAbility, DamageType.Melee, ignoreRandomHitChance: true, resolvedRolls, listOfActorsToBeTargetted.Count == 1, isMainTarget: true, ootType, isAssistAttack, isTriggerExtraAttackDamage);
+					resolvedRolls.Remove(RollDiceType.BodyShot);
+					if (flag)
+					{
+						CombatHelpers.AttackTargets(combatModel, source, listOfActorsToBeTargetted.GetRange(1, listOfActorsToBeTargetted.Count - 1), ownerAbility, DamageType.Melee, ignoreRandomHitChance: false, ootType, isAssistAttack, isTriggerExtraAttackDamage);
+						if (ownerAbility.IsChargeAttack)
+						{
+							CombatHelpers.CheckForLeaderBuffLeadByExample(combatModel, source);
+						}
+						CombatHelpers.CheckForExtraApMovement(source, listOfActorsToBeTargetted, combatModel);
+						source.ClearPerAttackFlags();
+					}
+				}
+				else
+				{
+					flag = false;
+				}
+			}
+			return flag;
+		}
+	}
+}

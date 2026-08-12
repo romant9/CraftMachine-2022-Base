@@ -1,0 +1,180 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BurningMan : MonoBehaviour
+{
+	[Serializable]
+	public class Replacements
+	{
+		public Shader FromShader;
+
+		public Shader ToShader;
+	}
+
+	private GameObject FirePrefab;
+
+	public bool Hips = true;
+
+	public bool Legs;
+
+	public bool Arms = true;
+
+	public List<Replacements> FireShaderReplacements;
+
+	private static string firePrefabPath = "FireWalker";
+
+	private bool visible = true;
+
+	private GameObject parentHips;
+
+	private GameObject parentLeftArm;
+
+	private GameObject parentRightArm;
+
+	private GameObject parentLeftLeg;
+
+	private GameObject parentRightLeg;
+
+	private Transform thisTransform;
+
+	private bool inited;
+
+	private GameObject fireHips;
+
+	private GameObject fireLArm;
+
+	private GameObject fireRArm;
+
+	private GameObject fireLLeg;
+
+	private GameObject fireRLeg;
+
+	private float delayedDestroyTimeoutSeconds;
+
+	private bool delayedDestroy;
+
+	private float timer;
+
+	public void Start()
+	{
+		if (!inited)
+		{
+			Init();
+		}
+	}
+
+	public void OnEnable()
+	{
+		if (!inited)
+		{
+			Init();
+		}
+		AddFire();
+	}
+
+	public void SetDelayedDestroyDelay(float inSeconds)
+	{
+		delayedDestroyTimeoutSeconds = inSeconds;
+		delayedDestroy = true;
+		timer = 0f;
+	}
+
+	public void Update()
+	{
+		if (delayedDestroy)
+		{
+			timer += Time.deltaTime;
+			if (timer >= delayedDestroyTimeoutSeconds)
+			{
+				RemoveFire();
+				delayedDestroy = false;
+			}
+		}
+	}
+
+	public void SetVisibility(bool setVisible)
+	{
+		if (visible && !setVisible && base.enabled)
+		{
+			OnDisable();
+			visible = setVisible;
+		}
+		if (!visible && setVisible && base.enabled)
+		{
+			OnEnable();
+			visible = setVisible;
+		}
+	}
+
+	private void Init()
+	{
+		thisTransform = base.gameObject.transform;
+		parentHips = thisTransform.FindInChildren("Bind_Hips")?.gameObject;
+		parentLeftArm = thisTransform.FindInChildren("Bind_LeftHand")?.gameObject;
+		parentRightArm = thisTransform.FindInChildren("Bind_RightHand")?.gameObject;
+		parentLeftLeg = thisTransform.FindInChildren("Bind_LeftFoot")?.gameObject;
+		parentRightLeg = thisTransform.FindInChildren("Bind_RightFoot")?.gameObject;
+		FirePrefab = UnityUtils.LoadFromAssetBundle<PrefabResource>(firePrefabPath, "scriptableobjects").GetPrefab();
+		inited = true;
+	}
+
+	private void AddFire()
+	{
+		if (Hips)
+		{
+			fireHips = Helpers.InstantiateToParent(FirePrefab, parentHips);
+		}
+		if (Arms && !PlatformInfo.HasFlag(PlatformFlag.SlowGPU))
+		{
+			fireLArm = Helpers.InstantiateToParent(FirePrefab, parentLeftArm);
+			fireRArm = Helpers.InstantiateToParent(FirePrefab, parentRightArm);
+		}
+		if (Legs && !PlatformInfo.HasFlag(PlatformFlag.SlowGPU))
+		{
+			fireLLeg = Helpers.InstantiateToParent(FirePrefab, parentLeftLeg);
+			fireRLeg = Helpers.InstantiateToParent(FirePrefab, parentRightLeg);
+		}
+		if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+		{
+			SingularityMonoBehaviour<AudioManager>.Instance.PlayEventDelayed("combat_walker/walker_burn", UnityEngine.Random.Range(0.1f, 0.3f), base.gameObject);
+		}
+	}
+
+	public void OnDisable()
+	{
+		if (!inited)
+		{
+			Init();
+		}
+		RemoveFire();
+	}
+
+	private void RemoveFire()
+	{
+		if (fireHips != null)
+		{
+			UnityEngine.Object.Destroy(fireHips);
+		}
+		if (fireLArm != null)
+		{
+			UnityEngine.Object.Destroy(fireLArm);
+		}
+		if (fireRArm != null)
+		{
+			UnityEngine.Object.Destroy(fireRArm);
+		}
+		if (fireLLeg != null)
+		{
+			UnityEngine.Object.Destroy(fireLLeg);
+		}
+		if (fireRLeg != null)
+		{
+			UnityEngine.Object.Destroy(fireRLeg);
+		}
+		if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+		{
+			SingularityMonoBehaviour<AudioManager>.Instance.StopEvent("combat_walker/walker_burn", base.gameObject);
+		}
+	}
+}

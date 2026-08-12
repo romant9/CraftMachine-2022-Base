@@ -1,0 +1,39 @@
+using System;
+using Newtonsoft.Json;
+
+namespace Singular
+{
+	[Serializable]
+	public class ShortLinkParams
+	{
+		private string data;
+
+		private string error;
+
+		[JsonProperty(PropertyName = "data")]
+		public string Data
+		{
+			get
+			{
+				return data;
+			}
+			set
+			{
+				data = value;
+			}
+		}
+
+		[JsonProperty(PropertyName = "error")]
+		public string Error
+		{
+			get
+			{
+				return error;
+			}
+			set
+			{
+				error = value;
+			}
+		}
+	}
+}

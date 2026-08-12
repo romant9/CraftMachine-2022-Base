@@ -1,0 +1,1 @@
+public delegate void VisualizationTaskCompletedHandler(VisualizationTask completedTask);

@@ -1,0 +1,403 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 568901920, guid: 07f4a03bd675acd6e27ef929f5be3cdf, type: 3}
+  m_Name: BuildConfigurationData
+  m_EditorClassIdentifier: 
+  BuildConfigurations:
+  - Branch: develop
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.dev
+    BundleIdIOSInHouse: com.nextgames.twd.dev.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.dev
+    DisplayName: TWD (develop)
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 1
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: DISABLE_SHADER_PROPERTY_IMPORTER;ANDROID_GOOGLEPLAY;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;ENABLE_DEBUG_COMMANDS;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED;UNITY_STANDALONE_WIN_EPIC
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-develop
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: nomansland
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: test
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.test
+    BundleIdIOSInHouse: com.nextgames.twd.test.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.test
+    DisplayName: TWD (test)
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 1
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;ENABLE_DEBUG_COMMANDS;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED;UNITY_STANDALONE_WIN_EPIC
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-test
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandtst
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: test-lv
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.test-lv
+    BundleIdIOSInHouse: com.nextgames.twd.test-lv.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.test-lv
+    DisplayName: TWD LV (test)
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 1
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;ENABLE_CHEATS;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;SINGULAR_SDK_IAP_ENABLED;ENABLE_DEBUG_COMMANDS;AMPLIFY_SHADER_EDITOR
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-test-lv
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandlvtst
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: release
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd
+    BundleIdIOSInHouse: com.nextgames.twd.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd
+    DisplayName: Walking Dead
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 0
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED;UNITY_STANDALONE_WIN_EPIC
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomansland
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: offline
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.offline
+    BundleIdIOSInHouse: com.nextgames.twd.offline.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.offline
+    DisplayName: TWD (offline)
+    DevelopmentBuild: 1
+    EnableRemoteDebug: 0
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;ENABLE_CHEATS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandoff
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: preview
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.prv
+    BundleIdIOSInHouse: com.nextgames.twd.prv.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.prv
+    DisplayName: TWD (preview)
+    DevelopmentBuild: 1
+    EnableRemoteDebug: 0
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandprv
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: temp
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.temp
+    BundleIdIOSInHouse: com.nextgames.twd.temp.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.temp
+    DisplayName: TWD (temp)
+    DevelopmentBuild: 1
+    EnableRemoteDebug: 1
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;ENABLE_CHEATS;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-temp
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandtmp
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: staging
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.staging
+    BundleIdIOSInHouse: com.nextgames.twd.staging.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.staging
+    DisplayName: TWD (staging)
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 0
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED;UNITY_STANDALONE_WIN_EPIC
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-staging
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandstg
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: release-lv
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd-lv
+    BundleIdIOSInHouse: com.nextgames.twd-lv.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd-lv
+    DisplayName: "\uB354 \uC6CC\uD0B9 \uB370\uB4DC-\uBB34\uC778 \uC9C0\uB300"
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 0
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandlv
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: feature
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd.feature
+    BundleIdIOSInHouse: com.nextgames.twd.feature.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd.feature
+    DisplayName: TWD (feature)
+    DevelopmentBuild: 1
+    EnableRemoteDebug: 1
+    ConnectWithProfiler: 1
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;SINGULAR_SDK_IAP_ENABLED;ENABLE_DEBUG_COMMANDS;AMPLIFY_SHADER_EDITOR
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-feature
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslanddev
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  - Branch: staging-pay
+    AndroidVersionCode: 0
+    BundleIdIOS: com.nextgames.twd
+    BundleIdIOSInHouse: com.nextgames.twd.inhouse
+    BundleIdGooglePlay: com.nextgames.android.twd
+    DisplayName: TWD (stag-pay)
+    DevelopmentBuild: 0
+    EnableRemoteDebug: 0
+    ConnectWithProfiler: 0
+    ScriptingDefineSymbols: ANDROID_GOOGLEPLAY;DISABLE_SHADER_PROPERTY_IMPORTER;STARTUP_EVENT_ANALYTICS;ASSETS_DELIVERY_BUNDLES;DRILLER_GAME;AMPLIFY_SHADER_EDITOR;SINGULAR_SDK_IAP_ENABLED
+    EnableTestRunnerInPlayMode: 0
+    ExcludedScenes: []
+    ServerSideSdks: []
+    UseCustomContentVersionFormat: 0
+    CustomContentVersionFormat: 
+    GameCode: 
+    ServerVersion: 6.24.0-staging-pay
+    ServerEndpoint: 
+    ServerPort: 0
+    ServerLocalPath: v2/edge
+    AppCenterTokenAndroid: 
+    AppCenterTokenIOS: 
+    UrlScheme: twdnomanslandstg
+    LogUdpEndpoint: 
+    HttpProxy: 
+    MetaApiSettings:
+      AuthorityUrl: 
+      EndpointUrl: 
+      ClientId: 
+      ClientSecret: 
+      Scopes: 
+    CustomBuildSettings: []
+    CustomRuntimeSettings:
+    - Name: AppLinkSuffix
+      Value: iylp
+  ActiveBranch: release
+  BuildId: Local build
+  VersionNumber: 7.4.0.100

@@ -1,0 +1,477 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 731088c5001cd6a5e79b4ff1531de8a2, type: 3}
+  m_Name: ImpactProfileData
+  m_EditorClassIdentifier:
+  ImpactProfiles:
+  - useAsDefault: 0
+    EquipmentType: 0
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 100
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 150
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 0
+    SubCategory:
+    isCriticalOnly: 1
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 120
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 170
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 3
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 1
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 3
+      bodyPartName: Bind_RightArm
+      forceOffset: {x: -0.2, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 1
+  - useAsDefault: 0
+    EquipmentType: 1
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 10
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 10
+      bodyPartName: Bind_RightArm
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: 92c120e2d3f45fd47b46a25dddcbe540, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 20
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 1
+    SubCategory:
+    isCriticalOnly: 1
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 20
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 2
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 20
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: 92c120e2d3f45fd47b46a25dddcbe540, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 1
+    EquipmentType: 3
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 100
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 120
+      bodyPartName: Bind_Spine2
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 1, z: -0.1}
+      forceMagnitude: 180
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 7
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 2
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 1
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 50
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 6
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 3
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 120
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.2, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 4
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 0.2, z: 0}
+      forceMagnitude: 200
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 3
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 15
+      bodyPartName: Bind_Head
+      forceOffset: {x: 1, y: -0.5, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 6
+    SubCategory:
+    isCriticalOnly: 1
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 3
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 100
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 4
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 100
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 1
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 3
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: -25
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: -1, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0
+    - forceDirectionType: 3
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 30
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: -1, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 2
+  - useAsDefault: 0
+    EquipmentType: 6
+    SubCategory:
+    isCriticalOnly: 1
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 100
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 1, z: 0}
+      forceMagnitude: 100
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 1
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: -25
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0, y: -1, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 30
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0, y: -1, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 3
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 2
+  - useAsDefault: 0
+    EquipmentType: 2
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 250
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 2
+    SubCategory: Flamethrower
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 0.1, z: 0.1}
+      forceMagnitude: 100
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.2, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: 56899b9b91c802d4da67782d3129d7be, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 2
+    SubCategory: Flamethrower
+    isCriticalOnly: 1
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 0.1, z: 0.1}
+      forceMagnitude: 200
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.2, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 11400000, guid: 56899b9b91c802d4da67782d3129d7be, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 5
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 5
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 0, z: -1}
+      forceMagnitude: 20
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 5
+    SubCategory:
+    isCriticalOnly: 1
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 5
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 0, z: -1}
+      forceMagnitude: 20
+      bodyPartName: Bind_Hips
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: fd1f51181c63ccb4ab1c2364e52b22d8, type: 2}
+      detachBodyPartType: 0
+    - forceDirectionType: 1
+      forceDirection: {x: 0, y: 0, z: -1}
+      forceMagnitude: 5
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 1
+      effectSpawnDirection: 2
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 14
+    SubCategory:
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 250
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 1
+    SubCategory: Bazooka
+    isCriticalOnly: 0
+    isExplosive: 1
+    ImpactConfigurations:
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0.1, z: 0}
+      forceMagnitude: 5
+      bodyPartName: Bind_Head
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 1
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0.1, z: 0}
+      forceMagnitude: 5
+      bodyPartName: Bind_RightArm
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 1
+    - forceDirectionType: 0
+      forceDirection: {x: 0, y: 0.1, z: 0}
+      forceMagnitude: 300
+      bodyPartName: Bind_Spine1
+      forceOffset: {x: 0.1, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+      detachBodyPartType: 0
+  - useAsDefault: 0
+    EquipmentType: 17
+    SubCategory: ExplosiveBarrel
+    isCriticalOnly: 0
+    isExplosive: 0
+    ImpactConfigurations:
+    - forceDirectionType: 3
+      forceDirection: {x: 0, y: 0, z: 0}
+      forceMagnitude: 25
+      bodyPartName: Barrel
+      forceOffset: {x: 0, y: 0, z: 0}
+      effectSpawnLocation: 0
+      effectSpawnDirection: 0
+      effectPrefabResource: {fileID: 0}
+      detachBodyPartType: 0

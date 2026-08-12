@@ -1,0 +1,304 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65044112734df9a2f164da858c25de34, type: 3}
+  m_Name: Atlas_GameLoader
+  m_EditorClassIdentifier:
+  material: {fileID: 2100000, guid: 9d56937197cf9a8458bd93df421e7ab3, type: 2}
+  mSprites:
+  - name: Button_Close_Alt
+    x: 1840
+    y: 887
+    width: 56
+    height: 56
+    borderLeft: 8
+    borderRight: 8
+    borderTop: 8
+    borderBottom: 8
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Circle_Bg
+    x: 1840
+    y: 944
+    width: 80
+    height: 80
+    borderLeft: 38
+    borderRight: 38
+    borderTop: 38
+    borderBottom: 38
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Detail_Bottom_Border_White
+    x: 0
+    y: 984
+    width: 1400
+    height: 40
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Detail_Bottom_Left_Corner
+    x: 1652
+    y: 881
+    width: 108
+    height: 143
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Detail_Dialogue_Border_White
+    x: 1652
+    y: 860
+    width: 314
+    height: 20
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Icon_Favorite_Active
+    x: 1897
+    y: 893
+    width: 60
+    height: 50
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Icon_Radio
+    x: 1967
+    y: 840
+    width: 48
+    height: 38
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Pattern_GritB
+    x: 1401
+    y: 874
+    width: 250
+    height: 150
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Progressbar_10px
+    x: 0
+    y: 925
+    width: 40
+    height: 20
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 9
+    borderBottom: 9
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Rect_Bg
+    x: 2016
+    y: 830
+    width: 20
+    height: 20
+    borderLeft: 4
+    borderRight: 4
+    borderTop: 4
+    borderBottom: 4
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Regular_Button_Bg
+    x: 1921
+    y: 952
+    width: 32
+    height: 72
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 12
+    borderBottom: 12
+    paddingLeft: 4
+    paddingRight: 4
+    paddingTop: 4
+    paddingBottom: 4
+  - name: Ui_Regular_Button_Bg_Pressed
+    x: 1967
+    y: 879
+    width: 32
+    height: 72
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 12
+    borderBottom: 12
+    paddingLeft: 4
+    paddingRight: 4
+    paddingTop: 4
+    paddingBottom: 4
+  - name: Ui_Regular_Button_Deactive_Bg
+    x: 1987
+    y: 952
+    width: 32
+    height: 72
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 12
+    borderBottom: 12
+    paddingLeft: 4
+    paddingRight: 4
+    paddingTop: 4
+    paddingBottom: 4
+  - name: Ui_Regular_Gray_Button_Deactive_Bg
+    x: 1954
+    y: 952
+    width: 32
+    height: 72
+    borderLeft: 10
+    borderRight: 10
+    borderTop: 12
+    borderBottom: 12
+    paddingLeft: 4
+    paddingRight: 4
+    paddingTop: 4
+    paddingBottom: 4
+  - name: Ui_Roundrect_10px_Bg
+    x: 2000
+    y: 882
+    width: 30
+    height: 30
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 12
+    borderBottom: 12
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Roundrect_10px_Hilight
+    x: 2016
+    y: 851
+    width: 30
+    height: 30
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 12
+    borderBottom: 12
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Roundrect_Bg
+    x: 2020
+    y: 978
+    width: 20
+    height: 20
+    borderLeft: 6
+    borderRight: 6
+    borderTop: 6
+    borderBottom: 6
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Roundrect_Bg_Hilight
+    x: 2020
+    y: 957
+    width: 20
+    height: 20
+    borderLeft: 6
+    borderRight: 6
+    borderTop: 6
+    borderBottom: 6
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Roundrect_Glow
+    x: 2000
+    y: 913
+    width: 38
+    height: 38
+    borderLeft: 16
+    borderRight: 16
+    borderTop: 16
+    borderBottom: 16
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: UI_Shop_Tab_Bg
+    x: 0
+    y: 946
+    width: 36
+    height: 37
+    borderLeft: 12
+    borderRight: 12
+    borderTop: 8
+    borderBottom: 14
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Tutorial_Hand_Point
+    x: 1761
+    y: 899
+    width: 78
+    height: 125
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  - name: Ui_Tutorial_Stab_Effect
+    x: 2020
+    y: 999
+    width: 22
+    height: 25
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+  mPixelSize: 1
+  mReplacement: {fileID: 0}

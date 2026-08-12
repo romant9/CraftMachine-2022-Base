@@ -1,0 +1,1 @@
+public delegate bool CampWaypointEndConditionDelegate(CampWaypoint waypoint, CampActorController actorController);

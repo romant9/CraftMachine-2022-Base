@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bd4ab8f2df792eca5e230d4c19db49c, type: 3}
+  m_Name: CombatCameraData
+  m_EditorClassIdentifier: 
+  CameraDragSpeed: 10
+  CameraMoveSpeed: 10
+  CameraHardLimitSize: 5
+  CameraFocusTriggerRatio: 0
+  Damping: 0.1
+  ElevationAngleVariationSoft: 10
+  ElevationAngleVariationHard: 12
+  SoftLimitsFriction: 0.25
+  FieldOfView: 40
+  CombatCameraProfiles:
+  - DeviceModel: 2
+    TopMargin: 0.17
+    BottomMargin: 0.09
+    SideMargin: 0.1
+    ElevationAngle: 58
+  - DeviceModel: 1
+    TopMargin: 0.17
+    BottomMargin: 0.09
+    SideMargin: 0.15
+    ElevationAngle: 58
+  - DeviceModel: 0
+    TopMargin: 0.18
+    BottomMargin: 0.07
+    SideMargin: 0.15
+    ElevationAngle: 58

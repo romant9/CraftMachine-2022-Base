@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cb06f48e3fe524d1e2be748d2fd4b98, type: 3}
+  m_Name: QuickHitProfileData
+  m_EditorClassIdentifier:
+  QuickHitProfiles:
+  - useAsDefault: 1
+    EquipmentType: 5
+    SubCategory:
+    bodyPartName:
+    effectSpawnLocation: 0
+    effectSpawnDirection: 0
+    effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+    ricochetPrefabResource: {fileID: 0}
+    spawnEffectsOnlyOnce: 0
+    spawnEffectsOnlyOnCharge: 0
+  - useAsDefault: 0
+    EquipmentType: 2
+    SubCategory:
+    bodyPartName:
+    effectSpawnLocation: 1
+    effectSpawnDirection: 2
+    effectPrefabResource: {fileID: 11400000, guid: 92d45a2c26623b643826e8f8df10b3e1, type: 2}
+    ricochetPrefabResource: {fileID: 11400000, guid: 10a15f0d2a6545b4b9d88a44beba1ef0, type: 2}
+    spawnEffectsOnlyOnce: 0
+    spawnEffectsOnlyOnCharge: 0
+  - useAsDefault: 0
+    EquipmentType: 2
+    SubCategory: Flamethrower
+    bodyPartName:
+    effectSpawnLocation: 0
+    effectSpawnDirection: 2
+    effectPrefabResource: {fileID: 11400000, guid: 56899b9b91c802d4da67782d3129d7be, type: 2}
+    ricochetPrefabResource: {fileID: 0}
+    spawnEffectsOnlyOnce: 1
+    spawnEffectsOnlyOnCharge: 0
+  - useAsDefault: 0
+    EquipmentType: 1
+    SubCategory:
+    bodyPartName:
+    effectSpawnLocation: 1
+    effectSpawnDirection: 2
+    effectPrefabResource: {fileID: 0}
+    ricochetPrefabResource: {fileID: 11400000, guid: 10a15f0d2a6545b4b9d88a44beba1ef0, type: 2}
+    spawnEffectsOnlyOnce: 0
+    spawnEffectsOnlyOnCharge: 0
+  - useAsDefault: 0
+    EquipmentType: 5
+    SubCategory: Musket
+    bodyPartName:
+    effectSpawnLocation: 1
+    effectSpawnDirection: 2
+    effectPrefabResource: {fileID: 0}
+    ricochetPrefabResource: {fileID: 11400000, guid: 10a15f0d2a6545b4b9d88a44beba1ef0, type: 2}
+    spawnEffectsOnlyOnce: 0
+    spawnEffectsOnlyOnCharge: 1
+  - useAsDefault: 0
+    EquipmentType: 6
+    SubCategory: Guitar
+    bodyPartName:
+    effectSpawnLocation: 1
+    effectSpawnDirection: 2
+    effectPrefabResource: {fileID: 0}
+    ricochetPrefabResource: {fileID: 0}
+    spawnEffectsOnlyOnce: 0
+    spawnEffectsOnlyOnCharge: 1

@@ -1,0 +1,403 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03cd687539152df771b948214a2a05ae, type: 3}
+  m_Name: ActorsResources
+  m_EditorClassIdentifier:
+  resources:
+  - Identifier: DefaultAssault
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Heavy_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultWarrior
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Medium_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultScout
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Light_Female_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultBruiser
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Heavy_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultShooter
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Medium_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultHunter
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Light_Female_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: Walker0
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList: []
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: Walker1
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList: []
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: SurvivorBait01
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Misc/actor_bait01
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: WalkerNormal
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Normal/Walker_Normal_Female_A
+    - Characters/Walker/Normal/Walker_Normal_Female_Z
+    - Characters/Walker/Normal/Walker_Normal_Male_A
+    - Characters/Walker/Normal/Walker_Normal_Male_B
+    - Characters/Walker/Normal/Walker_Normal_Female_C
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: WalkerNormal_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Normal/Walker_Normal_Female_A
+    - Characters/Walker/Normal/Walker_Normal_Female_Z
+    - Characters/Walker/Normal/Walker_Normal_Male_A
+    - Characters/Walker/Normal/Walker_Normal_Male_B
+    - Characters/Walker/Normal/Walker_Normal_Female_C
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: WalkerArmored
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Armored/Walker_Armored_Male_02_B
+    - Characters/Walker/Armored/Walker_Armored_Male_02_A
+    PortraitTexture: Ui_Texture_Walker_Armored
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Armored_Male_Outpost
+  - Identifier: WalkerArmored_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Armored/Walker_Armored_Male_02_B
+    - Characters/Walker/Armored/Walker_Armored_Male_02_A
+    PortraitTexture: Ui_Texture_Walker_Armored
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Armored_Male_Outpost
+  - Identifier: WalkerTank
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Tank/Walker_Tank_Male_01_A
+    - Characters/Walker/Tank/Walker_Tank_Male_01_B
+    - Characters/Walker/Tank/Walker_Tank_Female_01_A
+    PortraitTexture: Ui_Texture_Walker_Tank
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Tank_Male_Outpost
+  - Identifier: WalkerTank_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Tank/Walker_Tank_Male_01_A
+    - Characters/Walker/Tank/Walker_Tank_Male_01_B
+    - Characters/Walker/Tank/Walker_Tank_Female_01_A
+    PortraitTexture: Ui_Texture_Walker_Tank
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Tank_Male_Outpost
+  - Identifier: WalkerExplosive
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Explosive/Walker_Explosive_Male_A
+    PortraitTexture: Ui_Texture_Walker_Exploding
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Explosive_Male_Outpost
+  - Identifier: WalkerExplosive_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Explosive/Walker_Explosive_Male_A
+    PortraitTexture: Ui_Texture_Walker_Exploding
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Explosive_Male_Outpost
+  - Identifier: WalkerGoo
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Explosive/Walker_Goo
+    PortraitTexture: Ui_Texture_Walker_Exploding
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Explosive_Male_Outpost
+  - Identifier: WalkerGoo_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Explosive/Walker_Goo
+    PortraitTexture: Ui_Texture_Walker_Exploding
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Explosive_Male_Outpost
+  - Identifier: WalkerSlim
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Slim/Walker_Slim_Male_A
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerSlim_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Slim/Walker_Slim_Male_A
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerSpiked
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Spiked/Walker_Spiked
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerSpiked_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Spiked/Walker_Spiked
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerNormalSand
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Sand/Walker_Sand_A
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: WalkerNormalSnow
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Snow/Walker_Snow_B
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: WalkerCamp
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Inhabitants/Walker_Camp_Defense_A
+    - Characters/Inhabitants/Walker_Camp_Defense_B
+    PortraitTexture: ui_texture_walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: StoryTeller_1
+    IconSprite: Portrait_Daryl
+    PrefabResourceList:
+    - Characters/Inhabitants/Inhabitant_Daryl
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: StoryTeller_Angie
+    IconSprite: Portrait_Angie
+    PrefabResourceList:
+    - Characters/Inhabitants/Inhabitant_Angie
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: InitialSurvivor01
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Survivor/StoryTeller/StoryTeller_2
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: InitialSurvivor02
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Survivor/StoryTeller/StoryTeller_2
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: InitialSurvivor03
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Survivor/StoryTeller/StoryTeller_2
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: Unique_DarylDixon
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Survivor/StoryTeller/StoryTeller_2
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: Unique_SarahWolf
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Survivor/StoryTeller/StoryTeller_2
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultWarrior_Freemen
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Medium_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultScout_Freemen
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Light_Female_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultBruiser_Freemen
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Heavy_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultAssault_Freemen
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Heavy_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultShooter_Freemen
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Medium_Male_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultHunter_Freemen
+    IconSprite: UI/Combat/Survivors/StoryTellerPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Light_Female_A
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultAssaultWhisperer
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Whisperer
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultWarriorWhisperer
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Whisperer
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultScoutWhisperer
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Whisperer
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultBruiserWhisperer
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Whisperer
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultShooterWhisperer
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Whisperer
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultHunterWhisperer
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/Freemen/Freemen_Whisperer
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: WalkerMetalhead
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Metalhead/Walker_Metalhead
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerMetalhead_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Metalhead/Walker_Metalhead
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerMetalheadSnow
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Snow/Walker_Snow_Metalhead
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerFast
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Slim/Walker_Slim_Male_A
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerFast_Boss
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Slim/Walker_Slim_Male_A
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost
+  - Identifier: WalkerWhisperer
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Normal/Walker_Normal_Male_A
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: WalkerWhispererMelee
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/Normal/Walker_Normal_Male_A
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: ExplosiveBarrel
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Environment/ExplosiveBarrel
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: SurvivorBait01
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Misc/actor_bait01
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Normal_Male_Outpost
+  - Identifier: DefaultAssaultCommonWealthTrooper
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/CommonWealth/CommonWealthTrooper
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultWarriorCommonWealthTrooper
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/CommonWealth/CommonWealthTrooper
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultScoutCommonWealthTrooper
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/CommonWealth/CommonWealthTrooper
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultBruiserCommonWealthTrooper
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/CommonWealth/CommonWealthTrooper
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultShooterCommonWealthTrooper
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/CommonWealth/CommonWealthTrooper
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: DefaultHunterCommonWealthTrooper
+    IconSprite: UI/Combat/Survivors/SurvivorPortrait_01
+    PrefabResourceList:
+    - Characters/CommonWealth/CommonWealthTrooper
+    PortraitTexture:
+    CharacterScreenPrefab:
+  - Identifier: WalkerCommonWealth
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/CommonWealth/Walker_CommonWealth_Female_A
+    - Characters/Walker/CommonWealth/Walker_CommonWealth_Female_B
+    - Characters/Walker/CommonWealth/Walker_CommonWealth_Female_C
+    - Characters/Walker/CommonWealth/Walker_CommonWealth_Male_A
+    PortraitTexture: Ui_Texture_Walker_Normal
+    CharacterScreenPrefab:
+  - Identifier: WalkerAmpedupBurner
+    IconSprite: twdproto_character_icon_2
+    PrefabResourceList:
+    - Characters/Walker/AmpedupBurner/Walker_AmpedupBurner
+    PortraitTexture: Ui_Texture_Walker_Slim
+    CharacterScreenPrefab: Characters/Walker/Outpost/Walker_Slim_Male_Outpost

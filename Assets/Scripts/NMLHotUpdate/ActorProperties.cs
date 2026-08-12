@@ -1,0 +1,107 @@
+using TWDModel;
+using UnityEngine;
+
+public class ActorProperties : MonoBehaviour
+{
+	public enum PortraitSetupType
+	{
+		Random = 0,
+		Setup_1 = 1,
+		Setup_2 = 2,
+		Setup_3 = 3,
+		Setup_4 = 4,
+		Setup_5 = 5,
+		Setup_6 = 6,
+		Setup_7 = 7,
+		Setup_8 = 8,
+		Setup_9 = 9,
+		Setup_10 = 10,
+		Setup_11 = 11,
+		Setup_12 = 12,
+		Setup_13 = 13,
+		Setup_14 = 14,
+		Setup_15 = 15,
+		Setup_16 = 16,
+		Setup_17 = 17,
+		Setup_18 = 18,
+		Setup_19 = 19,
+		Setup_20_Negan = 20,
+		Setup_21_Rick = 21,
+		Setup_22_Michonne = 22,
+		Setup_23_Glenn = 23,
+		Setup_24_Maggie = 24,
+		Setup_25_Morgan = 25,
+		Setup_26_Carl = 26,
+		Setup_27_Jesus = 27,
+		Setup_28_Abraham = 28,
+		Setup_29_Carol = 29,
+		Setup_30_Rosita = 30,
+		Setup_31_Tara = 31,
+		Setup_32_Dwight = 32,
+		Setup_33_Hero = 33,
+		Setup_34_Sasha = 34,
+		Setup_35_Eugene = 35,
+		Setup_36_Ezekiel = 36,
+		Setup_37_Moonshiner = 37,
+		Setup_38_Gabriel = 38,
+		Setup_39_Aaron = 39,
+		Setup_40_Governor = 40,
+		Setup_41_Merle = 41,
+		Setup_42_Jerry = 42,
+		Setup_43_AltRick = 43,
+		Setup_44_AltMorgan = 44,
+		Setup_45_AltGlenn = 45,
+		Setup_46_AltDaryl = 46,
+		Setup_47_AltAbraham = 47,
+		Setup_48_AltMaggie = 48,
+		Setup_49_Alpha = 49,
+		Setup_50_Beta = 50,
+		Setup_51_TDog = 51,
+		Setup_52_Shane = 52,
+		Setup_53_SheriffRick = 53,
+		Setup_54_Princess = 54,
+		Setup_55_Yumiko = 55,
+		Setup_56_Beth = 56,
+		Setup_57_Mercer = 57,
+		Setup_58_CarolS10 = 58,
+		Setup_59_AssassinCarol = 59,
+		Setup_60_ScoutMercer = 60,
+		Setup_61_ScoutRosita = 61,
+		Setup_62_BruiserRosita = 62,
+		Setup_63_HunterHershel = 63,
+		Setup_64_Tyreese = 64,
+		Setup_65_HoodedMichonne = 65,
+		Setup_66_CommonWealthRosita = 66,
+		Setup_67_CommonWealthDaryl = 67,
+		Setup_68_Connie = 68,
+		Setup_69_CowboyNegan = 69,
+		Setup_70_BulletEugene = 70,
+		Setup_71_LawyerYumiko = 71,
+		Setup_72_MaskAlpha = 72,
+		Setup_73_Quinn = 73,
+		Setup_74_Magna = 74,
+		Setup_75_Jadis = 75,
+		Setup_76_TOWLMichonne = 76,
+		Setup_77_TOWLRick = 77,
+		Setup_78_Simon = 78,
+		Setup_79_ProtectorDaryl = 79,
+		Setup_80_GauntletAaron = 80,
+		Setup_81_MoonlightMaggie = 81,
+		Setup_82_Perlie = 82,
+		Setup_83_Croat = 83,
+		Setup_84_QuickdrawCarol = 84,
+		Setup_85_Lydia = 85,
+		Setup_86_Strand = 86,
+		Setup_87_ScoutMaggie = 87
+	}
+
+	public ActorAge Age = ActorAge.Adult;
+
+	public ActorGender Gender = ActorGender.Male;
+
+	public string Tags;
+
+	public GameObject PortraitPrefab;
+
+	public PortraitSetupType PortraitSetup;
+}

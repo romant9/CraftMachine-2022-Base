@@ -1,0 +1,201 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1777686260b43236386eb5972e565a6, type: 3}
+  m_Name: EffectRumblePresets
+  m_EditorClassIdentifier:
+  RumblePresets:
+  - name: Bojoing
+    RumbleCurves:
+    - Curvetype: 0
+      Modulator: 1
+      Channel: 0
+      ChannelMultiplier: {x: 0.1, y: 0.1, z: 0.1}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 40
+      StartLevel: 0
+      AttackDuration: 0.2
+      AttackLevel: 1.2
+      DecayDuration: 0.2
+      SustainDuration: 0.2
+      SustainLevel: 0.2
+      ReleaseDuration: 1.2
+      BallisticG: 0
+      BallisticV: 0
+    HasPosCurve: 0
+    HasRotCurve: 0
+    HasScaleCurve: 1
+    HasNguiAlphaCurve: 0
+    HasMaterialAlphaCurve: 0
+  - name: Kneel
+    RumbleCurves:
+    - Curvetype: 1
+      Modulator: 0
+      Channel: 1
+      ChannelMultiplier: {x: 0, y: -1, z: 0}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 0
+      StartLevel: 0
+      AttackDuration: 0
+      AttackLevel: 0
+      DecayDuration: 0
+      SustainDuration: 0
+      SustainLevel: 0
+      ReleaseDuration: 0
+      BallisticG: 30
+      BallisticV: 12
+    - Curvetype: 1
+      Modulator: 0
+      Channel: 0
+      ChannelMultiplier: {x: 0.5, y: -0.5, z: 0.5}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 0
+      StartLevel: 0
+      AttackDuration: 0
+      AttackLevel: 0
+      DecayDuration: 0
+      SustainDuration: 0
+      SustainLevel: 0
+      ReleaseDuration: 0
+      BallisticG: 30
+      BallisticV: 12
+    HasPosCurve: 1
+    HasRotCurve: 0
+    HasScaleCurve: 1
+    HasNguiAlphaCurve: 0
+    HasMaterialAlphaCurve: 0
+  - name: Bounce
+    RumbleCurves:
+    - Curvetype: 1
+      Modulator: 0
+      Channel: 1
+      ChannelMultiplier: {x: 0, y: 1, z: 0}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 0
+      StartLevel: 0
+      AttackDuration: 0
+      AttackLevel: 0
+      DecayDuration: 0
+      SustainDuration: 0
+      SustainLevel: 0
+      ReleaseDuration: 0
+      BallisticG: 20
+      BallisticV: 10
+    HasPosCurve: 1
+    HasRotCurve: 0
+    HasScaleCurve: 0
+    HasNguiAlphaCurve: 0
+    HasMaterialAlphaCurve: 0
+  - name: Jelly
+    RumbleCurves:
+    - Curvetype: 0
+      Modulator: 1
+      Channel: 0
+      ChannelMultiplier: {x: 0.15, y: -0.3, z: 0.15}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 22
+      StartLevel: 0
+      AttackDuration: 0.2
+      AttackLevel: 1.2
+      DecayDuration: 0.2
+      SustainDuration: 0.2
+      SustainLevel: 0.2
+      ReleaseDuration: 0.6
+      BallisticG: 0
+      BallisticV: 0
+    HasPosCurve: 0
+    HasRotCurve: 0
+    HasScaleCurve: 1
+    HasNguiAlphaCurve: 0
+    HasMaterialAlphaCurve: 0
+  - name: Heartbeat
+    RumbleCurves:
+    - Curvetype: 0
+      Modulator: 0
+      Channel: 0
+      ChannelMultiplier: {x: 0.15, y: 0.15, z: 0.15}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 40
+      StartLevel: 0
+      AttackDuration: 0.07
+      AttackLevel: 1.2
+      DecayDuration: 0.08
+      SustainDuration: 0
+      SustainLevel: -0.55
+      ReleaseDuration: 0.15
+      BallisticG: 30
+      BallisticV: 12
+    HasPosCurve: 0
+    HasRotCurve: 0
+    HasScaleCurve: 1
+    HasNguiAlphaCurve: 0
+    HasMaterialAlphaCurve: 0
+  - name: JigglyJump
+    RumbleCurves:
+    - Curvetype: 0
+      Modulator: 1
+      Channel: 0
+      ChannelMultiplier: {x: 0, y: -0.2, z: 0}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 33
+      StartLevel: 0
+      AttackDuration: 0.1
+      AttackLevel: 1.2
+      DecayDuration: 0.1
+      SustainDuration: 0
+      SustainLevel: 0.23
+      ReleaseDuration: 0.6
+      BallisticG: 30
+      BallisticV: 12
+    - Curvetype: 1
+      Modulator: 0
+      Channel: 1
+      ChannelMultiplier: {x: 0, y: 0.28, z: 0}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0
+      SinFrequency: 0
+      StartLevel: 0
+      AttackDuration: 0
+      AttackLevel: 0
+      DecayDuration: 0
+      SustainDuration: 0
+      SustainLevel: 0
+      ReleaseDuration: 0
+      BallisticG: 50
+      BallisticV: 20
+    - Curvetype: 0
+      Modulator: 1
+      Channel: 0
+      ChannelMultiplier: {x: 0.1, y: 0, z: -0.1}
+      ChannelOffset: {x: 0, y: 0, z: 0}
+      StartDelay: 0.34
+      SinFrequency: 22
+      StartLevel: 0
+      AttackDuration: 0.17
+      AttackLevel: 1.2
+      DecayDuration: 0.18
+      SustainDuration: 0
+      SustainLevel: 0.2
+      ReleaseDuration: 0.27
+      BallisticG: 0
+      BallisticV: 0
+    HasPosCurve: 1
+    HasRotCurve: 0
+    HasScaleCurve: 1
+    HasNguiAlphaCurve: 0
+    HasMaterialAlphaCurve: 0
