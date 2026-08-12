@@ -69,7 +69,7 @@ public class DuplicateAssetDetector : EditorWindow, IHasCustomMenu
 	private Vector2 buttonPressPosition;
 	private Vector2 scrollPos;
 
-	[MenuItem( "Window/Duplicate Asset Detector" )]
+	[MenuItem( "Tools/Duplicate Asset Detector" )]
 	private static void Init()
 	{
 		DuplicateAssetDetector window = GetWindow<DuplicateAssetDetector>();
