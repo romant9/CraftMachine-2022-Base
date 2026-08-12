@@ -355,7 +355,8 @@ public class ContentManager : MonoBehaviour, IModelContentService
 	{
 		if (typeof(T) == typeof(string))
 		{
-			T val = await DataManager.Instance.GoogleSheetManager.GetJsonFromGoogle(url) as T;
+			if (await DataManager.Instance.GoogleSheetManager.GetJsonFromGoogle(url) is not T val) return;
+
 			string text2 = ContentCache.CalculateChecksum(val);
 
 			cache.SetContent(id, url, text2, val);
@@ -363,7 +364,7 @@ public class ContentManager : MonoBehaviour, IModelContentService
 		}
 		else if (typeof(T) == typeof(byte[]))
 		{
-			T val2 = await DataManager.Instance.GoogleSheetManager.GetBytesFromGoogle(url) as T;
+			if (await DataManager.Instance.GoogleSheetManager.GetBytesFromGoogle(url) is not T val2) return;
 			string text3 = ContentCache.CalculateChecksum(val2);
 
 			cache.SetContent(id, url, text3, val2);
