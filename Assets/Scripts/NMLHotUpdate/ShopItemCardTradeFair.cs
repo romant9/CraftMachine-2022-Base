@@ -177,8 +177,6 @@ public class ShopItemCardTradeFair : ShopCardBase<TradefairBundleStoreDefinition
 
 	private LimitedBundleData limitedBundleData;
 
-	private bool speedTokenPass = true;
-
 	private List<IReward> OverSpeedRewardsList = new List<IReward>();
 
 	private int OverSpeedConvertedAmount;
@@ -644,7 +642,6 @@ public class ShopItemCardTradeFair : ShopCardBase<TradefairBundleStoreDefinition
 
 	private void CheckSpeedToken()
 	{
-		speedTokenPass = true;
 		OverSpeedConvertedAmount = 0;
 		OverSpeedRewardsList.Clear();
 		if (contentDefinition == null)
@@ -691,7 +688,6 @@ public class ShopItemCardTradeFair : ShopCardBase<TradefairBundleStoreDefinition
 		}
 		if (OverSpeedConvertedAmount > 0)
 		{
-			speedTokenPass = false;
 			TokenConversionPopup obj = (TokenConversionPopup)SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.TokenConversionPopup);
 			obj.OpenForCurrency(OverSpeedConvertedAmount);
 			obj.SetConversionCallbacks(GoPurchase);
