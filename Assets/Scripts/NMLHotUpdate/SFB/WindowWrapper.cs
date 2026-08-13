@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
 using System;
 using System.Windows.Forms;
 
@@ -15,3 +16,4 @@ namespace SFB
 		}
 	}
 }
+#endif

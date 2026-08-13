@@ -1,8 +1,10 @@
+using Ookii.Dialogs;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
 using System.Windows.Forms;
-using Ookii.Dialogs;
+#endif
 
 namespace SFB
 {
@@ -29,7 +31,11 @@ namespace SFB
 			{
 				vistaOpenFileDialog.FileName = GetDirectoryPath(directory);
 			}
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			string[] result = ((vistaOpenFileDialog.ShowDialog(new WindowWrapper(GetActiveWindow())) == DialogResult.OK) ? vistaOpenFileDialog.FileNames : new string[0]);
+#else
+			string[] result = new string[1] {""};
+#endif
 			vistaOpenFileDialog.Dispose();
 			return result;
 		}
@@ -47,7 +53,11 @@ namespace SFB
 			{
 				vistaFolderBrowserDialog.SelectedPath = GetDirectoryPath(directory);
 			}
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			string[] result = ((vistaFolderBrowserDialog.ShowDialog(new WindowWrapper(GetActiveWindow())) != DialogResult.OK) ? new string[0] : new string[1] { vistaFolderBrowserDialog.SelectedPath });
+#else
+			string[] result = new string[1] {""};
+#endif
 			vistaFolderBrowserDialog.Dispose();
 			return result;
 		}
@@ -84,7 +94,11 @@ namespace SFB
 				vistaSaveFileDialog.Filter = string.Empty;
 				vistaSaveFileDialog.AddExtension = false;
 			}
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			string result = ((vistaSaveFileDialog.ShowDialog(new WindowWrapper(GetActiveWindow())) == DialogResult.OK) ? vistaSaveFileDialog.FileName : "");
+#else
+			string[] result = new string[1] {""};
+#endif
 			vistaSaveFileDialog.Dispose();
 			return result;
 		}
