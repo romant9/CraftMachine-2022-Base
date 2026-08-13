@@ -97,7 +97,7 @@ namespace SFB
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			string result = ((vistaSaveFileDialog.ShowDialog(new WindowWrapper(GetActiveWindow())) == DialogResult.OK) ? vistaSaveFileDialog.FileName : "");
 #else
-			string[] result = new string[1] {""};
+			string result = string.Empty;
 #endif
 			vistaSaveFileDialog.Dispose();
 			return result;
