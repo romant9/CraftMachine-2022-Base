@@ -486,7 +486,7 @@ namespace AmplifyColor
 		{
 #if TWDMOD
 			return;
-#endif
+#else
 			EditorApplication.update -= Update;
 
 			if( !EditorApplication.isPlayingOrWillChangePlaymode )
@@ -529,6 +529,7 @@ namespace AmplifyColor
 				if( show )
 					StartScreen.Init();
 			}
+#endif
 		}
 	}
 }

@@ -59,8 +59,8 @@ public class OfflineManager : MonoBehaviour
 	public static bool UsePostgre = true;
 
 	public static string MainSceneName = "myTest_66";
-	public static string ClientVersion = "7.19.0.100";
-	public static string ShortVersion = "7.19.0";
+	public static string ClientVersion = "7.20.0.100";
+	public static string ShortVersion = "7.20.0";
 
 	public string EosAccountID_Custom { get; set; } //"1c6b97e...";
 	public string SessionToken = "";
