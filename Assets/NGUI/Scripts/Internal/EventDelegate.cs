@@ -344,7 +344,7 @@ public class EventDelegate
 					break;
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 			}
 			type = type.BaseType;

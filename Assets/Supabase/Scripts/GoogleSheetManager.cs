@@ -6,9 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using UnityAuth;
 using UnityEngine;
 using UnityEngine.Networking;
 using static Supabase.TWD.SupabaseManager;
+using TaskStatus = UnityAuth.TaskStatus;
 using ValueRange = Google.Apis.Sheets.v4.Data.ValueRange;
 
 public class GoogleSheetManager: MonoBehaviour
@@ -292,7 +294,7 @@ public class GoogleSheetManager: MonoBehaviour
 			{
 				logMessage = $"Сетевая ошибка Unity: {request.error}";
 				Debug.LogError(logMessage);
-				return new TaskResult(TaskResult.TaskStatus.Offline, logMessage);
+				return new TaskResult(TaskStatus.Offline, logMessage);
 			}
 
 			// 6. Парсим ответ от вашего Apps Script
@@ -305,20 +307,20 @@ public class GoogleSheetManager: MonoBehaviour
 				{
 					logMessage = "Данные аккаунта успешно обновлены в Supabase!";
 					Debug.Log(logMessage);
-					return new TaskResult(TaskResult.TaskStatus.Success, logMessage);
+					return new TaskResult(TaskStatus.Success, logMessage);
 				}
 				else
 				{
 					logMessage = $"Apps Script вернул ошибку: {response.data}";
 					Debug.LogError(logMessage);
-					return new TaskResult(TaskResult.TaskStatus.Error, logMessage);
+					return new TaskResult(TaskStatus.Error, logMessage);
 				}
 			}
 			catch (Exception ex)
 			{
 				logMessage = $"Ошибка парсинга ответа: {ex.Message}. Ответ сервера: {responseText}";
 				Debug.LogError(logMessage);
-				return new TaskResult(TaskResult.TaskStatus.Exception, logMessage);
+				return new TaskResult(TaskStatus.Exception, logMessage);
 			}
 		}
 	}

@@ -4,41 +4,9 @@ using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using UnityEngine;
-using static UnityAuth.TaskResult;
-using TaskStatus = UnityAuth.TaskResult.TaskStatus;
 
 namespace UnityAuth
 {
-	public class TaskResult
-	{
-		public enum TaskStatus
-		{
-			Success,
-			Fail,
-			NeedAuth,
-			Error,
-			Offline,
-			Exception
-		}
-
-		public TaskStatus Status { get; set; }
-		public string Message { get; set; }
-		public Exception Exception { get; set; }
-
-		public TaskResult(TaskStatus status, string message, Exception ex = null) 
-		{ 
-			Status = status; Message = message; Exception = ex;
-			if (ex == null)
-			{
-				DebugTWD.Log($"[{status}]{message}");
-			}
-			else
-			{
-				DebugTWD.LogError($"[{status}]{message}\n{ex.Message}");
-			}
-		}
-	}
-
 	public class UnityAuthManager : MonoBehaviour
 	{
 		public static UnityAuthManager Instance;

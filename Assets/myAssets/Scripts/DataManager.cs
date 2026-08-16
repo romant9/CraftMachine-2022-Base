@@ -17,6 +17,7 @@ using Client.Connectivity;
 using Supabase.TWD;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using TaskStatus = UnityAuth.TaskStatus;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -637,7 +638,7 @@ namespace TwdCustomMod
 
 				MyTools.UpdateLogPanel(supabaseManager.ErrorText, supabaseManager.ErrorTextRu);
 
-				if (taskClient.Status == SupabaseManager.TaskResult.TaskStatus.Success)
+				if (taskClient.Status == TaskStatus.Success)
 				{
 					if (DatabaseManager == null || DatabaseManager.SupaClient == null)
 					{
@@ -749,7 +750,7 @@ namespace TwdCustomMod
 				}
 				else
 				{
-					if (taskClient.Status == SupabaseManager.TaskResult.TaskStatus.NeedAuth)
+					if (taskClient.Status == TaskStatus.NeedAuth)
 					{
 						string textRu = "Необходима авторизация пользователя CraftMachine через email или Google";
 						string textEn = "CraftMachine user authentification via email or Google is required";
@@ -916,14 +917,22 @@ namespace TwdCustomMod
 
 		public void OpenRegPopup()
 		{
-			var regPopup = craftSettings.RegPopup;
-			regPopup.gameObject.SetActive(true);
+			if (OfflineManager.UseSupabase)
+			{
+                var regPopup = craftSettings.RegPopup;
+                regPopup.gameObject.SetActive(true);
 
-			regPopup.SetLocalButton.gameObject.SetActive(true);
-			regPopup.ReloadSupaClientButton.gameObject.SetActive(true);
-			regPopup.ExtraButtonContainer.Reposition();
+                regPopup.SetLocalButton.gameObject.SetActive(true);
+                regPopup.ReloadSupaClientButton.gameObject.SetActive(true);
+                regPopup.ExtraButtonContainer.Reposition();
 
-			regPopup.GetSessionStatus();
+                regPopup.GetSessionStatus();
+            }
+			else
+			{
+                var regPopup = craftSettings.UnityRegPopup;
+                regPopup.gameObject.SetActive(true);
+            }		
 		}
 
 		public void SetWish(UIInput input)

@@ -56,7 +56,7 @@ public class OfflineManager : MonoBehaviour
 	public static bool IsOfflineMode { get; set; } = false;
 	public static bool IsDodge { get; set; } = false;
 	public static bool IsUsePortraitManager { get; set; } = true;
-	public static bool UsePostgre = true;
+	public static bool UseSupabase = false;
 
 	public static string MainSceneName = "myTest_66";
 	public static string ClientVersion = "7.20.0.100";

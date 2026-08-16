@@ -10,8 +10,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TwdCustomMod;
+using UnityAuth;
 using UnityEngine;
 using UnityEngine.Networking;
+using TaskStatus = UnityAuth.TaskStatus;
 using User = Supabase.Gotrue.User;
 
 namespace Supabase.TWD
@@ -121,28 +123,9 @@ namespace Supabase.TWD
 			}
 		}
 
-		public class TaskResult
-		{
-			public enum TaskStatus
-			{
-				Success,
-				Fail,
-				NeedAuth,
-				Error,
-				Offline,
-				Exception
-			}
-
-			public TaskStatus Status { get; set; }
-			public string Message { get; set; }
-			public Exception Exception { get; set; }
-
-			public TaskResult(TaskStatus status, string message, Exception ex = null) { Status = status; Message = message; Exception = ex; }
-		}
-
 		public async Task<TaskResult> SetClient()
 		{
-			if (_currentUser != null) return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+			if (_currentUser != null) return new TaskResult(TaskStatus.Success, ErrorText);
 
 			SupabaseOptions options = new()
 			{
@@ -206,7 +189,7 @@ namespace Supabase.TWD
 				Debug.Log(e.Message, gameObject);
 
 				_client.Auth.Online = false;
-				return new TaskResult(TaskResult.TaskStatus.Exception, e.Message);
+				return new TaskResult(TaskStatus.Exception, e.Message);
 			}
 
 			if (_client.Auth.Online)
@@ -270,7 +253,7 @@ namespace Supabase.TWD
 
 							IsSignedIn = true;
 
-							return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+							return new TaskResult(TaskStatus.Success, ErrorText);
 						}
 						else
 						{
@@ -278,7 +261,7 @@ namespace Supabase.TWD
 							ErrorTextRu = $"Не удалось обновить сессию. Попробуйте произвести выход и повторить";
 
 							Debug.Log(ErrorText);
-							return new TaskResult(TaskResult.TaskStatus.NeedAuth, ErrorText);
+							return new TaskResult(TaskStatus.NeedAuth, ErrorText);
 						}
 					}
 					catch (Exception ex)
@@ -288,7 +271,7 @@ namespace Supabase.TWD
 						ErrorTextRu = $"Не удалось обновить сессию: {ex.Message}";
 
 						Debug.Log(ErrorText);
-						return new TaskResult(TaskResult.TaskStatus.NeedAuth, ErrorText);
+						return new TaskResult(TaskStatus.NeedAuth, ErrorText);
 					}
 				}
 				else
@@ -297,7 +280,7 @@ namespace Supabase.TWD
 					ErrorTextRu = "Пользователь не авторизован. Требуется вход через Google или почту.";
 
 					Debug.Log(ErrorText);
-					return new TaskResult(TaskResult.TaskStatus.NeedAuth, ErrorText);
+					return new TaskResult(TaskStatus.NeedAuth, ErrorText);
 				}
 			}
 			else
@@ -306,7 +289,7 @@ namespace Supabase.TWD
 				ErrorTextRu = "Включите интернет для авторизации в моде";
 
 				Debug.Log(ErrorText);
-				return new TaskResult(TaskResult.TaskStatus.Offline, ErrorText);
+				return new TaskResult(TaskStatus.Offline, ErrorText);
 			}
 		}
 
@@ -374,7 +357,7 @@ namespace Supabase.TWD
 					ErrorTextRu = $"[VPN Блокировка] Код ответа: {request.responseCode}. Текст ответа: {request.downloadHandler.text}";
 					ErrorText = $"[VPN Block] Response code: {request.responseCode}. Message: {request.downloadHandler.text}";
 					Debug.LogError(ErrorText);
-					return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+					return new TaskResult(TaskStatus.Fail, ErrorText);
 				}
 
 				string rawJsonResponse = request.downloadHandler.text;
@@ -434,7 +417,7 @@ namespace Supabase.TWD
 							ErrorText = $"[Supabase] Authorization successful for {user}, bypassing UriFormatException!";
 
 							Debug.Log(ErrorText);
-							return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+							return new TaskResult(TaskStatus.Success, ErrorText);
 						}
 						else
 						{
@@ -442,7 +425,7 @@ namespace Supabase.TWD
 							ErrorTextRu = $"Ошибка! Вход не выполнен. Пользователь с адресом {email} не существует";
 							Debug.Log(ErrorText);
 
-							return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+							return new TaskResult(TaskStatus.Fail, ErrorText);
 						}						
 					}
 					else
@@ -450,7 +433,7 @@ namespace Supabase.TWD
 						ErrorTextRu = "[Supabase] Полученный JSON пустой или не содержит AccessToken.";
 						ErrorText = "[Supabase] The received JSON is empty or does not contain an AccessToken.";
 						Debug.LogError(ErrorText);
-						return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+						return new TaskResult(TaskStatus.Fail, ErrorText);
 					}				
 				}
 				catch (Exception ex)
@@ -458,7 +441,7 @@ namespace Supabase.TWD
 					ErrorTextRu = $"[Ошибка парсинга JSON] Сессия не распознана. Ошибка: {ex.Message}. Ответ сервера был: {rawJsonResponse}";
 					ErrorText = $"[JSON parsing error] Session not recognized. Error: {ex.Message}. Server response was: {rawJsonResponse}";
 					Debug.LogError(ErrorText);
-					return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText);
+					return new TaskResult(TaskStatus.Exception, ErrorText);
 				}
 			}
 		}
@@ -469,19 +452,19 @@ namespace Supabase.TWD
 			{
 				ErrorText = $"User {_currentUser.Email} is signedIn yet";
 				ErrorTextRu = $"Пользователь {_currentUser.Email} уже вошел в систему";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (_client == null)
 			{
 				ErrorText = "The Supabase server is not connected. Try restarting the mod";
 				ErrorTextRu = "Сервер Supabase не подключен. Попробуйте перезапуск мода";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (!_client.Auth.Online)
 			{
 				ErrorText = "The Supabase server is not connected. Try restarting the mod";
 				ErrorTextRu = "Сервер Supabase не подключен. Попробуйте перезапуск мода";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			try
 			{
@@ -492,13 +475,13 @@ namespace Supabase.TWD
 					ErrorText = $"Success! Signed Up as {session.User.Email}";
 					ErrorTextRu = $"Успешно! Вы зарегистрировались как {session.User.Email}";
 					IsSignedIn = true;
-					return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+					return new TaskResult(TaskStatus.Success, ErrorText);
 				}
 				else
 				{
 					ErrorText = $"Failed! Not Signed Up. User with {mail} does not exist";
 					ErrorTextRu = $"Ошибка! Регистрация не выполнена. Пользователь с адресом {mail} не существует.";
-					return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+					return new TaskResult(TaskStatus.Fail, ErrorText);
 				}
 			}
 			catch (GotrueException goTrueException)
@@ -507,7 +490,7 @@ namespace Supabase.TWD
 				ErrorTextRu = ErrorText;
 
 				Debug.LogError(ErrorText);
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, goTrueException);
+				return new TaskResult(TaskStatus.Exception, ErrorText, goTrueException);
 			}
 			catch (UriFormatException ex)
 			{
@@ -516,7 +499,7 @@ namespace Supabase.TWD
 				errorsCount++;
 				Debug.LogError(ErrorText);
 
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, ex);
+				return new TaskResult(TaskStatus.Exception, ErrorText, ex);
 			}
 			catch (Exception e)
 			{
@@ -524,7 +507,7 @@ namespace Supabase.TWD
 				ErrorTextRu = $"Неизвестная ошибка: \n{e.Message}";
 
 				Debug.LogError(ErrorText);
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, e);
+				return new TaskResult(TaskStatus.Exception, ErrorText, e);
 			}
 		}
 
@@ -534,19 +517,19 @@ namespace Supabase.TWD
 			{
 				ErrorText = $"User {_currentUser.Email} is signedIn yet";
 				ErrorTextRu = $"Пользователь {_currentUser.Email} уже вошел в систему";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (_client == null)
 			{
 				ErrorText = "The Supabase server is not connected. Try restarting the mod";
 				ErrorTextRu = "Сервер Supabase не подключен. Попробуйте перезапуск мода";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (!_client.Auth.Online)
 			{
 				ErrorText = "Ошибка подключения к базе пользователей. Проверьте интернет";
 				ErrorTextRu = "Error connecting to the user database. Check your internet connection";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			try
 			{
@@ -558,13 +541,13 @@ namespace Supabase.TWD
 					ErrorTextRu = $"Успешно! Вы вошли как {session.User.Email}";
 
 					IsSignedIn = true;
-					return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+					return new TaskResult(TaskStatus.Success, ErrorText);
 				}
 				else
 				{
 					ErrorText = $"Failed! Not Signed In. User with {mail} does not exist";
 					ErrorTextRu = $"Ошибка! Вход не выполнен. Пользователь с адресом {mail} не существует";
-					return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+					return new TaskResult(TaskStatus.Fail, ErrorText);
 				}
 			}
 			catch (GotrueException goTrueException)
@@ -581,7 +564,7 @@ namespace Supabase.TWD
 				ErrorTextRu = $"{goTrueException.Reason}\n{prefixRu}\n{goTrueException.Message}";
 				Debug.LogError(ErrorText);
 
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, goTrueException);
+				return new TaskResult(TaskStatus.Exception, ErrorText, goTrueException);
 			}
 			catch (UriFormatException ex)
 			{
@@ -590,7 +573,7 @@ namespace Supabase.TWD
 				errorsCount++;
 				Debug.LogError(ErrorText);
 
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, ex);
+				return new TaskResult(TaskStatus.Exception, ErrorText, ex);
 			}
 			catch (Exception e)
 			{
@@ -598,7 +581,7 @@ namespace Supabase.TWD
 				ErrorTextRu = $"Неизвестная ошибка: \n{e.Message}";
 
 				Debug.LogError(ErrorText);
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, e);
+				return new TaskResult(TaskStatus.Exception, ErrorText, e);
 			}
 		}
 
@@ -610,19 +593,19 @@ namespace Supabase.TWD
 			{
 				ErrorText = $"User {_currentUser.Email} is signedIn yet";
 				ErrorTextRu = $"Пользователь {_currentUser.Email} уже вошел в систему";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (_client == null)
 			{
 				ErrorText = "The Supabase server is not connected. Try restarting the mod";
 				ErrorTextRu = $"Сервер Supabase не подключен. Попробуйте перезапуск мода";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (!_client.Auth.Online)
 			{
 				ErrorText = $"Ошибка подключения к базе пользователей. Проверьте интернет";
 				ErrorTextRu = "Error connecting to the user database. Check your internet connection";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			try
 			{
@@ -635,13 +618,13 @@ namespace Supabase.TWD
 					Debug.Log(ErrorText);
 
 					IsSignedIn = true;
-					return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+					return new TaskResult(TaskStatus.Success, ErrorText);
 				}
 				else
 				{
 					ErrorText = $"Failed! Not Signed In. User does not exist";
 					ErrorTextRu = $"Ошибка! Вход не выполнен. Пользователь не существует";
-					return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+					return new TaskResult(TaskStatus.Fail, ErrorText);
 				}
 			}
 			catch (UriFormatException ex)
@@ -651,7 +634,7 @@ namespace Supabase.TWD
 				errorsCount++;
 				Debug.LogError(ErrorText);
 
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, ex);
+				return new TaskResult(TaskStatus.Exception, ErrorText, ex);
 			}
 			catch (Exception e)
 			{
@@ -659,7 +642,7 @@ namespace Supabase.TWD
 				ErrorTextRu = $"Неизвестная ошибка: \n{e.Message}";
 
 				Debug.LogError(ErrorText);
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, e);
+				return new TaskResult(TaskStatus.Exception, ErrorText, e);
 			}
 		}
 	
@@ -670,19 +653,19 @@ namespace Supabase.TWD
 			{
 				ErrorText = $"User {_currentUser.Email} is signedIn yet";
 				ErrorTextRu = $"Пользователь {_currentUser.Email} уже вошел в систему";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (_client == null)
 			{
 				ErrorText = "The Supabase server is not connected. Try restarting the mod";
 				ErrorTextRu = $"Сервер Supabase не подключен. Попробуйте перезапуск мода";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			if (!_client.Auth.Online)
 			{
 				ErrorText = $"Ошибка подключения к базе пользователей. Проверьте интернет";
 				ErrorTextRu = "Error connecting to the user database. Check your internet connection";
-				return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+				return new TaskResult(TaskStatus.Fail, ErrorText);
 			}
 			try
 			{
@@ -695,13 +678,13 @@ namespace Supabase.TWD
 					Debug.Log(ErrorText);
 
 					IsSignedIn = true;
-					return new TaskResult(TaskResult.TaskStatus.Success, ErrorText);
+					return new TaskResult(TaskStatus.Success, ErrorText);
 				}
 				else
 				{
 					ErrorText = $"Failed! Not Signed In. User does not exist";
 					ErrorTextRu = $"Ошибка! Вход не выполнен. Пользователь не существует";
-					return new TaskResult(TaskResult.TaskStatus.Fail, ErrorText);
+					return new TaskResult(TaskStatus.Fail, ErrorText);
 				}
 			}
 			catch (UriFormatException ex)
@@ -711,7 +694,7 @@ namespace Supabase.TWD
 				errorsCount++;
 				Debug.LogError(ErrorText);
 
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, ex);
+				return new TaskResult(TaskStatus.Exception, ErrorText, ex);
 			}
 			catch (Exception e)
 			{
@@ -719,7 +702,7 @@ namespace Supabase.TWD
 				ErrorTextRu = $"Неизвестная ошибка: \n{e.Message}";
 
 				Debug.LogError(ErrorText);
-				return new TaskResult(TaskResult.TaskStatus.Exception, ErrorText, e);
+				return new TaskResult(TaskStatus.Exception, ErrorText, e);
 			}
 		}
 

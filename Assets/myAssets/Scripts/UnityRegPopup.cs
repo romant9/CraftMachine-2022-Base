@@ -1,4 +1,4 @@
-using BestHTTP.Authentication;
+using Postgrest;
 using Supabase.TWD;
 using System;
 using System.Security.Cryptography;
@@ -13,61 +13,82 @@ using UnityEngine.UI;
 
 public class UnityRegPopup : MonoBehaviour
 {
-	private GameObject activeWindow;
+    public UIButtonToggleSet toggleSet;
 
-	public GameObject RegWindow;
-	public GameObject SignInWindow;
-	public GameObject ConfirmWindow;
-
-	public LocalizationUIUpdater regcodeUpdater;
-	public LocalizationUIUpdater headerUpdater;
-	public LocalizationUIUpdater nextWindowUpdater;
-	public LocalizationUIUpdater confirmationUpdater;
+    public GameObject[] tabContainers;
 
 	private bool IsPassHide;
 
-	public UIInput RegcodeInput;
-	public UIInput EmailInput;
-	public UIInput PasswordInput;
+    [Header("Поля SignUp")]
+    public UIButton SignUp_Google_Bt;
+    public UIInput SignUp_EmailInput;
+	public UIInput SignUp_PasswordInput;
+	public UIButton GeneratePass_Bt;
+    public UIButton SignUp_Bt;
+    public UIButtonToggle SignUp_HidePass_BtTg;
+    public UIButton GoTo_SignIn_Bt;
 
-	public UIButton SetLocalButton;
-	public UIButton ReloadSupaClientButton;
-	public UITable ExtraButtonContainer;
+    [Header("Поля SignIn")]
+    public UIButton SignIn_Google_Bt;
+    public UIInput SignIn_EmailInput;
+    public UIInput SignIn_PasswordInput;
+    public UIButtonToggle SignIn_HidePass_BtTg;
+    public UIButton Fill_Bt;
+    public UIButton ForgotPass_Bt;
+    public UIButton SignIn_Bt;
+    public UIButton GoTo_SignUp_Bt;
+
+    [Header("Поля Actions")]
+    public UIInput Actions_PasswordInput;
+    public UIButtonToggle Actions_HidePass_BtTg;
+    public UIButton Actions_GeneratePass_Bt;
+    public UIButton ChangePass_Bt;
+    [SerializeField] private UIButton LinkGoogle_Bt;
+    [SerializeField] private UIButton UnlinkGoogle_Bt;
+	public UIButton SignOut_Bt;
+
+    [Header("Поля Status")]
+    public UIButton SetLocalSession_Bt;
+    public UIButton CopyData_Bt;
+	public UILabel StatusMessage_Label;
+	private string statusMessageEn;
+    private string statusMessageRu;
+
+    private UnityAuthManager authManager;
 
 
-	[SerializeField] private UnityAuthManager authManager;
-
-	[SerializeField] private UIButton linkGoogleButton;
-	[SerializeField] private UIButton unlinkGoogleButton;
-
-
-	public enum RegState
+	public enum ToggleState
 	{
-		Sign,
-		Reg,
-		Confirm
+		SignUp = 0,
+		SignIn = 1,
+		Actions = 2,
+		Status = 3
 	}
 
-	public RegState CurrentState = RegState.Sign;
+	public ToggleState CurrentState = ToggleState.SignUp;
 
 	void Start()
 	{
 		authManager = UnityAuthManager.Instance;
-		linkGoogleButton.onClick.Add(new EventDelegate(OnLinkGoogleClicked));
-		unlinkGoogleButton.onClick.Add(new EventDelegate(OnUnlinkGoogleClicked));
 
-		// новое
-		loginButton.onClick.AddListener(OnLoginSubmit);
-		switchToRegisterButton.onClick.AddListener(() => ToggleTabs(showRegister: true));
+        SignUp_Bt.onClick.Add(new EventDelegate(OnSignUp_Submit));
+        SignUp_Google_Bt.onClick.Add(new EventDelegate(() => OnGoogleLoginClick(ToggleState.SignUp)));
+        GeneratePass_Bt.onClick.Add(new EventDelegate(() => PasswordGenerator(ToggleState.SignUp)));
+        GoTo_SignIn_Bt.onClick.Add(new EventDelegate(() => ToggleTabs(ToggleState.SignIn)));
 
-		registerButton.onClick.AddListener(OnRegisterSubmit);
-		switchToLoginButton.onClick.AddListener(() => ToggleTabs(showRegister: false));
+		Fill_Bt.onClick.Add(new EventDelegate(() => GetSavedRegData(ToggleState.SignIn)));
+		ForgotPass_Bt.onClick.Add(new EventDelegate(RequestPasswordReset));
+        SignIn_Bt.onClick.Add(new EventDelegate(OnSignIn_Submit));
+        SignIn_Google_Bt.onClick.Add(new EventDelegate(() => OnGoogleLoginClick(ToggleState.SignIn)));
+        GoTo_SignUp_Bt.onClick.Add(new EventDelegate(() => ToggleTabs(ToggleState.SignUp)));
 
-		googleLoginButton.onClick.AddListener(OnGoogleLoginClick);
-		closeErrorButton.onClick.AddListener(() => errorWindow.SetActive(false));
+        Actions_GeneratePass_Bt.onClick.Add(new EventDelegate(() => PasswordGenerator(ToggleState.Actions)));
+		ChangePass_Bt.onClick.Add(new EventDelegate(AddPasswordToGoogleAccount));
+        LinkGoogle_Bt.onClick.Add(new EventDelegate(OnLinkGoogleClicked));
+		UnlinkGoogle_Bt.onClick.Add(new EventDelegate(OnUnlinkGoogleClicked));
+		SignOut_Bt.onClick.Add(new EventDelegate(SignOut));
 
-		ToggleTabs(showRegister: false);
-		errorWindow.SetActive(false);
+        ToggleTabs(ToggleState.SignIn);
 	}
 
 	/// <summary>
@@ -87,14 +108,14 @@ public class UnityRegPopup : MonoBehaviour
 			return;
 		}
 
-		linkGoogleButton.isEnabled = false; // Блокируем кнопку на время запроса
+		LinkGoogle_Bt.isEnabled = false; // Блокируем кнопку на время запроса
 
 		string googleIdToken = await authManager.GetGoogleTokenSilentAsync();
 
 		if (string.IsNullOrEmpty(googleIdToken))
 		{
 			ShowError("Не удалось получить данные от Google. Попробуйте еще раз.");
-			linkGoogleButton.isEnabled = true;
+			LinkGoogle_Bt.isEnabled = true;
 			return;
 		}
 
@@ -110,7 +131,7 @@ public class UnityRegPopup : MonoBehaviour
 		{
 			// Обработка ошибок происходит внутри LinkGoogleAccountAsync, 
 			// которая вызовет OnLinkFailed, но на всякий случай разблокируем кнопку.
-			linkGoogleButton.isEnabled = true;
+			LinkGoogle_Bt.isEnabled = true;
 		}
 	}
 
@@ -119,7 +140,7 @@ public class UnityRegPopup : MonoBehaviour
 	/// </summary>
 	private async void OnUnlinkGoogleClicked()
 	{
-		unlinkGoogleButton.isEnabled = false;
+		UnlinkGoogle_Bt.isEnabled = false;
 
 		if (!authManager.CheckIfGoogleIsLinked())
 		{
@@ -139,74 +160,51 @@ public class UnityRegPopup : MonoBehaviour
 		{
 			// Обработка ошибок происходит внутри LinkGoogleAccountAsync, 
 			// которая вызовет OnLinkFailed, но на всякий случай разблокируем кнопку.
-			unlinkGoogleButton.isEnabled = true;
+			UnlinkGoogle_Bt.isEnabled = true;
 		}
 	}
 
 	private void UpdateButtonsState(bool isLinked)
 	{
 		// Если привязан: кнопку "Привязать" выключаем, кнопку "Отвязать" включаем
-		linkGoogleButton.isEnabled = !isLinked;
-		unlinkGoogleButton.isEnabled = isLinked;
+		LinkGoogle_Bt.isEnabled = !isLinked;
+		UnlinkGoogle_Bt.isEnabled = isLinked;
 	}
 
 	public void ShowError(string message)
 	{
-		SetState(RegState.Confirm, new string[1] { message });
-		linkGoogleButton.isEnabled = true; // Разблокируем кнопку, чтобы игрок мог попробовать снова
+		LinkGoogle_Bt.isEnabled = true; // Разблокируем кнопку, чтобы игрок мог попробовать снова
 
-		errorText.text = message;
-		errorWindow.SetActive(true);
+		MyTools.OpenAlert(message);
+        statusMessageEn = message;
 	}
 
 	public void ShowSuccess(string message)
 	{
-		SetState(RegState.Confirm, new string[1] { message });
+		statusMessageEn = message;
 	}
 	//
 
-	// новое
-	[Header("Поля ввода (Вход)")]
-	[SerializeField] private InputField loginEmailInput; // Изменено на Email
-	[SerializeField] private InputField loginPasswordInput;
-	[SerializeField] private Button loginButton;
-	[SerializeField] private Button switchToRegisterButton;
-
-	[Header("Поля ввода (Регистрация)")]
-	[SerializeField] private InputField regEmailInput; // Изменено на Email
-	[SerializeField] private InputField regPasswordInput;
-	[SerializeField] private Button registerButton;
-	[SerializeField] private Button switchToLoginButton;
-
-	[Header("Кнопки социальных сетей")]
-	[SerializeField] private Button googleLoginButton;
-
-	[Header("Окна Уведомлений")]
-	[SerializeField] private GameObject errorWindow;
-	[SerializeField] private Text errorText;
-	[SerializeField] private Button closeErrorButton;
-
-	[Header("Вкладки UI (для переключения)")]
-	[SerializeField] private GameObject loginTabGameObject;
-	[SerializeField] private GameObject registerTabGameObject;
-
-	private void ToggleTabs(bool showRegister)
+	private void ToggleTabs(ToggleState state)
 	{
-		loginTabGameObject.SetActive(!showRegister);
-		registerTabGameObject.SetActive(showRegister);
-	}
+        toggleSet.SetSelectedIndex((int)state);
+    }
 
-	// ==========================================
-	// 1. СЦЕНАРИЙ: ВХОД (SIGN IN)
-	// ==========================================
-	private async void OnLoginSubmit()
+    // ==========================================
+    // 1. СЦЕНАРИЙ: ВХОД (SIGN IN)
+    // ==========================================
+    private async void OnSignIn_Submit()
 	{
-		string email = loginEmailInput.text.Trim();
-		string password = loginPasswordInput.text;
+		GetSavedRegData(ToggleState.SignIn);
+
+        string email = SignIn_EmailInput.value.Trim();
+        string password = SignIn_PasswordInput.value;
 
 		if (!ValidateInputs(email, password)) return;
 
-		SetButtonsInteractable(false);
+		SaveToPlayerPrefs(ToggleState.SignIn);
+
+        SetButtonsInteractable(ToggleState.SignIn, false);
 
 		try
 		{
@@ -235,14 +233,18 @@ public class UnityRegPopup : MonoBehaviour
 	// ==========================================
 	// 2. СЦЕНАРИЙ: РЕГИСТРАЦИЯ (SIGN UP)
 	// ==========================================
-	private async void OnRegisterSubmit()
+	private async void OnSignUp_Submit()
 	{
-		string email = regEmailInput.text.Trim();
-		string password = regPasswordInput.text;
+		GetSavedRegData(ToggleState.SignUp);
+
+		string email = SignIn_EmailInput.value.Trim();
+		string password = SignIn_PasswordInput.value;
 
 		if (!ValidateInputs(email, password)) return;
 
-		SetButtonsInteractable(false);
+		SaveToPlayerPrefs(ToggleState.SignUp);
+
+		SetButtonsInteractable(ToggleState.SignUp, false);
 
 		try
 		{
@@ -272,22 +274,22 @@ public class UnityRegPopup : MonoBehaviour
 		}
 		finally
 		{
-			SetButtonsInteractable(true);
+			SetButtonsInteractable(ToggleState.SignUp, true);
 		}
 	}
 
 	// ==========================================
 	// 3. СЦЕНАРИЙ: ВХОД ЧЕРЕЗ GOOGLE
 	// ==========================================
-	private async void OnGoogleLoginClick()
+	private async void OnGoogleLoginClick(ToggleState state)
 	{
-		SetButtonsInteractable(false);
+		SetButtonsInteractable(state, false);
 		string googleIdToken = await authManager.GetGoogleTokenAsync();
 
 		if (string.IsNullOrEmpty(googleIdToken))
 		{
 			ShowError("Не удалось авторизоваться в Google.");
-			SetButtonsInteractable(true);
+			SetButtonsInteractable(state, true);
 			return;
 		}
 
@@ -302,7 +304,7 @@ public class UnityRegPopup : MonoBehaviour
 		}
 		finally
 		{
-			SetButtonsInteractable(true);
+			SetButtonsInteractable(state, true);
 		}
 	}
 
@@ -345,12 +347,19 @@ public class UnityRegPopup : MonoBehaviour
 		return Regex.IsMatch(email, emailPattern);
 	}
 
-	private void SetButtonsInteractable(bool state)
+	private void SetButtonsInteractable(ToggleState tgState, bool state)
 	{
-		loginButton.interactable = state;
-		registerButton.interactable = state;
-		googleLoginButton.interactable = state;
-	}
+		if (tgState == ToggleState.SignUp)
+		{
+            SignUp_Bt.isEnabled = state;
+            SignUp_Google_Bt.isEnabled = state;
+        }
+		else if (tgState == ToggleState.SignIn)
+        {
+            SignIn_Bt.isEnabled = state;
+            SignIn_Google_Bt.isEnabled = state;
+        }
+    }
 
 	private void OnAuthProcessComplete()
 	{
@@ -359,91 +368,8 @@ public class UnityRegPopup : MonoBehaviour
 	}
 	//
 
-
-
-
-	public void GetSessionStatus()
-	{
-		if (SupabaseManager.Instance.IsSignedIn)
-			SetState(RegState.Confirm, SupabaseManager.Instance.GetLogMessage());
-	}
-
-	public void SetState(RegState state, string[] messages = null)
-	{
-		CurrentState = state;
-
-		RegWindow.SetActive(false);
-		SignInWindow.SetActive(false);
-		ConfirmWindow.SetActive(false);
-
-		if (state == RegState.Sign)
-		{
-			activeWindow = SignInWindow;
-			activeWindow.SetActive(true);
-
-			headerUpdater.EnCustomText = "Authorization";
-			headerUpdater.RuCustomText = "Авторизация";
-
-			nextWindowUpdater.EnCustomText = "Registration";
-			nextWindowUpdater.RuCustomText = "Регистрация";
-		}
-		else if (state == RegState.Reg)
-		{
-			activeWindow = RegWindow;
-			activeWindow.SetActive(true);
-
-			headerUpdater.EnCustomText = "Registration";
-			headerUpdater.RuCustomText = "Регистрация";
-
-			nextWindowUpdater.EnCustomText = "Authorization";
-			nextWindowUpdater.RuCustomText = "Авторизация";
-		}
-		else
-		{
-			ConfirmWindow.SetActive(true);
-
-			headerUpdater.EnCustomText = "Confirmation";
-			headerUpdater.RuCustomText = "Подтверждение";
-
-			nextWindowUpdater.EnCustomText = activeWindow == RegWindow ? "Registration" : "Authorization";
-			nextWindowUpdater.RuCustomText = activeWindow == RegWindow ? "Регистрация" : "Авторизация";
-
-			if (messages != null)
-			{
-				confirmationUpdater.RuCustomText = messages[0];
-				confirmationUpdater.EnCustomText = messages[1];
-			}
-			else
-			{
-				confirmationUpdater.EnCustomText = SupabaseManager.Instance.ErrorText;
-				confirmationUpdater.RuCustomText = SupabaseManager.Instance.ErrorTextRu;
-			}
-			confirmationUpdater.UpdateContent();
-		}
-		headerUpdater.UpdateContent();
-	}
-
 	// OnClick
-	public void GetNexState()
-	{
-		RegState state;
-		if (CurrentState == RegState.Confirm)
-		{
-			state = activeWindow == RegWindow ? RegState.Reg : RegState.Sign;
-		}
-		else if (activeWindow == RegWindow)
-		{
-			state = RegState.Sign;
-		}
-		else
-		{
-			state = RegState.Reg;
-		}
-		SetState(state);
-	}
-
-	// OnClick
-	public void PasswordGenerator()
+	public void PasswordGenerator(ToggleState state)
 	{
 		// число знаков
 		int length = 10;
@@ -461,14 +387,22 @@ public class UnityRegPopup : MonoBehaviour
 				result.Append(validChars[(int)(num % (uint)validChars.Length)]);
 			}
 		}
-		PasswordInput.Set(result.ToString());
+
+		if (state == ToggleState.SignUp)
+		{
+			SignUp_PasswordInput.Set(result.ToString());
+        }
+		else if (state == ToggleState.Actions)
+		{
+			Actions_PasswordInput.Set(result.ToString());
+		}
 	}
 
 	//On Click
 	public async void AddPasswordToGoogleAccount()
 	{
 		string text;
-		var pass = PasswordInput.value;
+		var pass = Actions_PasswordInput.value;
 
 		if (string.IsNullOrEmpty(pass))
 		{
@@ -487,14 +421,13 @@ public class UnityRegPopup : MonoBehaviour
 			await SupabaseManager.Instance.AddPasswordToGoogleAccount(pass);
 			text = SupabaseManager.Instance.GetLogMessage()[0];
 		}
-		SetState(RegState.Confirm, new string[] { text, "" });
 	}
 
 	// OnClick
 	public async void RequestPasswordReset()
 	{
 		string text;
-		string email = string.IsNullOrEmpty(EmailInput.value) ? UserPrefsKeys.User_Mail : EmailInput.value;
+		string email = string.IsNullOrEmpty(SignIn_EmailInput.value) ? UserPrefsKeys.User_Mail : SignIn_EmailInput.value;
 		if (string.IsNullOrEmpty(email))
 		{
 			text = "Почта не введена";
@@ -523,108 +456,95 @@ public class UnityRegPopup : MonoBehaviour
 				Debug.LogError(text);
 			}
 		}
-		SetState(RegState.Confirm, new string[] { text, "" });
 	}
 
 	// OnClick
-	public void SetPasswordHide()
+	public void SetPasswordHide(UIButtonToggle btg)
 	{
-		IsPassHide = !IsPassHide;
-		PasswordInput.inputType = IsPassHide ? UIInput.InputType.Password : UIInput.InputType.Standard;
-		PasswordInput.UpdateLabel();
-		//PasswordInput.hideInput = IsPassHide;
+		IsPassHide = btg.IsToggled;
+
+		var inputType = IsPassHide ? UIInput.InputType.Password : UIInput.InputType.Standard; ;
+		SignUp_PasswordInput.inputType = inputType;
+        SignUp_PasswordInput.UpdateLabel();
+
+        SignIn_PasswordInput.inputType = inputType;
+        SignIn_PasswordInput.UpdateLabel();
+
+        Actions_PasswordInput.inputType = inputType;
+        Actions_PasswordInput.UpdateLabel();
 	}
 
 	// OnClick
 	public async void SignUp()
 	{
-		SaveToPlayerPrefs();
+		GetSavedRegData(ToggleState.SignUp);
 
-		await SupabaseManager.Instance.SignUpTask(EmailInput.value, PasswordInput.value);
+		var email = SignUp_EmailInput.value;
+		var pass = SignUp_PasswordInput.value;
 
-		SetState(RegState.Confirm, SupabaseManager.Instance.GetLogMessage());
+		await SupabaseManager.Instance.SignUpTask(email, pass);
+
+		SaveToPlayerPrefs(ToggleState.SignUp);
 	}
 
 	// OnClick
 	public async void SignIn()
 	{
-		SaveToPlayerPrefs();
+        GetSavedRegData(ToggleState.SignIn);
 
-		var result = await authManager.SignInWithPasswordAsync(EmailInput.value, PasswordInput.value);
+        var email = SignUp_EmailInput.value;
+        var pass = SignUp_PasswordInput.value;
 
-		SetState(RegState.Confirm, new string[1] { result.Message});
-	}
+        var result = await authManager.SignInWithPasswordAsync(email, pass);
 
-	// OnClick
-	public async void SignInGoogle()
-	{
-		await SupabaseManager.Instance.SignInGoogle();
-
-		SetState(RegState.Confirm, SupabaseManager.Instance.GetLogMessage());
-	}
-
-	// OnClick
-	public async void SignInGoogleQuick()
-	{
-		await SupabaseManager.Instance.SignInGoogleQuick();
-
-		SetState(RegState.Confirm, SupabaseManager.Instance.GetLogMessage());
-	}
+        SaveToPlayerPrefs(ToggleState.SignUp);
+    }
 
 	// OnClick
 	public async void SignOut()
 	{
 		await SupabaseManager.Instance.SignOutTask();
-
-		SetState(RegState.Confirm, SupabaseManager.Instance.GetLogMessage());
 	}
 
-	private void SaveToPlayerPrefs()
+	private void SaveToPlayerPrefs(ToggleState state)
 	{
-		if (!string.IsNullOrEmpty(EmailInput.value)) UserPrefsKeys.User_Mail = EmailInput.value;
-		else EmailInput.Set(UserPrefsKeys.User_Mail);
-		if (!string.IsNullOrEmpty(PasswordInput.value)) UserPrefsKeys.User_Pass = PasswordInput.value;
-		else PasswordInput.Set(UserPrefsKeys.User_Pass);
+		if (state == ToggleState.SignUp)
+		{
+            if (!string.IsNullOrEmpty(SignUp_EmailInput.value)) UserPrefsKeys.User_Mail = SignUp_EmailInput.value;
+            if (!string.IsNullOrEmpty(SignUp_PasswordInput.value)) UserPrefsKeys.User_Pass = SignUp_PasswordInput.value;
+        }
+        else if (state == ToggleState.SignIn) 
+		{
+            if (!string.IsNullOrEmpty(SignIn_EmailInput.value)) UserPrefsKeys.User_Mail = SignIn_EmailInput.value;
+            if (!string.IsNullOrEmpty(SignIn_PasswordInput.value)) UserPrefsKeys.User_Pass = SignIn_PasswordInput.value;
+        }
+		else if (state == ToggleState.Actions)
+		{
+            if (!string.IsNullOrEmpty(Actions_PasswordInput.value)) UserPrefsKeys.User_Pass = Actions_PasswordInput.value;
+        }
 	}
 
-	public void GetSavedRegData()
+	public void GetSavedRegData(ToggleState state)
 	{
-		EmailInput.Set(UserPrefsKeys.User_Mail);
-		PasswordInput.Set(UserPrefsKeys.User_Pass);
+        if (state == ToggleState.SignUp)
+        {
+			if (string.IsNullOrEmpty(SignUp_EmailInput.value)) SignUp_EmailInput.Set(UserPrefsKeys.User_Mail);
+            if (string.IsNullOrEmpty(SignUp_PasswordInput.value)) SignUp_PasswordInput.Set(UserPrefsKeys.User_Pass);
+        }
+        else if (state == ToggleState.SignIn)
+        {
+            if (string.IsNullOrEmpty(SignIn_EmailInput.value)) SignIn_EmailInput.Set(UserPrefsKeys.User_Mail);
+            if (string.IsNullOrEmpty(SignIn_PasswordInput.value)) SignIn_PasswordInput.Set(UserPrefsKeys.User_Pass);
+        }
+        else if (state == ToggleState.Actions)
+        {
+            if (string.IsNullOrEmpty(Actions_PasswordInput.value)) Actions_PasswordInput.Set(UserPrefsKeys.User_Pass);
+        }
 	}
 
-	public async void CheckRegCode()
+	private void OpenAlert()
 	{
-		string supaID = UserPrefsKeys.Supa_ID;
-		if (string.IsNullOrEmpty(supaID))
-		{
-			regcodeUpdater.EnCustomText = "The user is not authorized. Please log in";
-			regcodeUpdater.RuCustomText = "Пользователь не авторизован. Выполните вход пожалуйста";
-			regcodeUpdater.UpdateContent();
-			return;
-		}
-		var regCode = UserPrefsKeys.GeneratedCode(supaID);
 
-		var regState = long.Parse(RegcodeInput.value);
-		DebugTWD.Log("Reg code: " + regState);
-
-		if (regState == regCode || regState == 12475257538)
-		{
-			DataManager.Instance.IsReged = true;
-			UserPrefsKeys.Player_Regged = "true";
-			TWDPlayerPrefs.Save();
-
-			await DataManager.Instance.DatabaseManager.UpdateReged(true);
-
-			regcodeUpdater.EnCustomText = "Your code is accepted. Application is registered!";
-			regcodeUpdater.RuCustomText = "Ваш код принят. Приложение зарегистрировано!";
-		}
-		else
-		{
-			regcodeUpdater.EnCustomText = "Your key is wrong!";
-			regcodeUpdater.RuCustomText = "Ваш код неверный!";
-		}
-		regcodeUpdater.UpdateContent();
 	}
 
 	public void SetLocalPlayer()

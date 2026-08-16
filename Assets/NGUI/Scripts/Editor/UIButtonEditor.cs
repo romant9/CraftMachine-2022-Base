@@ -5,6 +5,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 [CanEditMultipleObjects]
 #if UNITY_3_5
@@ -88,6 +89,10 @@ public class UIButtonEditor : UIButtonColorEditor
 		}
 
 		var button = target as UIButton;
+		//if (button.onClick != null && button.onClick.Count > 0 && button.onClick.First().methodName == "ReadRegData")
+		//{
+		//	Debug.LogError("Object for ReadRegData " + button.gameObject.name);
+		//}
 		NGUIEditorTools.DrawEvents("On Click", button, button.onClick, false);
         NGUIEditorTools.DrawEvents("On Drag Finish", button, button.onDragFinish, false);
 

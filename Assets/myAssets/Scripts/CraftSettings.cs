@@ -82,7 +82,9 @@ namespace TwdCustomMod
 		public GameObject ContentUrlObject;
 		public GameObject ContentSheetObject;
 		public RegPopup RegPopup;
-		public GameObject GameVersionObject;
+        public UnityRegPopup UnityRegPopup;
+
+        public GameObject GameVersionObject;
 		public GameObject EpicObject;
 
 		public GameObject WishObject;
