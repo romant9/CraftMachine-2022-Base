@@ -10,6 +10,7 @@ using Unity.Services.Core;
 using UnityAuth;
 using UnityEngine;
 using Unity.Services.CloudSave;
+using System.Threading.Tasks;
 
 public class UnityRegPopup : MonoBehaviour
 {
@@ -81,7 +82,7 @@ public class UnityRegPopup : MonoBehaviour
 		authManager = UnityAuthManager.Instance;
 
         SignUp_Bt.onClick.Add(new EventDelegate(OnSignUp_Submit));
-        SignUp_Google_Bt.onClick.Add(new EventDelegate(() => OnGoogleLoginClick(ToggleState.SignUp)));
+		SignUp_Google_Bt.onClick.Add(new EventDelegate(SignInWithGoogle));
         GeneratePass_Bt.onClick.Add(new EventDelegate(() => PasswordGenerator(ToggleState.SignUp)));
         GoTo_SignIn_Bt.onClick.Add(new EventDelegate(() => ForceToggleTabs(ToggleState.SignIn)));
 
@@ -418,11 +419,16 @@ public class UnityRegPopup : MonoBehaviour
 		}
 	}
 
-	// ==========================================
-	// ВАЛИДАЦИЯ И ПРОВЕРКА ПОЧТЫ (EMAIL)
-	// ==========================================
+	public void SignInWithGoogle()
+	{
+		authManager.SignInWithGoogle();
+    }
 
-	private bool ValidateInputs(string email, string password)
+    // ==========================================
+    // ВАЛИДАЦИЯ И ПРОВЕРКА ПОЧТЫ (EMAIL)
+    // ==========================================
+
+    private bool ValidateInputs(string email, string password)
 	{
 		if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
 		{

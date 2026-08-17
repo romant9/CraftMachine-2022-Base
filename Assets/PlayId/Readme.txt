@@ -1,0 +1,1 @@
+Please visit our GitHub for setup instructions: https://github.com/hippogamesunity/PlayID

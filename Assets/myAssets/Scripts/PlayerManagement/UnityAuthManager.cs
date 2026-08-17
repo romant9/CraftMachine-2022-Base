@@ -496,43 +496,81 @@ namespace UnityAuth
 		}
 
 		[ContextMenu("SignInWith Google")]
-		public void SignInWithGoogle()
+		public async void SignInWithGoogle()
 		{
-			// Конфигурируем запрос к Google, явно запрашивая ID Token
+			// Конфигурируем запрос к Google
 			GoogleSignIn.Configuration = new GoogleSignInConfiguration
 			{
 				WebClientId = webClientId,
-				RequestIdToken = true, // ОБЯЗАТЕЛЬНО: просим именно ID токен
+				RequestIdToken = true,
 				RequestEmail = true
 			};
 
-			// Запуск окна выбора аккаунта Google
-			GoogleSignIn.DefaultInstance.SignIn().ContinueWith(task =>
+			try
 			{
-				if (task.IsFaulted)
-				{
-					Debug.LogError("Ошибка вызова Google Sign-In");
-				}
-				else if (task.IsCanceled)
-				{
-					Debug.Log("Вход отменен пользователем");
-				}
-				else
-				{
-					// Успешно получили данные от Google
-					GoogleSignInUser googleUser = task.Result;
+				Debug.Log("Запуск окна выбора аккаунта Google...");
 
-					// Вот он — нужный нам токен!
+				// Ждем ответа от Google. Поток Unity при этом НЕ замораживается!
+				GoogleSignInUser googleUser = await GoogleSignIn.DefaultInstance.SignIn();
+
+				// Как только мы прошли await, мы СНОВА находимся в основном потоке Unity!
+				if (googleUser != null)
+				{
 					googleIdToken = googleUser.IdToken;
-					// ЗАПОМИНАЕМ EMAIL: Сохраняем почту в локальный кэш менеджера
 					googleMail = googleUser.Email;
 					var userID = googleUser.UserId;
 					var userName = googleUser.DisplayName;
-					// Передаем его в поток Unity (желательно выполнять в основном потоке Unity)
+
+					Debug.Log($"Google вернул данные для: {userName} ({googleMail})");
+
+					// Абсолютно безопасно вызываем метод авторизации Unity
 					OnGoogleButtonClick(googleIdToken);
 				}
-			});
+			}
+			catch (System.Exception ex)
+			{
+				// Сюда попадут и отмена пользователем, и ошибки сети
+				Debug.LogError($"Ошибка вызова Google Sign-In: {ex.Message}");
+			}
 		}
+
+  //      public void SignInWithGoogle()
+		//{
+		//	// Конфигурируем запрос к Google, явно запрашивая ID Token
+		//	GoogleSignIn.Configuration = new GoogleSignInConfiguration
+		//	{
+		//		WebClientId = webClientId,
+		//		RequestIdToken = true, // ОБЯЗАТЕЛЬНО: просим именно ID токен
+		//		RequestEmail = true
+		//	};
+
+		//	// Запуск окна выбора аккаунта Google
+		//	GoogleSignIn.DefaultInstance.SignIn().ContinueWith(task =>
+		//	{
+		//		if (task.IsFaulted)
+		//		{
+		//			Debug.LogError("Ошибка вызова Google Sign-In");
+		//		}
+		//		else if (task.IsCanceled)
+		//		{
+		//			Debug.Log("Вход отменен пользователем");
+		//		}
+		//		else
+		//		{
+		//			// Успешно получили данные от Google
+		//			GoogleSignInUser googleUser = task.Result;
+
+		//			// Вот он — нужный нам токен!
+		//			googleIdToken = googleUser.IdToken;
+		//			// ЗАПОМИНАЕМ EMAIL: Сохраняем почту в локальный кэш менеджера
+		//			googleMail = googleUser.Email;
+		//			var userID = googleUser.UserId;
+		//			var userName = googleUser.DisplayName;
+		//			// Передаем его в поток Unity (желательно выполнять в основном потоке Unity)
+		//			OnGoogleButtonClick(googleIdToken);
+		//		}
+		//	});
+		//}
 
 		public bool CheckIfGoogleIsLinked()
 		{
