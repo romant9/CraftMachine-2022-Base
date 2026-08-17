@@ -64,8 +64,7 @@ public class ResidencePopup : HUDElement
 		}
 		GameManager.Instance.playerModel.Changed += OnPlayerChanged;
 		UIEvent.OnUIEvent += OnUIEvent;
-		UIButtonToggleSet uIButtonToggleSet = toggleSet;
-		uIButtonToggleSet.OnChangeDelegate = (UIButtonToggleSet.OnTabsChangeDelegate)Delegate.Combine(uIButtonToggleSet.OnChangeDelegate, new UIButtonToggleSet.OnTabsChangeDelegate(OnTabChanged));
+		toggleSet.OnChangeDelegate = (UIButtonToggleSet.OnTabsChangeDelegate)Delegate.Combine(toggleSet.OnChangeDelegate, new UIButtonToggleSet.OnTabsChangeDelegate(OnTabChanged));
 		if (shopButton != null)
 		{
 			shopButton.SetClickCallback(OnShopClicked);

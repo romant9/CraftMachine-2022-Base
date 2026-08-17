@@ -332,7 +332,6 @@ public class RegPopup : MonoBehaviour
     public void ReloadSupaClient()
     {
 		SetNetPlayer();
-        DataManager.Instance.IsRestartSupaClient = true;
         DataManager.Instance.SetGameStatus();
     }
 

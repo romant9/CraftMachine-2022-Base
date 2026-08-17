@@ -21,6 +21,8 @@ using TaskStatus = UnityAuth.TaskStatus;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using Unity.Services.Authentication;
+
 #endif
 
 namespace TwdCustomMod
@@ -481,20 +483,7 @@ namespace TwdCustomMod
 
 		void Start()
 		{
-			if (OfflineManager.IsLoadDataManager)
-			{
-				Init();
-				//var shader = Shader.Find("Unlit/Transparent Colored");
-				//if (shader)
-				//{
-				//	Debug.Log("Shader name is " + shader.name);
-				//}
-				//var shader2 = Resources.Load<Shader>("shaders/unlit - transparent colored");
-				//if (shader2)
-				//{
-				//	Debug.Log("Shader2 name is " + shader2.name);
-				//}
-			}
+			Init();
 		}
 
 		public void Init()
@@ -607,175 +596,151 @@ namespace TwdCustomMod
 			gameStatusUI.UpdateContent();
 		}
 
-		public async Task<bool> CheckDatabaseManager()
-		{
-			if (IsLocalPlayer) return false;
-			if (!SupabaseManager.IsOnline) return false;
-			if (DatabaseManager == null || DatabaseManager.SupaClient == null)
-			{
-				DatabaseManager = new DatabaseManager();
-			}
-			if (!DatabaseManager.IsInited)
-			{
-				return await DatabaseManager.UpdateLastRun();
-			}
-			return true;
-		}
-
-		public bool IsRestartSupaClient { get; set; }
 		public async void SetGameStatus()
 		{
 			await UniTask.NextFrame();
 
-			IsRestartSupaClient = false;
 			IsFeedbackReaded = true;
 			Anonymous = TWDPlayerPrefs.GetBool(UserPrefsKeys.Player_Anonymous);
 			bool isOffline = true;
 			//bool isInternet = await OfflineManager.Instance.CheckIfOnline();
 			if (OfflineManager.IsInternetOn && !IsLocalPlayer)
 			{
-				var taskClient = await supabaseManager.SetClient();
+				bool isSignedIn;
 
-				MyTools.UpdateLogPanel(supabaseManager.ErrorText, supabaseManager.ErrorTextRu);
-
-				if (taskClient.Status == TaskStatus.Success)
+				if (OfflineManager.UseSupabase)
 				{
-					if (DatabaseManager == null || DatabaseManager.SupaClient == null)
-					{
-						DatabaseManager = new DatabaseManager();
-					}
+					var taskClient = await supabaseManager.SetClient();
+					isSignedIn = taskClient.Status == TaskStatus.Success;
+					MyTools.UpdateLogPanel(supabaseManager.ErrorText, supabaseManager.ErrorTextRu);
 
-					bool updated = await DatabaseManager.UpdateLastRun();
-					if (!updated)
+					if (isSignedIn)
 					{
-						string textRu = "Необходима авторизация пользователя CraftMachine через email или Google";
-						string textEn = "CraftMachine user authentification via email or Google is required";
-						MyTools.UpdateLogPanel(textEn, textRu);
-
-						if (!IsLocalPlayer)
+						if (DatabaseManager == null || DatabaseManager.SupaClient == null)
 						{
+							DatabaseManager = new DatabaseManager();
+						}
+
+						bool updated = await DatabaseManager.UpdateLastRun();
+						if (!updated)
+						{
+							string textRu = "Необходима авторизация пользователя CraftMachine через email или Google";
+							string textEn = "CraftMachine user authentification via email or Google is required";
+							MyTools.UpdateLogPanel(textEn, textRu);
+
 							regPopupErrorCount++;
 							OpenRegPopup();
 							craftSettings.RegPopup.SetState(RegPopup.RegState.Sign);
+							return;
+						}
+						else
+						{
+							DatabaseManager.IsInited = true;
+							isOffline = false;
 
-							while (IsRegPopupOpened)
+							var supaUser = DatabaseManager.CurrentCMUser;
+							IsReged = supaUser.Regged;
+							UserPrefsKeys.Player_Regged = IsReged.ToString();
+
+							IsBlocked = supaUser.Blocked;
+							UserPrefsKeys.Player_Blocked = IsBlocked.ToString();
+
+							FirstRun = supaUser.FirstRun;
+							UserPrefsKeys.Player_FirstRun = FirstRun.ToString();
+
+							TrialModeDays = supaUser.TrialCount;
+							UserPrefsKeys.Player_TrialCount = TrialModeDays;
+
+							ProGuild = supaUser.ProGuild;
+							UserPrefsKeys.Player_ProGuild = ProGuild.ToString();
+
+							ProLink = supaUser.ProLink;
+							UserPrefsKeys.Player_ProLink = ProLink.ToString();
+
+							TWDPlayerPrefs.Save();
+
+							//var data = await DatabaseManager.GetIDListAsync();
+							//Debug.LogWarning(data.First().PlayerName);
+
+							if (IsBlocked)
 							{
-								if (IsRestartSupaClient) return;
-								await Task.Yield();
+								BlockedResult();
+								return;
 							}
 
-							SetGameStatus();
-							return;
+							if (!IsReged)
+							{
+								TrialOverResult();
+
+								if (TrialModeOver)
+								{
+									var logTrialEn = "The trial period is expired. \nContact the developer via Telegram: t.me/BloodyModding";
+									var logTrialRu = "Пробный период завершен. \nСвяжитесь с разработчиком. Telegram: t.me/BloodyModding";
+
+									MyTools.UpdateLogPanel(logTrialEn, logTrialRu);
+									DebugTWD.Log(logTrialEn);
+
+									if (!IsLocalPlayer)
+									{
+										regPopupErrorCount++;
+										OpenRegPopup();
+										craftSettings.RegPopup.SetState(RegPopup.RegState.Reg);
+
+										while (IsRegPopupOpened)
+										{
+											await UniTask.Yield();
+										}
+
+										if (!IsReged)
+										{
+											return;
+										}
+									}
+								}
+							}
+
+							if (IsFeedbackReaded)
+							{
+								IsFeedbackReaded = false;
+								Feedback = supaUser.Feedback;
+								UserPrefsKeys.Player_Feedback = Feedback;
+								TWDPlayerPrefs.Save();
+
+								if (!string.IsNullOrEmpty(Feedback))
+								{
+									craftSettings.SetupGlowFeedback(isOn: true);
+								}
+							}
 						}
 					}
 					else
 					{
-						DatabaseManager.IsInited = true;
-						isOffline = false;
-
-						var supaUser = DatabaseManager.CurrentCMUser;
-						IsReged = supaUser.Regged;
-						UserPrefsKeys.Player_Regged = IsReged.ToString();
-
-						IsBlocked = supaUser.Blocked;
-						UserPrefsKeys.Player_Blocked = IsBlocked.ToString();
-
-						FirstRun = supaUser.FirstRun;
-						UserPrefsKeys.Player_FirstRun = FirstRun.ToString();
-
-						TrialModeDays = supaUser.TrialCount;
-						UserPrefsKeys.Player_TrialCount = TrialModeDays;
-
-						ProGuild = supaUser.ProGuild;
-						UserPrefsKeys.Player_ProGuild = ProGuild.ToString();
-
-						ProLink = supaUser.ProLink;
-						UserPrefsKeys.Player_ProLink = ProLink.ToString();
-
-						TWDPlayerPrefs.Save();
-
-						//var data = await DatabaseManager.GetIDListAsync();
-						//Debug.LogWarning(data.First().PlayerName);
-
-						if (IsBlocked)
+						if (taskClient.Status == TaskStatus.NeedAuth)
 						{
-							BlockedResult();
-							return;
-						}
+							string textRu = "Необходима авторизация пользователя CraftMachine через email или Google";
+							string textEn = "CraftMachine user authentification via email or Google is required";
+							MyTools.UpdateLogPanel(textEn, textRu);
 
-						if (!IsReged)
+							regPopupErrorCount++;
+							OpenRegPopup();
+							craftSettings.RegPopup.SetState(RegPopup.RegState.Sign);
+						}
+						else
 						{
-							TrialOverResult();
-
-							if (TrialModeOver)
-							{
-								var logTrialEn = "The trial period is expired. \nContact the developer via Telegram: t.me/BloodyModding";
-								var logTrialRu = "Пробный период завершен. \nСвяжитесь с разработчиком. Telegram: t.me/BloodyModding";
-
-								MyTools.UpdateLogPanel(logTrialEn, logTrialRu);
-								DebugTWD.Log(logTrialEn);
-
-								if (!IsLocalPlayer)
-								{
-									regPopupErrorCount++;
-									OpenRegPopup();
-									craftSettings.RegPopup.SetState(RegPopup.RegState.Reg);
-
-									while (IsRegPopupOpened)
-									{
-										await UniTask.Yield();
-									}
-
-									if (!IsReged)
-									{
-										return;
-									}
-								}
-							}
+							string textRu = "Проблема с подключением к серверу CraftMachine. Попробуйте переключить VPN";
+							string textEn = "There is a problem connecting to CraftMachine server. Try switch your VPN";
+							MyTools.UpdateLogPanel(textEn, textRu);
 						}
-
-						if (IsFeedbackReaded)
-						{
-							IsFeedbackReaded = false;
-							Feedback = supaUser.Feedback;
-							UserPrefsKeys.Player_Feedback = Feedback;
-							TWDPlayerPrefs.Save();
-
-							if (!string.IsNullOrEmpty(Feedback))
-							{
-								craftSettings.SetupGlowFeedback(isOn: true);
-							}
-						}
+						return;
 					}
 				}
 				else
 				{
-					if (taskClient.Status == TaskStatus.NeedAuth)
+					while (AuthenticationService.Instance == null)
 					{
-						string textRu = "Необходима авторизация пользователя CraftMachine через email или Google";
-						string textEn = "CraftMachine user authentification via email or Google is required";
-						MyTools.UpdateLogPanel(textEn, textRu);
-
-						regPopupErrorCount++;
-						OpenRegPopup();
-						craftSettings.RegPopup.SetState(RegPopup.RegState.Sign);
-
-						while (IsRegPopupOpened)
-						{
-							if (IsRestartSupaClient) return;
-
-							await Task.Yield();
-						}
-
-						SetGameStatus();
+						await Task.Delay(500);
 					}
-					else
-					{
-						string textRu = "Проблема с подключением к серверу CraftMachine. Попробуйте переключить VPN";
-						string textEn = "There is a problem connecting to CraftMachine server. Try switch your VPN";
-						MyTools.UpdateLogPanel(textEn, textRu);
-					}
-					return;
+					isSignedIn = AuthenticationService.Instance.IsSignedIn;
 				}
 			}
 			else
@@ -801,17 +766,6 @@ namespace TwdCustomMod
 					else UserPrefsKeys.Player_TrialCount = TrialModeDays;
 
 					GWTeamUtils.Instance.GuildID = UserPrefsKeys.Player_GuildID;
-
-					if (IsBlocked)
-					{
-						BlockedResult();
-						return;
-					}
-
-					if (!IsReged)
-					{
-						TrialOverResult();
-					}
 				}
 				else
 				{
@@ -823,17 +777,11 @@ namespace TwdCustomMod
 
 			if (IsBlocked)
 			{
-				string textEn = "You are blocked! Contact via Telegram: t.me/BloodyModding";
-				string textRu = "Вы заблокированы! Свяжитесь: t.me/BloodyModding";
-
-				MyTools.UpdateLogPanel(textEn, textRu);
-				gameStatusUI.EnCustomText = textEn;
-				gameStatusUI.RuCustomText = textRu;
-				gameStatusUI.UpdateContent();
+				BlockedResult();
 				return;
 			}
 
-			if (!IsReged) TrialOverResult();
+			if (!IsReged && !IsLocalPlayer) TrialOverResult();
 
 			await UniTask.NextFrame();
 
@@ -845,6 +793,8 @@ namespace TwdCustomMod
 			VpnToggle.transform.parent.gameObject.SetActive(language == Language.Ru);
 
 			IsDataManagerInitialized = true;
+
+			DebugTWD.Log("DataManager Initialized");
 		}
 
 		public void SetClientVersion(UIInput input)

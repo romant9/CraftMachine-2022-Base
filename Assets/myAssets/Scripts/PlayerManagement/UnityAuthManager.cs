@@ -1,7 +1,9 @@
 using Google;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
+using Unity.Services.CloudCode;
 using Unity.Services.Core;
 using UnityEngine;
 
@@ -15,6 +17,9 @@ namespace UnityAuth
 		private string userName;
 		[SerializeField]
 		private string password;
+
+		private string googleIdToken;
+		private string googleMail;
 
 		private void Awake()
 		{
@@ -198,6 +203,13 @@ namespace UnityAuth
 				// Пробрасываем исключение дальше, чтобы вызвать catch в UI контроллере
 				throw;
 			}
+			catch (RequestFailedException ex)
+			{
+				// Сюда попадут только общие сетевые сбои (например, у пользователя пропал интернет посреди запроса)
+				Debug.LogError($"[Link] Сетевая ошибка сервера: {ex.Message} (Код: {ex.ErrorCode})");
+				OnLinkFailed("Проблема со связью с сервером. Попробуйте позже.");
+				throw;
+			}
 			catch (Exception ex)
 			{
 				// Перехватываем системные ошибки или наши кастомные исключения из switch
@@ -207,44 +219,245 @@ namespace UnityAuth
 			}
 		}
 
-		/// <summary>
-		/// Привязать Логин/Пароль к текущему профилю (например, если игрок зашел через Google и хочет создать пароль для ПК-версии).
-		/// </summary>
-		public async Task LinkUsernamePasswordAsync(string username, string password)
+		public async Task LinkUsernamePasswordAsync(string password)
 		{
+			// 1. Проверяем авторизацию в Unity
 			if (!AuthenticationService.Instance.IsSignedIn)
 			{
-				Debug.LogError("[Link] Ошибка: Вы должны быть авторизованы.");
+				OnLinkFailed("Вы не авторизованы в системе.");
+				return;
+			}
+
+			// ПРОВЕРКА 2: Получаем Email. Если в кэше пусто (например, после авто-входа), дергаем Silent Sign-In
+			if (string.IsNullOrEmpty(googleMail))
+			{
+				try
+				{
+					Debug.Log("[Link] Кэш пуст. Запрашиваем данные у Google в фоне...");
+					// Нативный метод плагина для бесшумного получения данных текущего юзера Google
+					GoogleSignInUser silentUser = await GoogleSignIn.DefaultInstance.SignInSilently();
+					if (silentUser != null)
+					{
+						googleMail = silentUser.Email;
+					}
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError($"[Link] Не удалось получить Email через SignInSilently: {ex.Message}");
+				}
+			}
+
+			// Если и фоновый запрос не вернул почту, прерываем
+			if (string.IsNullOrEmpty(googleMail))
+			{
+				OnLinkFailed("Не удалось получить Email от сервисов Google. Требуется ручной перезапуск окна входа.");
 				return;
 			}
 
 			try
 			{
-				Debug.Log("[Link] Попытка привязать Логин/Пароль...");
+				Debug.Log($"[Link] Email успешно подтянут: {googleMail}. Привязываем пароль...");
+				await AuthenticationService.Instance.AddUsernamePasswordAsync(googleMail, password);
 
-				await AuthenticationService.Instance.AddUsernamePasswordAsync(username, password);
-
-				Debug.Log("[Link] Логин и Пароль успешно привязаны к профилю!");
+				Debug.Log("[Link] Пароль успешно добавлен к вашей учетной записи Google!");
 				OnLinkSuccess("Username/Password");
 			}
 			catch (AuthenticationException ex)
 			{
 				if (ex.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked)
 				{
-					Debug.LogError("[Link] Такой логин уже занят в системе.");
-					OnLinkFailed("Данное имя пользователя уже занято.");
+					OnLinkFailed($"Этот Google Email ({googleMail}) уже занят другим игровым профилем.");
+				}
+				else if (ex.ErrorCode == AuthenticationErrorCodes.InvalidParameters)
+				{
+					OnLinkFailed("Пароль слишком простой. Нужна заглавная буква, цифра и спецсимвол.");
 				}
 				else
 				{
-					Debug.LogError($"[Link] Ошибка связывания пароля: {ex.Message}");
-					OnLinkFailed(ex.Message);
+					OnLinkFailed($"Ошибка SDK: {ex.Message}");
 				}
+			}
+			catch (RequestFailedException)
+			{
+				OnLinkFailed("Ошибка соединения с сервером Unity Cloud.");
+			}
+		}
+
+		/// <summary>
+		/// Изменить текущий пароль игрока в Unity Cloud
+		/// </summary>
+		/// <param name="currentPassword">Старый (текущий) пароль</param>
+		/// <param name="newPassword">Новый придуманный пароль</param>
+		public async Task ChangePasswordAsync(string currentPassword, string newPassword)
+		{			
+			// 1. Проверяем, вошел ли вообще игрок в систему
+			if (!AuthenticationService.Instance.IsSignedIn)
+			{
+				Debug.LogError("[Password] Ошибка: Нельзя изменить пароль, если вы не авторизованы.");
+				OnChangePasswordFailed("Вы не авторизованы в системе.");
+				return;
+			}
+
+			// Локальная экспресс-проверка совпадения старого и нового пароля
+			if (currentPassword == newPassword)
+			{
+				OnChangePasswordFailed("Новый пароль не должен совпадать со старым.");
+				return;
+			}
+
+			try
+			{
+				Debug.Log("[Password] Отправка запроса на смену пароля...");
+
+				// 2. Вызываем метод SDK для обновления пароля
+				await AuthenticationService.Instance.UpdatePasswordAsync(currentPassword, newPassword);
+
+				Debug.Log("[Password] Пароль успешно изменен в Unity Cloud!");
+				OnChangePasswordSuccess();
+			}
+			catch (AuthenticationException ex)
+			{
+				// Перехватываем специфические ошибки валидации со стороны SDK Unity
+				if (ex.ErrorCode == AuthenticationErrorCodes.InvalidParameters)
+				{
+					// Неверный формат нового пароля или не совпал старый пароль
+					Debug.LogWarning($"[Password] Ошибка параметров (Код: {ex.ErrorCode}): {ex.Message}");
+					OnChangePasswordFailed("Неверный текущий пароль или новый пароль не соответствует правилам безопасности Unity (нужна заглавная буква, цифра и спецсимвол).");
+				}
+				else
+				{
+					Debug.LogError($"[Password] Ошибка SDK при смене пароля: {ex.Message} (Код: {ex.ErrorCode})");
+					OnChangePasswordFailed($"Ошибка авторизации: {ex.Message}");
+				}
+			}
+			catch (RequestFailedException ex)
+			{
+				// Сетевые ошибки или ошибки сервера (например, если старый пароль указан неверно, сервер также вернет ошибку запроса)
+				Debug.LogWarning($"[Password] Ошибка сервера: {ex.Message} (Код: {ex.ErrorCode})");
+				OnChangePasswordFailed("Не удалось обновить пароль. Проверьте правильность ввода текущего пароля.");
 			}
 			catch (Exception ex)
 			{
-				Debug.LogError($"[Link] Ошибка: {ex.Message}");
-				OnLinkFailed(ex.Message);
+				Debug.LogError($"[Password] Непредвиденная системная ошибка: {ex.Message}");
+				OnChangePasswordFailed(ex.Message);
 			}
+		}
+
+		#region Restore Password
+		// Ответ сервера при успешном запросе PIN-кода (Режим "request")
+		[Serializable]
+		public class CloudCodeRequestResponse
+		{
+			public bool success;
+			public string message;
+			public string debugPin; // Будет содержать PIN только при тестах в Dashboard
+		}
+
+		// Ответ сервера при успешном сбросе пароля (Режим "confirm")
+		[Serializable]
+		public class CloudCodeConfirmResponse
+		{
+			public bool success;
+			public string message;
+		}
+		// Имя нашего монолитного скрипта, которое мы указали в Dashboard
+		private const string CloudScriptEndpoint = "PasswordRecoveryManager";
+
+		/// <summary>
+		/// ЭТАП 1: Запросить PIN-код восстановления доступа на указанную почту
+		/// </summary>
+		public async Task<CloudCodeRequestResponse> RequestPasswordResetAsync(string email)
+		{
+			try
+			{
+				Debug.Log($"[Client -> Cloud] Запрос PIN для почты: {email}...");
+
+				// Готовим параметры для передачи в JS-скрипт (имена ключей должны строго совпадать с params в JS!)
+				var requestParameters = new Dictionary<string, object>
+			{
+				{ "action", "request" },
+				{ "email", email }
+			};
+
+				// Вызываем облачную функцию и сразу десериализуем ответ в класс CloudCodeRequestResponse
+				CloudCodeRequestResponse response = await CloudCodeService.Instance.CallEndpointAsync<CloudCodeRequestResponse>(
+					CloudScriptEndpoint,
+					requestParameters
+				);
+
+				Debug.Log($"[Cloud -> Client] Сервер обработал запрос. Статус: {response.message}");
+				return response;
+			}
+			catch (CloudCodeException ex)
+			{
+				Debug.LogError($"[CloudCode Error] Не удалось вызвать скрипт: {ex.Message} (Код: {ex.ErrorCode})");
+				return null;
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError($"[System Error] Ошибка запроса восстановления: {ex.Message}");
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// ЭТАП 2: Передать PIN-код и новый пароль для принудительного сброса в базе UGS
+		/// </summary>
+		public async Task<bool> ConfirmPasswordResetAsync(string email, string pinCode, string newPassword)
+		{
+			try
+			{
+				Debug.Log($"[Client -> Cloud] Отправка PIN-кода на верификацию для: {email}...");
+
+				// Готовим параметры подтверждения для режима "confirm"
+				var confirmParameters = new Dictionary<string, object>
+			{
+				{ "action", "confirm" },
+				{ "email", email },
+				{ "pinCode", pinCode },
+				{ "newPassword", newPassword }
+			};
+
+				// Вызываем тот же эндпоинт, но с другими параметрами
+				CloudCodeConfirmResponse response = await CloudCodeService.Instance.CallEndpointAsync<CloudCodeConfirmResponse>(
+					CloudScriptEndpoint,
+					confirmParameters
+				);
+
+				if (response != null && response.success && response.message == "PASSWORD_RESET_SUCCESS")
+				{
+					Debug.Log("[Cloud -> Client] Доступ успешно восстановлен! Пароль изменен в UGS.");
+					return true;
+				}
+
+				return false;
+			}
+			catch (CloudCodeException ex)
+			{
+				// Сюда приложение зайдет, если JS-скрипт выбросил throw new Error("INVALID_PIN_CODE") или аналогичную
+				Debug.LogWarning($"[CloudCode Rejected] Сервер отклонил сброс пароля: {ex.Message}");
+				return false;
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError($"[System Error] Непредвиденная ошибка на этапе подтверждения: {ex.Message}");
+				return false;
+			}
+		}
+		#endregion
+
+		// --- Коллбэки для UI интерфейса ---
+
+		private void OnChangePasswordSuccess()
+		{
+			// ТУТ ВАШ КОД: Показать окно "Пароль успешно изменен!"
+			Debug.Log("[UI] Оповещаем игрока об успешной смене пароля.");
+		}
+
+		private void OnChangePasswordFailed(string errorMessage)
+		{
+			// ТУТ ВАШ КОД: Показать ошибку (например, "Неверный старый пароль")
+			Debug.Log($"[UI] Ошибка смены пароля: {errorMessage}");
 		}
 
 		[ContextMenu("SignOut")]
@@ -310,8 +523,11 @@ namespace UnityAuth
 					GoogleSignInUser googleUser = task.Result;
 
 					// Вот он — нужный нам токен!
-					string googleIdToken = googleUser.IdToken;
-
+					googleIdToken = googleUser.IdToken;
+					// ЗАПОМИНАЕМ EMAIL: Сохраняем почту в локальный кэш менеджера
+					googleMail = googleUser.Email;
+					var userID = googleUser.UserId;
+					var userName = googleUser.DisplayName;
 					// Передаем его в поток Unity (желательно выполнять в основном потоке Unity)
 					OnGoogleButtonClick(googleIdToken);
 				}

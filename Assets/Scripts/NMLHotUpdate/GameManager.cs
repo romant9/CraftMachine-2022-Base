@@ -3623,6 +3623,7 @@ public class GameManager : MonoBehaviour
 
 	private IEnumerator OnApplicationFocus(bool focus)
 	{
+		if (OfflineManager.IsLoadDataManager) yield break;
 		yield return null;
 		if (focus)
 		{
@@ -3632,6 +3633,7 @@ public class GameManager : MonoBehaviour
 
 	private IEnumerator OnApplicationPause(bool pause)
 	{
+		if (OfflineManager.IsLoadDataManager) yield break;
 		if (FabricManager.Instance != null)
 		{
 			FabricManager.Instance.Pause(pause);
@@ -4026,6 +4028,12 @@ public class GameManager : MonoBehaviour
 
 	public static void LogReloadEvent(string message)
 	{
+		if (!OfflineManager.IsUseServices)
+		{
+			Debug.Log("LogReloadEvent: return!");
+			return;
+		}
+
 		if (AnalyticsManager.instance != null)
 		{
 			AnalyticsManager.instance.CreateEvent("Connectivity_AutoReloadNetworkError").AddProperty("Message", message).Send();
