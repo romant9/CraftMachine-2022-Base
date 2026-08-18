@@ -84,11 +84,11 @@ namespace Assets.PlayId.Examples
 		{
 			Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
 
-			PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Any);
+			PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Yandex);
 
 			void OnSignIn(bool success, string error, User user)
 			{
-				//user.Internals.RequestIdTokenForPlatform(Platform.Any, refresh: true, OnGetIdToken);
+				//user.Internals.RequestIdTokenForPlatform(Platform.Yandex, refresh: true, OnGetIdToken);
 
 				if (user != null && user.TokenResponse != null)
 				{
