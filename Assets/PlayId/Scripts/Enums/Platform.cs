@@ -14,6 +14,7 @@ namespace Assets.PlayId.Scripts.Enums
         Microsoft = 32,
         VK = 64,
         Discord = 128,
-        Steam = 256
+        Steam = 256,
+        Yandex = 512
     }
 }

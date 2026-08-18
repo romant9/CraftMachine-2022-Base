@@ -20,7 +20,8 @@ namespace Assets.PlayId.Examples
             {
                 if (success)
                 {
-                    var data = new Dictionary<string, object> { { "progress", 10 }, { "timestamp", DateTime.UtcNow } };
+                    var email = user.Email;
+                    var data = new Dictionary<string, object> { { "email", email }, { "progress", 10 }, { "timestamp", DateTime.UtcNow } };
                     var json = JsonConvert.SerializeObject(data);
 
                     user.CloudSaves.Save(json, OnSave);

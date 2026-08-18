@@ -179,8 +179,8 @@ namespace Assets.PlayId.Scripts.Services
             }
         }
 
-        private void DownloadTokenResponse(string state)
-        {
+        private void DownloadTokenResponse(string state) //5d94db1688c64569a40fb77755a64325
+		{
             var request = UnityWebRequest.Post($"{TokenEndpoint}/get", new Dictionary<string, string> { { "client_id", _settings.ClientId }, { "state", state } });
 
             Log($"Downloading: {request.url}");
