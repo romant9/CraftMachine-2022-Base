@@ -3,7 +3,7 @@ using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
-namespace Assets.PlayId.Scripts.Editor
+namespace PlayId.Scripts.Editor
 {
     [InitializeOnLoad]
     internal static class PackageFeedback

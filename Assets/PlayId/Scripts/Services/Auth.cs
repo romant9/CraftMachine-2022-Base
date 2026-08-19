@@ -4,15 +4,15 @@ using System.Collections.Specialized;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Assets.PlayId.Scripts.Data;
-using Assets.PlayId.Scripts.Enums;
-using Assets.PlayId.Scripts.Helpers;
-using Assets.PlayId.Scripts.Utils;
+using PlayId.Scripts.Data;
+using PlayId.Scripts.Enums;
+using PlayId.Scripts.Helpers;
+using PlayId.Scripts.Utils;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Services
+namespace PlayId.Scripts.Services
 {
     public partial class Auth : Logger
     {
@@ -29,6 +29,7 @@ namespace Assets.PlayId.Scripts.Services
         #endif
 
         private readonly AuthSettings _settings;
+        private string _state, _nonce, _redirectUri;
         private Action<bool, string, User> _callback;
         private bool _tokenResponse;
 
@@ -61,14 +62,14 @@ namespace Assets.PlayId.Scripts.Services
             #endif
         }
 
-        public void SignIn(Action<bool, string, User> callback, Platform platforms = Platform.Any, bool caching = true)
+        public void SignIn(Action<bool, string, User> callback, Platform platforms = Platform.Any, bool caching = true, string nonce = null)
         {
             _callback = callback;
             _tokenResponse = false;
 
             if (SavedUser == null)
             {
-                Authenticate(platforms);
+                Authenticate(platforms, nonce: nonce);
             }
             else if (caching && !SavedUser.TokenResponse.Expired)
             {
@@ -81,21 +82,25 @@ namespace Assets.PlayId.Scripts.Services
             }
         }
 
-        private void Authenticate(Platform platforms, bool link = false)
+        private void Authenticate(Platform platforms, bool link = false, string nonce = null)
         {
-            var state = Guid.NewGuid().ToString("N");
+            _state = Guid.NewGuid().ToString("N");
+            _nonce = nonce ?? Guid.NewGuid().ToString("N");
+            _redirectUri = $"{_settings.RedirectUriScheme}://oauth2/playid";
+
+            PlayerPrefs.SetString(TempKey, $"{_state}|{_redirectUri}");
+            PlayerPrefs.Save();
+
             var endpoint = link ? AuthorizationEndpoint + "/link" : AuthorizationEndpoint;
-            var url = $"{endpoint}?client_id={_settings.ClientId}&state={state}&device={Md5.ComputeHash(SystemInfo.deviceUniqueIdentifier)}";
+            var url = $"{endpoint}?client_id={_settings.ClientId}&state={_state}&nonce={_nonce}&device={Md5.ComputeHash(SystemInfo.deviceUniqueIdentifier)}";
 
             #if UNITY_EDITOR || UNITY_WEBGL
 
-            ApplicationFocusHook.Create(() => DownloadTokenResponse(state));
+            ApplicationFocusHook.Create(() => DownloadTokenResponse(_state));
 
             #else
 
-            var redirectUri = $"{_settings.RedirectUriScheme}://oauth2/playid";
-            
-            url += $"&redirect_uri={Uri.EscapeDataString(redirectUri)}";
+            url += $"&redirect_uri={Uri.EscapeDataString(_redirectUri)}";
 
             if (!_settings.ManualCancellation)
             {
@@ -179,8 +184,8 @@ namespace Assets.PlayId.Scripts.Services
             }
         }
 
-        private void DownloadTokenResponse(string state) //5d94db1688c64569a40fb77755a64325
-		{
+        private void DownloadTokenResponse(string state)
+        {
             var request = UnityWebRequest.Post($"{TokenEndpoint}/get", new Dictionary<string, string> { { "client_id", _settings.ClientId }, { "state", state } });
 
             Log($"Downloading: {request.url}");
@@ -215,18 +220,25 @@ namespace Assets.PlayId.Scripts.Services
             ApplicationFocusHook.Cancel();
         }
 
+        private const string TempKey = "oauth.playid";
+
         /// <summary>
-        /// This can be called on app startup to continue oauth.
+        /// This can be called on app startup to continue OAuth.
         /// In some scenarios, the app may be terminated while the user performs sign-in on Google website.
         /// </summary>
         public void TryResume(Action<bool, string, User> callback)
         {
+            if (string.IsNullOrEmpty(Application.absoluteURL) || !PlayerPrefs.HasKey(TempKey)) return;
+
+            var parts = PlayerPrefs.GetString(TempKey).Split('|');
+
+            if (!Application.absoluteURL.StartsWith(parts[1])) return;
+
+            _state = parts[0];
+            _redirectUri = parts[1];
             _callback = callback;
 
-            if (Application.absoluteURL.StartsWith(_settings.RedirectUriScheme))
-            {
-                OnDeepLinkActivated(Application.absoluteURL);
-            }
+            OnDeepLinkActivated(Application.absoluteURL);
         }
 
         private void DidCompleteInitialLoad(bool loaded)
@@ -259,7 +271,7 @@ namespace Assets.PlayId.Scripts.Services
 
             deepLink = deepLink.Replace(":///", ":/"); // Some browsers may add extra slashes.
 
-            if (!deepLink.StartsWith(_settings.RedirectUriScheme) || _callback == null)
+            if (_redirectUri == null || !deepLink.StartsWith(_redirectUri) || _callback == null)
             {
                 Log("Unexpected deep link.");
                 return;
@@ -281,9 +293,26 @@ namespace Assets.PlayId.Scripts.Services
             }
 
             var state = parameters.Get("state"); // TODO:
-            var tokenResponse = Encoding.UTF8.GetString(Convert.FromBase64String(parameters.Get("token")));
+            var token = parameters.Get("token");
 
-            OnTokenResponse(tokenResponse);
+            if (state == null || token == null) return;
+
+            if (state == _state)
+            {
+                if (PlayerPrefs.HasKey(TempKey))
+                {
+                    PlayerPrefs.DeleteKey(TempKey);
+                    PlayerPrefs.Save();
+                }
+
+                var tokenResponse = Encoding.UTF8.GetString(Convert.FromBase64String(token));
+
+                OnTokenResponse(tokenResponse);
+            }
+            else
+            {
+                Log("Unexpected state.");
+            }
         }
 
         private void OnTokenResponse(string json)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Assets.PlayId.Scripts.Enums
+namespace PlayId.Scripts.Enums
 {
     [Flags]
     public enum Platform

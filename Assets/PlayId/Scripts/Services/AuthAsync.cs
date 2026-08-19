@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Assets.PlayId.Scripts.Data;
+using PlayId.Scripts.Data;
 using Newtonsoft.Json;
 
-namespace Assets.PlayId.Scripts.Services
+namespace PlayId.Scripts.Services
 {
     public partial class Auth
     {

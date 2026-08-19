@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Assets.PlayId.Scripts.Utils
+namespace PlayId.Scripts.Utils
 {
     /// <summary>
     /// Md5 helper.

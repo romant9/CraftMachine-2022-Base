@@ -4,13 +4,13 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Editor
+namespace PlayId.Scripts.Editor
 {
     [InitializeOnLoad]
     internal static class PackageUpdater
     {
         private const string PackageId = "287608";
-        private const string CurrentVersion = "2.2";
+        private const string CurrentVersion = "2.4";
 
         private static readonly string PrefsKeyTime = $"PackageUpdater.Time.{PackageId}";
         private static readonly string PrefsKeySkip = $"PackageUpdater.Skip.{PackageId}";

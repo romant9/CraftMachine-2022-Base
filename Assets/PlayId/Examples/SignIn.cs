@@ -1,10 +1,11 @@
-using Assets.PlayId.Scripts;
-using Assets.PlayId.Scripts.Data;
-using Assets.PlayId.Scripts.Enums;
+using System;
+using PlayId.Scripts;
+using PlayId.Scripts.Data;
+using PlayId.Scripts.Enums;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.PlayId.Examples
+namespace PlayId.Examples
 {
     public class SignIn : MonoBehaviour
     {
@@ -19,7 +20,9 @@ namespace Assets.PlayId.Examples
 
         public void DoSignIn()
         {
-            PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false);
+            var nonce = Guid.NewGuid().ToString("N"); // Nonce is optional.
+
+            PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, nonce: nonce);
         }
 
         void OnSignIn(bool success, string error, User user)
@@ -45,9 +48,9 @@ namespace Assets.PlayId.Examples
             PlayIdServices.Instance.Auth.SignIn(OnSignIn, platforms: Platform.Google | Platform.Apple | Platform.Facebook);
         }
 
-        public void SignInSinglePlatform()
+        public void SignInWithPlatform(string platform)
         {
-            PlayIdServices.Instance.Auth.SignIn(OnSignIn, platforms: Platform.Google);
+            PlayIdServices.Instance.Auth.SignIn(OnSignIn, platforms: Enum.Parse<Platform>(platform));
         }
 
         public void LinkPlatform()

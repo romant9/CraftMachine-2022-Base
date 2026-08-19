@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.PlayId.Scripts.Enums;
+using PlayId.Scripts.Enums;
 using UnityEngine;
 
-namespace Assets.PlayId.Scripts.Data
+namespace PlayId.Scripts.Data
 {
     [CreateAssetMenu(fileName = "AppSettings", menuName = "Play ID/App Settings")]
     public class AppSettings : ScriptableObject

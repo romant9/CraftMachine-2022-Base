@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class YandexAuth : MonoBehaviour
 {
 	private const string ClientId = "aje0klo54cjknb5366dk";
 	// ВАЖНО: это должно совпадать с Redirect URI в Identity Hub
-	private const string RedirectUri = "http://localhost:8080/callback";
+	private const string RedirectUri = "http://localhost/callback"; //"simple.oauth://oauth2/playid"; 
 	private const string AuthorizationEndpoint = "https://auth.yandex.cloud/oauth/authorize";
 	private const string TokenEndpoint = "https://auth.yandex.cloud/oauth/token";
 
@@ -20,6 +22,7 @@ public class YandexAuth : MonoBehaviour
 
 	public async Task<string> GetIdTokenFromYandexViaWebViewAsync()
 	{
+		StopLocalHttpServer();
 		// 1. PKCE и state
 		(string codeVerifier, string codeChallenge) = GeneratePkcePair();
 		_codeVerifier = codeVerifier;
@@ -55,7 +58,7 @@ public class YandexAuth : MonoBehaviour
 	private void StartLocalServer()
 	{
 		_listener = new HttpListener();
-		_listener.Prefixes.Add("http://localhost:8080/");
+		_listener.Prefixes.Add("http://localhost/");
 		_listener.Start();
 
 		Task.Run(async () =>
@@ -76,7 +79,7 @@ public class YandexAuth : MonoBehaviour
 					_redirectTcs.TrySetResult(url);
 
 					// Отправляем простой HTML-ответ, чтобы браузер не висел
-					byte[] buffer = Encoding.UTF8.GetBytes("<html><body><h1>Вход выполнен!</h1><p>Можете закрыть окно.</p></body></html>");
+					byte[] buffer = Encoding.UTF8.GetBytes("<html><body><h1>Authentication successful!</h1><p>You can close this tab.</p></body></html>");
 					response.ContentLength64 = buffer.Length;
 					var output = response.OutputStream;
 					await output.WriteAsync(buffer, 0, buffer.Length);
@@ -98,6 +101,16 @@ public class YandexAuth : MonoBehaviour
 				}
 			}
 		});
+	}
+
+	public void StopLocalHttpServer()
+	{
+		if (_listener != null && _listener.IsListening)
+		{
+			_listener.Stop();
+			_listener.Close();
+			Debug.Log("[Server] Локальный сервер остановлен.");
+		}
 	}
 
 	// --- Вспомогательные методы (те же, что и раньше) ---
@@ -168,7 +181,7 @@ public class YandexAuth : MonoBehaviour
 
 	private async Task<Dictionary<string, string>> ExchangeCodeForTokensAsync(string code, string codeVerifier)
 	{
-		var form = new System.Collections.Specialized.NameValueCollection
+		var dict = new Dictionary<string, string> 
 		{
 			{ "grant_type", "authorization_code" },
 			{ "code", code },
@@ -178,7 +191,8 @@ public class YandexAuth : MonoBehaviour
 		};
 
 		using var client = new System.Net.Http.HttpClient();
-		var response = await client.PostAsync(TokenEndpoint, new System.Net.Http.FormUrlEncodedContent((IEnumerable<KeyValuePair<string, string>>)form));
+
+		var response = await client.PostAsync(TokenEndpoint, new System.Net.Http.FormUrlEncodedContent(dict));
 		response.EnsureSuccessStatusCode();
 		var json = await response.Content.ReadAsStringAsync();
 

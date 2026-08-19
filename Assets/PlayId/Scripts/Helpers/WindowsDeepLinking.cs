@@ -6,7 +6,7 @@ using System.IO;
 using Microsoft.Win32; // Requires .NET 4.x (Player Settings / Configuration).
 using UnityEngine;
 
-namespace Assets.PlayId.Scripts.Helpers
+namespace PlayId.Scripts.Helpers
 {
     /// <summary>
     /// Add deep linking support for Windows.

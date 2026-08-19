@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using UnityEngine.Scripting;
 
-namespace Assets.PlayId.Scripts.Data
+namespace PlayId.Scripts.Data
 {
     /// <summary>
     /// Response specification:

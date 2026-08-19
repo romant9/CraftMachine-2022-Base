@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Assets.PlayId.Scripts.Data
+namespace PlayId.Scripts.Data
 {
     public class Score
     {

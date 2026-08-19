@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Assets.PlayId.Scripts;
-using Assets.PlayId.Scripts.Data;
+using PlayId.Scripts;
+using PlayId.Scripts.Data;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.PlayId.Examples
+namespace PlayId.Examples
 {
     public class CloudSaves : MonoBehaviour
     {
@@ -20,8 +20,7 @@ namespace Assets.PlayId.Examples
             {
                 if (success)
                 {
-                    var email = user.Email;
-                    var data = new Dictionary<string, object> { { "email", email }, { "progress", 10 }, { "timestamp", DateTime.UtcNow } };
+                    var data = new Dictionary<string, object> { { "progress", 10 }, { "timestamp", DateTime.UtcNow } };
                     var json = JsonConvert.SerializeObject(data);
 
                     user.CloudSaves.Save(json, OnSave);

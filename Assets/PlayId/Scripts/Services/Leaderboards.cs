@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.PlayId.Scripts.Data;
-using Assets.PlayId.Scripts.Helpers;
+using PlayId.Scripts.Data;
+using PlayId.Scripts.Helpers;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Services
+namespace PlayId.Scripts.Services
 {
     public class Leaderboards : Logger
     {

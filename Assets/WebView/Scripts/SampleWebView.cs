@@ -211,6 +211,11 @@ public class SampleWebView : MonoBehaviour
     {
         var x = 10;
 
+        if (webViewObject == null)
+        {
+
+        }
+
         GUI.enabled = (webViewObject == null) ? false : webViewObject.CanGoBack();
         if (GUI.Button(new Rect(x, 10, 80, 80), "<")) {
             webViewObject?.GoBack();

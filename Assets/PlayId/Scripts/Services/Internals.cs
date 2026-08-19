@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Assets.PlayId.Scripts.Enums;
-using Assets.PlayId.Scripts.Helpers;
+using PlayId.Scripts.Enums;
+using PlayId.Scripts.Helpers;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Services
+namespace PlayId.Scripts.Services
 {
     /// <summary>
     /// This class provides data originally retrieved by Play ID from OAuth platforms.

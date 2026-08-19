@@ -1,8 +1,8 @@
-﻿using Assets.PlayId.Scripts.Data;
-using Assets.PlayId.Scripts.Services;
+﻿using PlayId.Scripts.Data;
+using PlayId.Scripts.Services;
 using UnityEngine;
 
-namespace Assets.PlayId.Scripts
+namespace PlayId.Scripts
 {
     public class PlayIdServices
     {

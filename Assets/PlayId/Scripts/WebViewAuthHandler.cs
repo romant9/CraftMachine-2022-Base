@@ -1,55 +1,65 @@
-using System;
-using UnityEngine;
-using System.Threading.Tasks;
-
-#if UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_WIN
 using Gree.UnityWebView;
-#endif
+using Mono.Cecil.Cil;
+using System.Threading.Tasks;
+using UnityEngine;
 
 public class WebViewAuthHandler : MonoBehaviour
 {
     public string AuthUrl { get; set; }
     public OidcTokenExchangeAsync tokenExchange;
 
-    public WebViewObject _webViewObj;
+    private WebViewObject _webViewObj;
+    [SerializeField]
+    private string altUrl;
+    public delegate void OnTokenRecieved(string token);
+    private OnTokenRecieved onTokenRecieved;
 
-    void Start()
+	void Start()
     {
         
     }
 
-    public async void StartURL(string url)
+    public void OnClickLogin(OnTokenRecieved callback)
     {
-        AuthUrl = url;
-        //AuthUrl = "https://github.com/gree/unity-webview?ysclid=msyzrbbas709157511";
+        onTokenRecieved = callback;
+		AuthUrl = !string.IsNullOrEmpty(altUrl) ? altUrl : tokenExchange.GetAuthUrl();
+
+		Debug.Log("[WebViewAuth] URL авторизации подготовлен. WebView откроется при инициализации.");
+
+		StartURL();
+	}
+
+	private async void StartURL()
+    {
         if (tokenExchange == null)
         {
             Debug.LogError("[WebViewAuth] tokenExchange не назначен в инспекторе!");
             return;
         }
 
-#if UNITY_ANDROID || UNITY_IOS || UNITY_STANDALONE_WIN
         if (_webViewObj == null)
         {
-            Debug.LogError(
-                "[WebViewAuth] На объекте нет компонента WebViewObject! " +
-                "Добавь компонент WebViewObject из плагина unity-webview на этот GameObject."
-            );
-            return;
+			_webViewObj = new GameObject("WebViewObject").AddComponent<WebViewObject>();
         }
 
         // Все колбэки — Action<string>, чтобы точно совпасть с твоей сборкой
         _webViewObj.Init(
-            cb: msg => {
-                // Общие сообщения плагина (можно раскомментировать для отладки)
-                // Debug.Log($"[WebView] cb: {msg}");
+            cb: msg => 
+            {
+				// Общие сообщения плагина (можно раскомментировать для отладки)
+				Debug.Log($"[WebView] cb: {msg}");
             },
             err: msg => HandleErrorChanged(msg),
             httpErr: msg => HandleHttpErrorChanged(msg), // один string
-            ld: url => HandleUrlChanged(url),                              // в этой сборке ld — это Action<string> с URL
-            started: msg => { },
-            hooked: msg => { },
-            cookies: msg => { }
+            ld: url => HandleUrlChanged(url), // в этой сборке ld — это Action<string> с URL
+            started: msg =>
+            {
+				Debug.Log($"[WebView] started: {msg}");
+				HandleUrlChanged(msg);
+			},
+
+			hooked: msg => { Debug.Log($"[WebView] hooked: {msg}"); },
+            cookies: msg => { Debug.Log($"[WebView] cookies: {msg}"); }
         );
 
         while (!_webViewObj.IsInitialized())
@@ -63,10 +73,17 @@ public class WebViewAuthHandler : MonoBehaviour
 
         Debug.Log("[WebViewAuth] WebView инициализирован. Загружаем авторизацию...");
         _webViewObj.LoadURL(AuthUrl);
-#else
-        Debug.LogWarning("[WebViewAuth] Плагин unity-webview не поддерживается на этой платформе (заглушка).");
-#endif
     }
+
+    private void StopWebView()
+    {
+		if (_webViewObj != null)
+		{
+			Debug.Log($"[WebViewAuth] Закрываем WebView");
+			Destroy(_webViewObj.gameObject);
+			_webViewObj = null;
+		}
+	}
 
     private void HandleErrorChanged(string message)
     {
@@ -81,35 +98,44 @@ public class WebViewAuthHandler : MonoBehaviour
     // Сюда приходит URL от колбэка ld
     private void HandleUrlChanged(string url)
     {
-        //var js = "";
-        //_webViewObj.EvaluateJS(js + @"Unity.call('ua=' + navigator.userAgent)");
-
         // Проверяем наш callback-редирект
         if (!url.StartsWith(tokenExchange.redirectUri))
         {
-            Debug.Log("Фиксируем редирект");
-            // Все остальные URL просто игнорируем — WebView сам их отображает
             return;
         }
 
         Debug.Log($"[WebViewAuth] Перехвачен редирект: {url}");
 
-        string code = ExtractCodeFromUrl(url);
-        if (!string.IsNullOrEmpty(code))
-        {
-            Debug.Log($"[WebViewAuth] Извлечён code: {code}");
-            tokenExchange.ExchangeCodeForTokens(code);
-
-            // Опционально: закрываем WebView после получения кода
-            // _webViewObj.Dispose();
-        }
-        else
-        {
-            Debug.LogError("[WebViewAuth] Не удалось извлечь code из URL.");
-        }
+        ExchangeIdTokenFromUrl(url);
     }
 
-    private string ExtractCodeFromUrl(string url)
+    private async void ExchangeIdTokenFromUrl(string url)
+    {
+		string code = ExtractCodeFromUrl(url);
+        StopWebView();
+
+		if (string.IsNullOrEmpty(code))
+        {
+			Debug.LogError("[WebViewAuth] Не удалось извлечь code из URL.");
+            return;
+		}
+		Debug.Log($"[WebViewAuth] Извлечён code: {code}");
+
+		string idToken = await tokenExchange.PerformTokenExchangeWithPkce(code);
+
+		if (!string.IsNullOrEmpty(idToken))
+		{
+			Debug.Log("[WebViewAuth] Извлечён idToken. Signing in...");
+
+            onTokenRecieved?.Invoke(idToken);
+		}
+		else
+		{
+			Debug.LogError("[WebViewAuth] id_token missing in response.");
+		}
+	}
+
+	private string ExtractCodeFromUrl(string url)
     {
         var queryPart = url.Split('?');
         if (queryPart.Length < 2) return null;

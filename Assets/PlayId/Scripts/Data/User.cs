@@ -1,11 +1,11 @@
 ﻿using System;
-using Assets.PlayId.Scripts.Enums;
-using Assets.PlayId.Scripts.Services;
+using PlayId.Scripts.Enums;
+using PlayId.Scripts.Services;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace Assets.PlayId.Scripts.Data
+namespace PlayId.Scripts.Data
 {
     public class User
     {

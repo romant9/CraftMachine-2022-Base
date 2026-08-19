@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Assets.PlayId.Scripts.Services
+namespace PlayId.Scripts.Services
 {
     /// <summary>
     /// This class is used to enable/disable logs in one place.

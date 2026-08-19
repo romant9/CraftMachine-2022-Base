@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Assets.PlayId.Scripts.Helpers;
+using PlayId.Scripts.Helpers;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Services
+namespace PlayId.Scripts.Services
 {
     public class CloudSaves : Logger
     {

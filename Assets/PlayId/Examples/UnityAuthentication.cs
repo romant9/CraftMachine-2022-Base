@@ -1,6 +1,6 @@
-using Assets.PlayId.Scripts;
-using Assets.PlayId.Scripts.Data;
-using Assets.PlayId.Scripts.Enums;
+using PlayId.Scripts;
+using PlayId.Scripts.Data;
+using PlayId.Scripts.Enums;
 using System;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
@@ -11,140 +11,13 @@ using UnityEngine.UI;
 
 namespace Assets.PlayId.Examples
 {
-    public class UnityAuthentication : MonoBehaviour
-    {
-        public Text Output;
+	public class UnityAuthentication : MonoBehaviour
+	{
+		public Text Output;
 		public YandexAuth yandexAuth;
+		public WebViewAuthHandler webViewAuthHandler;
 
-        public void SignInWithGoogle()
-        {
-            Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
-
-            PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Google);
-
-            void OnSignIn(bool success, string error, User user)
-            {
-                user.Internals.RequestIdTokenForPlatform(Platform.Google, refresh: true, OnGetIdToken);
-            }
-
-            async void OnGetIdToken(bool success, string error, string idToken)
-            {
-                if (success)
-                {
-                    await Unity.Services.Core.UnityServices.InitializeAsync();
-
-                    var authService = Unity.Services.Authentication.AuthenticationService.Instance;
-
-                    if (authService.IsSignedIn) authService.SignOut();
-
-                    await authService.SignInWithGoogleAsync(idToken);
-
-                    Output.text = authService.IsAuthorized ? $"Player ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
-                }
-                else
-                {
-                    Output.text = error;
-                }
-            }
-        }
-
-        public void SignInWithApple()
-        {
-            Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
-
-            PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Apple);
-
-            void OnSignIn(bool success, string error, User user)
-            {
-                user.Internals.RequestIdTokenForPlatform(Platform.Apple, refresh: true, OnGetIdToken);
-            }
-
-            async void OnGetIdToken(bool success, string error, string idToken)
-            {
-                if (success)
-                {
-                    await Unity.Services.Core.UnityServices.InitializeAsync();
-
-                    var authService = Unity.Services.Authentication.AuthenticationService.Instance;
-
-                    if (authService.IsSignedIn) authService.SignOut();
-
-                    await authService.SignInWithAppleAsync(idToken);
-
-                    Output.text = authService.IsAuthorized ? $"Player ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
-                }
-                else
-                {
-                    Output.text = error;
-                }
-            }
-        }
-
-		public void SignInWithYandex()
-		{
-			Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
-
-			PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Yandex);
-
-			void OnSignIn(bool success, string error, User user)
-			{
-				//user.Internals.RequestIdTokenForPlatform(Platform.Yandex, refresh: true, OnGetIdToken);
-
-				if (user != null && user.TokenResponse != null)
-				{
-					OnGetIdToken(success, error, user.TokenResponse.IdToken);
-				}
-				else
-				{
-					user.Internals.RequestIdTokenForPlatform(Platform.Any, refresh: true, OnGetIdToken);
-				}
-			}
-
-			async void OnGetIdToken(bool success, string error, string idToken)
-			{
-				if (success)
-				{
-					await Unity.Services.Core.UnityServices.InitializeAsync();
-
-					var authService = Unity.Services.Authentication.AuthenticationService.Instance;
-
-					if (authService.IsSignedIn) authService.SignOut();
-
-					await authService.SignInWithOpenIdConnectAsync("oidc-yandex", idToken);
-
-					Output.text = authService.IsAuthorized ? $"Player Yandex ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
-				}
-				else
-				{
-					Output.text = error;
-				}
-			}
-		}
-
-		public async void SignInWithYandex2()
-		{
-			await Unity.Services.Core.UnityServices.InitializeAsync();
-
-			var authService = Unity.Services.Authentication.AuthenticationService.Instance;
-
-			if (authService.IsSignedIn) authService.SignOut();
-
-			string idToken = await yandexAuth.GetIdTokenFromYandexViaWebViewAsync();
-
-			try
-			{
-				await authService.SignInWithOpenIdConnectAsync("oidc-yandex", idToken);
-				Output.text = authService.IsAuthorized ? $"Player Yandex ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
-
-			}
-			catch (Exception ex)
-			{
-				Debug.LogError("Auth Yandex failed: " + ex.Message);
-			}
-		}
-
-
-		public void SignInUnityPlayer()
+		public void SignInWithGoogle()
 		{
 			Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
 
@@ -165,8 +38,6 @@ namespace Assets.PlayId.Examples
 
 					if (authService.IsSignedIn) authService.SignOut();
 
-                    //
-
 					await authService.SignInWithGoogleAsync(idToken);
 
 					Output.text = authService.IsAuthorized ? $"Player ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
@@ -175,6 +46,127 @@ namespace Assets.PlayId.Examples
 				{
 					Output.text = error;
 				}
+			}
+		}
+
+		public void SignInWithApple()
+		{
+			Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
+
+			PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Apple);
+
+			void OnSignIn(bool success, string error, User user)
+			{
+				user.Internals.RequestIdTokenForPlatform(Platform.Apple, refresh: true, OnGetIdToken);
+			}
+
+			async void OnGetIdToken(bool success, string error, string idToken)
+			{
+				if (success)
+				{
+					await Unity.Services.Core.UnityServices.InitializeAsync();
+
+					var authService = Unity.Services.Authentication.AuthenticationService.Instance;
+
+					if (authService.IsSignedIn) authService.SignOut();
+
+					await authService.SignInWithAppleAsync(idToken);
+
+					Output.text = authService.IsAuthorized ? $"Player ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
+				}
+				else
+				{
+					Output.text = error;
+				}
+			}
+		}
+
+		public void SignInWithYandexTest()
+		{
+			Output.text = "Please import Unity Authentication package and uncomment code below in Examples/UnityAuthentication.cs.";
+
+			PlayIdServices.Instance.Auth.SignIn(OnSignIn, caching: false, platforms: Platform.Yandex);
+
+			void OnSignIn(bool success, string error, User user)
+			{
+				//user.Internals.RequestIdTokenForPlatform(Platform.Yandex, refresh: true, OnGetIdToken);
+
+				if (user != null && user.TokenResponse != null)
+				{
+					OnGetIdToken(success, error, user.TokenResponse.IdToken);
+				}
+				else
+				{
+					user.Internals.RequestIdTokenForPlatform(Platform.Yandex, refresh: true, OnGetIdToken);
+				}
+			}
+
+			async void OnGetIdToken(bool success, string error, string idToken)
+			{
+				if (success)
+				{
+					await Unity.Services.Core.UnityServices.InitializeAsync();
+
+					var authService = Unity.Services.Authentication.AuthenticationService.Instance;
+
+					if (authService.IsSignedIn) authService.SignOut();
+
+					await Unity.Services.Authentication.AuthenticationService.Instance.SignInWithOpenIdConnectAsync("oidc-yandex", idToken);
+
+					Output.text = authService.IsAuthorized ? $"Player Yandex ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
+				}
+				else
+				{
+					Output.text = error;
+				}
+			}
+		}
+
+		public async void SignInWithYandex()
+		{
+			await Unity.Services.Core.UnityServices.InitializeAsync();
+
+			var authService = Unity.Services.Authentication.AuthenticationService.Instance;
+
+			if (authService.IsSignedIn) authService.SignOut();
+
+			string idToken = await yandexAuth.GetIdTokenFromYandexViaWebViewAsync();
+
+			try
+			{
+				await authService.SignInWithOpenIdConnectAsync("oidc-yandex", idToken);
+				Output.text = authService.IsAuthorized ? $"Player Yandex ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
+			}
+			catch (Exception ex)
+			{
+				Output.text = "Auth Yandex failed: " + ex.Message;
+			}
+		}
+
+		public async void SignInWithYandexWebView()
+		{
+			await Unity.Services.Core.UnityServices.InitializeAsync();
+
+			var authService = Unity.Services.Authentication.AuthenticationService.Instance;
+
+			if (authService.IsSignedIn) authService.SignOut();
+
+			webViewAuthHandler.OnClickLogin(SignInWithYandexWebViewCallback);
+		}
+
+		private async void SignInWithYandexWebViewCallback(string token)
+		{
+			var authService = Unity.Services.Authentication.AuthenticationService.Instance;
+
+			try
+			{
+				await authService.SignInWithOpenIdConnectAsync("oidc-yandex", token);
+				Output.text = authService.IsAuthorized ? $"Player Yandex ID: {authService.PlayerInfo.Id}!" : "Unable to authorize.";
+
+			}
+			catch (Exception ex)
+			{
+				Output.text = "Auth Yandex failed: " + ex.Message;
 			}
 		}
 
@@ -258,7 +250,7 @@ namespace Assets.PlayId.Examples
 
 				try
 				{
-					// Метод SignInAnonymouslyAsync в Unity автоматически подхватывает 
+					// Метод SignInAnonymouslyAsync в Unity автоматически подхватывает
 					// существующий сессионный токен игрока, если он сохранен на устройстве,
 					// и восстанавливает его полноценный профиль (Google или Логин/Пароль).
 					await AuthenticationService.Instance.SignInAnonymouslyAsync();

@@ -1,8 +1,8 @@
-using Assets.PlayId.Scripts;
+using PlayId.Scripts;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.PlayId.Examples
+namespace PlayId.Examples
 {
     public class RemoteConfig : MonoBehaviour
     {

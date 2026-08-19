@@ -9,7 +9,7 @@ using UnityEngine.iOS;
 
 #endif
 
-namespace Assets.PlayId.Scripts.Helpers
+namespace PlayId.Scripts.Helpers
 {
     /// <summary>
     /// https://developer.apple.com/documentation/safariservices/sfsafariviewcontrollerdelegate

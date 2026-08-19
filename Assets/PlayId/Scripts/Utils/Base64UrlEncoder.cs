@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Assets.PlayId.Scripts.Utils
+namespace PlayId.Scripts.Utils
 {
     /// <summary>
     /// Encodes and Decodes strings using Base64 URL encoding.

@@ -1,4 +1,4 @@
-namespace Assets.PlayId.Scripts.Enums
+namespace PlayId.Scripts.Enums
 {
     /// <summary>
     /// https://github.com/hippogamesunity/PlayID/wiki/Plans

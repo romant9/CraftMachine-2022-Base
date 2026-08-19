@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Assets.PlayId.Scripts.Data;
-using Assets.PlayId.Scripts.Enums;
-using Assets.PlayId.Scripts.Helpers;
+using PlayId.Scripts.Data;
+using PlayId.Scripts.Enums;
+using PlayId.Scripts.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Editor
+namespace PlayId.Scripts.Editor
 {
     /// <summary>
     /// Adds "Rebuild" button to CharacterBuilder script.

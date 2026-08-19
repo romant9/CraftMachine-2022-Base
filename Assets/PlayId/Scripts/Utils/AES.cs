@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Assets.PlayId.Scripts.Utils
+namespace PlayId.Scripts.Utils
 {
     /// <summary>
     /// AES (Advanced Encryption Standard) implementation with 128-bit key (default).

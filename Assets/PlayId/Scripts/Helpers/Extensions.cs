@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Assets.PlayId.Scripts.Helpers
+namespace PlayId.Scripts.Helpers
 {
     public static class Extensions
     {

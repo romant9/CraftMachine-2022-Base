@@ -1,9 +1,9 @@
-using Assets.PlayId.Scripts;
-using Assets.PlayId.Scripts.Data;
+using PlayId.Scripts;
+using PlayId.Scripts.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.PlayId.Examples
+namespace PlayId.Examples
 {
     public class RefreshAccessToken : MonoBehaviour
     {

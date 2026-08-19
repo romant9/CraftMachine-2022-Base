@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.PlayId.Scripts.Helpers
+namespace PlayId.Scripts.Helpers
 {
     public class ApplicationFocusHook : MonoBehaviour
     {

@@ -1,9 +1,9 @@
-﻿using Assets.PlayId.Scripts.Utils;
+﻿using PlayId.Scripts.Utils;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace Assets.PlayId.Scripts.Data
+namespace PlayId.Scripts.Data
 {
     public class SavedUser : User
     {

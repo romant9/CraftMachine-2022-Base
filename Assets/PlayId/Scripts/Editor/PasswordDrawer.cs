@@ -1,8 +1,8 @@
-using Assets.PlayId.Scripts.Data;
+using PlayId.Scripts.Data;
 using UnityEditor;
 using UnityEngine;
 
-namespace Assets.PlayId.Scripts.Editor
+namespace PlayId.Scripts.Editor
 {
     [CustomPropertyDrawer(typeof(PasswordAttribute))]
     public class PasswordDrawer : PropertyDrawer

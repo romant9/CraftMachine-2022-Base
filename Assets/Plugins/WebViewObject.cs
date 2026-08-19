@@ -2060,41 +2060,41 @@ namespace Gree.UnityWebView
                 inputString += Input.inputString;
             }
 #endif
-            //for (;;)
-            //{
-            //    if (webView == IntPtr.Zero)
-            //        break;
-            //    string s = _CWebViewPlugin_GetMessage(webView);
-            //    if (s == null)
-            //        break;
-            //    var i = s.IndexOf(':', 0);
-            //    if (i == -1)
-            //        continue;
-            //    switch (s.Substring(0, i))
-            //    {
-            //    case "CallFromJS":
-            //        CallFromJS(s.Substring(i + 1));
-            //        break;
-            //    case "CallOnError":
-            //        CallOnError(s.Substring(i + 1));
-            //        break;
-            //    case "CallOnHttpError":
-            //        CallOnHttpError(s.Substring(i + 1));
-            //        break;
-            //    case "CallOnLoaded":
-            //        CallOnLoaded(s.Substring(i + 1));
-            //        break;
-            //    case "CallOnStarted":
-            //        CallOnStarted(s.Substring(i + 1));
-            //        break;
-            //    case "CallOnHooked":
-            //        CallOnHooked(s.Substring(i + 1));
-            //        break;
-            //    case "CallOnCookies":
-            //        CallOnCookies(s.Substring(i + 1));
-            //        break;
-            //    }
-            //}
+            for (;;)
+            {
+                if (webView == IntPtr.Zero)
+                    break;
+                string s = _CWebViewPlugin_GetMessage(webView);
+                if (s == null)
+                    break;
+                var i = s.IndexOf(':', 0);
+                if (i == -1)
+                    continue;
+                switch (s.Substring(0, i))
+                {
+                case "CallFromJS":
+                    CallFromJS(s.Substring(i + 1));
+                    break;
+                case "CallOnError":
+                    CallOnError(s.Substring(i + 1));
+                    break;
+                case "CallOnHttpError":
+                    CallOnHttpError(s.Substring(i + 1));
+                    break;
+                case "CallOnLoaded":
+                    CallOnLoaded(s.Substring(i + 1));
+                    break;
+                case "CallOnStarted":
+                    CallOnStarted(s.Substring(i + 1));
+                    break;
+                case "CallOnHooked":
+                    CallOnHooked(s.Substring(i + 1));
+                    break;
+                case "CallOnCookies":
+                    CallOnCookies(s.Substring(i + 1));
+                    break;
+                }
+            }
             if (webView == IntPtr.Zero || !visibility)
                 return;
             bool refreshBitmap = (Time.frameCount % bitmapRefreshCycle == 0);
