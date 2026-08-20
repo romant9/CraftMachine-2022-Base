@@ -1,11 +1,12 @@
+using Newtonsoft.Json;
 using Supabase.TWD;
 using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Unity.Services.Authentication;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Scripting;
 
 public class OidcTokenExchangeAsync : MonoBehaviour
 {
@@ -158,7 +159,7 @@ public class OidcConfiguration
 [Serializable]
 public class TokenResponseOidc
 {
-    public string access_token;
+	public string access_token;
     public string id_token;
     public int expires_in;
     public string token_type;

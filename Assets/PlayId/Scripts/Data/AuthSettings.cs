@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PlayId.Scripts.Data
 {
-    [CreateAssetMenu(fileName = "AuthSettings", menuName = "Simple Sign-In/Auth Settings/Play ID")]
+    [CreateAssetMenu(fileName = "AuthSettings", menuName = "Play ID/Auth Settings")]
     public class AuthSettings : ScriptableObject
     {
         public string ClientId;

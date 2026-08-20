@@ -56,7 +56,7 @@ namespace PlayId.Scripts.Data
         public bool Expired => Expiration < DateTime.UtcNow;
 
         [Preserve]
-        private TokenResponse()
+        public TokenResponse()
         {
         }
 

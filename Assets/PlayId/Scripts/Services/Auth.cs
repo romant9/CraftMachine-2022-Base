@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Google.Apis.Sheets.v4.Data;
+using Newtonsoft.Json;
+using PlayId.Scripts.Data;
+using PlayId.Scripts.Enums;
+using PlayId.Scripts.Helpers;
+using PlayId.Scripts.Utils;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using PlayId.Scripts.Data;
-using PlayId.Scripts.Enums;
-using PlayId.Scripts.Helpers;
-using PlayId.Scripts.Utils;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -94,7 +95,7 @@ namespace PlayId.Scripts.Services
             var endpoint = link ? AuthorizationEndpoint + "/link" : AuthorizationEndpoint;
             var url = $"{endpoint}?client_id={_settings.ClientId}&state={_state}&nonce={_nonce}&device={Md5.ComputeHash(SystemInfo.deviceUniqueIdentifier)}";
 
-            #if UNITY_EDITOR || UNITY_WEBGL
+            #if UNITY_WEBGL || UNITY_EDITOR
 
             ApplicationFocusHook.Create(() => DownloadTokenResponse(_state));
 
@@ -315,9 +316,12 @@ namespace PlayId.Scripts.Services
             }
         }
 
-        private void OnTokenResponse(string json)
+        public void OnTokenResponse(string json)
         {
-            _tokenResponse = true;
+			//{\"access_token\":\"b735aa33ef30404cbaa5fd10febbd9cd\",\"token_type\":\"bearer\",\"expires_in\":7200,\"scope\":\"openid email profile\",\"refresh_token\":\"a64666aac0164a4a8f37c438ed96186d\",\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjUxY2NmMGQ0ZjA5M2MwMjI5ZTVmMzA4MjIwMjk3NDY3IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL3BsYXlpZC5vcmciLCJhdWQiOiJlOTYwZDk0NGY3ODg0YTBkYTVlYzBmOWRmMGU2ODc2NSIsInN1YiI6NDQ1MSwibmFtZSI6IlJvbWFuIEFtZWxjaGVua28iLCJlbWFpbCI6ImFtZWxjaGVua29ydkBnbWFpbC5jb20iLCJwbGF0Ijo2NSwiaWF0IjoxNzg3MjMzODg2LCJleHAiOjE3ODcyNDEwODYsInN0YXRlIjoiNDU1OWUwMWJmYjQzNGFhNjlhZmUzZWNlZGIxM2Q3NDAiLCJub25jZSI6IjMzMTQ5YTRkMzE4YTRiZDJiNzIyMjFlNTA4NjQzZjZlIn0.NgE58PiQFHSz-5ZkvyEGCOEZ4l8IxFMw1N4wMP9-QYQyozWxHDJUU8xspeCe4OsVCTJ-T6G9a8JXVHw3CrtBWMRoB6G2aA-AhWSPtck8z1jw_yZ8eWPP8a8CWEePRP1ZlDu8YOMl3vgffrDCvbB8hTBTbUgaQQb5i_HyZNeoUYIB6eNiIr_SIX8_St9wN8Caeq6WrxLj2EGz849XiDay9JMBYJxhhpsZWCp2WjV3nrYYfGORplRa4Pta3LknCTN0G2tdSx5EyxFzE0fFaoB0kwJV46i_zillOTiwbrFsSXbBo68FXvY3t0T_UkyV25yf15ti2YLBMOW7VEvm4T5oHw\"}
+			//{\"iss\":\"https://playid.org\",\"aud\":\"e960d944f7884a0da5ec0f9df0e68765\",\"sub\":4451,\"name\":\"Roman Amelchenko\",\"email\":\"amelchenkorv@gmail.com\",\"plat\":65,\"iat\":1787236666,\"exp\":1787243866,\"state\":\"11dc305693954bb7bda3020522e3f771\",\"nonce\":\"fa5c9444baf24160813571b1e705b81b\"
+
+			_tokenResponse = true;
 
             Log($"TokenResponse={json}");
 
@@ -331,7 +335,7 @@ namespace PlayId.Scripts.Services
             _callback(true, null, SavedUser);
         }
 
-        public void RequestUserInfo(string accessToken, Action<bool, string, User> callback)
+		public void RequestUserInfo(string accessToken, Action<bool, string, User> callback)
         {
             var request = UnityWebRequest.PostWwwForm($"{UserEndpoint}/info", "");
 
