@@ -109,10 +109,11 @@ namespace TWDModel
 			List<ActorModel> list = new List<ActorModel>();
 			List<ActorModel> list2 = null;
 			list2 = ((targetFaction != Faction.Any) ? combatModel.GetFactionActors(targetFaction) : combatModel.GetEnemyFactionsActors(actor.Faction));
+			GridCoordinate attackOriginCell = actor.GetAttackOriginCell();
 			for (int i = 0; i < list2.Count; i++)
 			{
 				ActorModel actorModel = list2[i];
-				if (actor.SelectedAbility.CanAbilityBeTargetedOnGridCell(combatModel, actor, actor.GridCoordinate, actorModel.GridCoordinate))
+				if (actor.SelectedAbility.CanAbilityBeTargetedOnGridCell(combatModel, actor, attackOriginCell, actorModel.GetClosestOccupiedCell(attackOriginCell)))
 				{
 					list.Add(actorModel);
 				}
@@ -313,9 +314,10 @@ namespace TWDModel
 
 		public static bool IsTargetInActivationRange(ActorModel actor, CombatModel combatModel, ActorModel target)
 		{
-			if (combatModel.Grid.IsCoordinateValid(actor.GridCoordinate) && target != null && target.IsValid())
+			GridCoordinate attackOriginCell = actor.GetAttackOriginCell();
+			if (combatModel.Grid.IsCoordinateValid(attackOriginCell) && target != null && target.IsValid())
 			{
-				int num = actor.GridCoordinate.SquaredDistanceTo(target.GridCoordinate);
+				int num = attackOriginCell.SquaredDistanceTo(target.GetClosestOccupiedCell(attackOriginCell));
 				int num2 = actor.ActivationRange * actor.ActivationRange;
 				return num <= num2;
 			}
@@ -326,14 +328,15 @@ namespace TWDModel
 		{
 			if (target != null && target.IsValid())
 			{
-				return IsTargetInAttackRange(actor, combatModel, target.GridCoordinate);
+				return IsTargetInAttackRange(actor, combatModel, target.GetClosestOccupiedCell(actor.GetAttackOriginCell()));
 			}
 			return false;
 		}
 
 		public static bool IsTargetInAttackRange(ActorModel actor, CombatModel combatModel, GridCoordinate c)
 		{
-			if (combatModel.Grid.IsCoordinateValid(actor.GridCoordinate))
+			GridCoordinate attackOriginCell = actor.GetAttackOriginCell();
+			if (combatModel.Grid.IsCoordinateValid(attackOriginCell))
 			{
 				EquipmentItemModel weaponEquipment = actor.GetWeaponEquipment();
 				if (weaponEquipment != null)
@@ -344,9 +347,9 @@ namespace TWDModel
 						CombatHelpers.CalculateRangeExtension(ref range, actor, combatModel.AbilityManager);
 					}
 					int num = (weaponEquipment.Ability.Definition.AbilityTargetDiagonal ? ((int)range) : 0);
-					GridCoordinate other = new GridCoordinate(actor.GridCoordinate.X + (int)range, actor.GridCoordinate.Y + num);
-					int num2 = actor.GridCoordinate.SquaredDistanceTo(c);
-					int num3 = actor.GridCoordinate.SquaredDistanceTo(other);
+					GridCoordinate other = new GridCoordinate(attackOriginCell.X + (int)range, attackOriginCell.Y + num);
+					int num2 = attackOriginCell.SquaredDistanceTo(c);
+					int num3 = attackOriginCell.SquaredDistanceTo(other);
 					return num2 <= num3;
 				}
 				return false;
@@ -476,7 +479,9 @@ namespace TWDModel
 			for (int num2 = 0; num2 < list.Count; num2++)
 			{
 				ActorModel actorModel2 = list[num2];
-				if (actor.SelectedAbility.CanAbilityBeTargetedOnGridCell(combatModel, actor, actor.GridCoordinate, actorModel2.GridCoordinate) && !list2.Contains(actorModel2))
+				GridCoordinate attackOriginCell = actor.GetAttackOriginCell();
+				GridCoordinate closestOccupiedCell = actorModel2.GetClosestOccupiedCell(attackOriginCell);
+				if (actor.SelectedAbility.CanAbilityBeTargetedOnGridCell(combatModel, actor, attackOriginCell, closestOccupiedCell) && !list2.Contains(actorModel2))
 				{
 					list2.Add(actorModel2);
 				}

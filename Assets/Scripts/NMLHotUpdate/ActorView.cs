@@ -58,6 +58,10 @@ public class ActorView : ModelView<ActorModel>
 
 	private float healthValue = 1f;
 
+	private int lastBossBarHitpoints = -1;
+
+	private int lastBossBarSegmentCount = -1;
+
 	private bool newTurn;
 
 	private bool aiOverwatchIndicator;
@@ -95,6 +99,10 @@ public class ActorView : ModelView<ActorModel>
 	private GameObject commandSkillSelectedIndicator;
 
 	private HealthIndicator healthIndicator;
+
+	private readonly List<ActorEffectInfoData> cachedHealthBarEffects = new List<ActorEffectInfoData>();
+
+	private List<ActorStatusInfoHealthBar> cachedTimedEffectStatusInfos;
 
 	private GameObject healthBarPosition;
 
@@ -258,6 +266,8 @@ public class ActorView : ModelView<ActorModel>
 	public CharacterAnimationController CharacterAnimationController { get; private set; }
 
 	public HealthIndicator HealthIndicator => healthIndicator;
+
+	public IReadOnlyList<ActorEffectInfoData> CachedHealthBarEffects => cachedHealthBarEffects;
 
 	public WeaponRangeVisualization AbilityRangeVisualizer
 	{
@@ -543,46 +553,76 @@ public class ActorView : ModelView<ActorModel>
 	{
 		if (healthIndicator != null)
 		{
-			bool flag = IsVisibleToSurvivors && showHealthIndicator;
+			bool flag = base.Model != null && base.Model.UsesScreenTopHealthBar;
+			bool flag2 = (IsVisibleToSurvivors || flag) && showHealthIndicator;
 			if (base.Model.IsFlare)
 			{
-				Helpers.GameObjectSetActive(healthIndicator, flag);
-				Helpers.GameObjectSetActive(healthIndicator.HealthBar, value: false);
-				Helpers.GameObjectSetActive(healthIndicator.ShieldHPBar, value: false);
-				if (updateAll)
+				Helpers.GameObjectSetActive(healthIndicator, flag2);
+				if (healthIndicator.HealthBar != null)
 				{
-					healthIndicator.NameLabel.text = base.Model.Name;
+					Helpers.GameObjectSetActive(healthIndicator.HealthBar, value: false);
+				}
+				if (healthIndicator.ShieldHPBar != null)
+				{
+					Helpers.GameObjectSetActive(healthIndicator.ShieldHPBar, value: false);
+				}
+				if (updateAll && healthIndicator.NameLabel != null)
+				{
+					if (base.Model.Definition.BossType != BossType.Any)
+					{
+						healthIndicator.NameLabel.text = SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("ActorName." + base.Model.Definition.BossType);
+					}
+					else
+					{
+						healthIndicator.NameLabel.text = base.Model.Name;
+					}
 				}
 			}
 			else
 			{
-				bool flag2 = base.Model.Faction == Faction.Survivor;
-				bool flag3 = base.Model.StrugglesLeft <= 0;
-				bool flag4 = base.Model.Faction == Faction.Lure;
+				bool flag3 = base.Model.Faction == Faction.Survivor;
+				bool flag4 = base.Model.StrugglesLeft <= 0;
+				bool flag5 = base.Model.Faction == Faction.Lure;
+				bool usesScreenTopHealthBar = base.Model.UsesScreenTopHealthBar;
 				float num = (float)base.Model.Hitpoints / (float)base.Model.MaxHitPoints;
 				float num2 = (float)base.Model.ShieldHitPoints / (float)base.Model.MaxShieldHitPoints;
-				healthIndicator.gameObject.SetActive(flag && !flag4);
-				healthIndicator.HealthBar.gameObject.SetActive(flag && num > 0f && (flag2 || flag3 || num < 1f || num2 < 1f));
-				healthIndicator.ShieldHPBar.gameObject.SetActive(flag && num2 > 0f && (flag2 || flag3 || num2 < 1f));
+				bool active = flag2 && !flag5;
+				healthIndicator.gameObject.SetActive(active);
+				bool flag6 = usesScreenTopHealthBar || flag3 || flag4 || num < 1f || num2 < 1f;
+				if (healthIndicator.HealthBar != null)
+				{
+					healthIndicator.HealthBar.gameObject.SetActive(flag2 && flag6 && (usesScreenTopHealthBar || num > 0f));
+				}
+				if (healthIndicator.ShieldHPBar != null)
+				{
+					healthIndicator.ShieldHPBar.gameObject.SetActive(flag2 && num2 > 0f && (usesScreenTopHealthBar || flag3 || flag4 || num2 < 1f));
+				}
 				if (healthIndicator.ChargePointContainer != null && num == 0f)
 				{
 					Helpers.GameObjectSetActive(healthIndicator.ChargePointContainer.gameObject, value: false);
 				}
 			}
-			if (base.Model.IsHuman && updateAll)
+			if (base.Model.IsHuman && updateAll && healthIndicator.NameLabel != null)
 			{
-				bool flag5 = false;
+				bool flag7 = false;
 				if (base.Model.manager != null && base.Model.manager.Player != null && base.Model.manager.Player.Combat != null && base.Model.manager.Player.Combat.IsPVPMission && base.Model.manager.Player.SurvivorContainer != null && base.Model.manager.Player.SurvivorContainer.Survivors != null)
 				{
-					flag5 = !GameManager.Instance.playerModel.SurvivorContainer.Survivors.Contains(base.Model as SurvivorModel);
+					flag7 = !GameManager.Instance.playerModel.SurvivorContainer.Survivors.Contains(base.Model as SurvivorModel);
 				}
-				healthIndicator.NameLabel.text = (flag5 ? GameManager.Instance.GetFilteredText(base.Model.Name) : base.Model.Name);
+				if (base.Model.Definition.BossType != BossType.Any)
+				{
+					healthIndicator.NameLabel.text = SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("ActorName." + base.Model.Definition.BossType);
+				}
+				else
+				{
+					healthIndicator.NameLabel.text = (flag7 ? GameManager.Instance.GetFilteredText(base.Model.Name) : base.Model.Name);
+				}
 			}
 			if (base.Model.Faction == Faction.Walker)
 			{
 				if (healthIndicator.ToughWalkerIcon != null)
 				{
-					healthIndicator.ToughWalkerIcon.gameObject.SetActive(base.Model.IsBoss && flag);
+					healthIndicator.ToughWalkerIcon.gameObject.SetActive(base.Model.IsBoss && flag2);
 				}
 				Helpers.GameObjectSetActive(healthIndicator.BossWalkerIcon, base.Model.IsBossWalker);
 			}
@@ -648,7 +688,10 @@ public class ActorView : ModelView<ActorModel>
 		if (remoteIndicator != null && base.Model.IsRemoteWeakened)
 		{
 			remoteIndicator.SetActive(IsVisibleToSurvivors);
-			healthIndicator.UpdateRemote(isActive: true);
+			if (healthIndicator != null)
+			{
+				healthIndicator.UpdateRemote(isActive: true);
+			}
 		}
 		if (ABTestA2Indicator != null && ABTestA2Indicator.activeInHierarchy != IsVisibleToSurvivors && base.Model.IsABTesterA2ed)
 		{
@@ -692,12 +735,95 @@ public class ActorView : ModelView<ActorModel>
 		if (HealthIndicator != null)
 		{
 			HealthIndicator.SetCoverIconEnabled(coverState);
+			RefreshHealthBarEffectCache();
+		}
+	}
+
+	public void RefreshHealthBarEffectCache()
+	{
+		cachedHealthBarEffects.Clear();
+		if (healthIndicator == null)
+		{
+			return;
+		}
+		List<ActorEffectInfoSnapshot> list = healthIndicator.CaptureVisibleEffects();
+		for (int i = 0; i < list.Count; i++)
+		{
+			if (HealthBarEffectMetadata.TryToInfoData(list[i], out var data))
+			{
+				cachedHealthBarEffects.Add(data);
+			}
+		}
+		if (cachedTimedEffectStatusInfos == null)
+		{
+			return;
+		}
+		for (int j = 0; j < cachedTimedEffectStatusInfos.Count; j++)
+		{
+			if (HealthBarEffectMetadata.TryFromTimedEffect(cachedTimedEffectStatusInfos[j], healthIndicator.TimedEffectIndicators, healthIndicator.StatusIndicatorSprite, healthIndicator.StatusIndicator, healthIndicator.SecondaryStatusIndicatorSprite, (!(healthIndicator.SecondaryStatusIndicatorSprite != null)) ? null : ((healthIndicator.SecondaryStatusIndicatorSprite.transform.parent != null) ? healthIndicator.SecondaryStatusIndicatorSprite.transform.parent.gameObject : healthIndicator.StatusIndicator), (healthIndicator.StatusIndicatorSprite != null) ? healthIndicator.StatusIndicatorSprite.atlas : null, (healthIndicator.SecondaryStatusIndicatorSprite != null) ? healthIndicator.SecondaryStatusIndicatorSprite.atlas : null, out var data2))
+			{
+				cachedHealthBarEffects.Add(data2);
+			}
 		}
 	}
 
 	public void SetHealthIndicatorValue(float value)
 	{
+		float num = healthValue;
 		healthValue = value;
+		if (!(healthIndicator != null) || !healthIndicator.IsScreenTopBossBar || base.Model == null)
+		{
+			return;
+		}
+		int hitpoints = base.Model.Hitpoints;
+		int num2 = (base.Model.IsSegmentedHP ? base.Model.SegmentedHPCount : 0);
+		HealthBarUpdateMode mode;
+		if (lastBossBarHitpoints < 0)
+		{
+			if (value > num + 1E-07f)
+			{
+				mode = HealthBarUpdateMode.Heal;
+			}
+			else
+			{
+				if (!(value < num - 1E-07f))
+				{
+					return;
+				}
+				mode = HealthBarUpdateMode.Damage;
+			}
+		}
+		else if (base.Model.IsSegmentedHP && num2 < lastBossBarSegmentCount)
+		{
+			mode = HealthBarUpdateMode.Damage;
+		}
+		else if (base.Model.IsSegmentedHP && num2 > lastBossBarSegmentCount)
+		{
+			mode = HealthBarUpdateMode.Heal;
+		}
+		else if (hitpoints < lastBossBarHitpoints)
+		{
+			mode = HealthBarUpdateMode.Damage;
+		}
+		else if (hitpoints > lastBossBarHitpoints)
+		{
+			mode = HealthBarUpdateMode.Heal;
+		}
+		else if (value < num - 1E-07f)
+		{
+			mode = HealthBarUpdateMode.Damage;
+		}
+		else
+		{
+			if (!(value > num + 1E-07f))
+			{
+				return;
+			}
+			mode = HealthBarUpdateMode.Heal;
+		}
+		lastBossBarHitpoints = hitpoints;
+		lastBossBarSegmentCount = num2;
+		healthIndicator.SyncBossBarFromModel(base.Model, mode, value);
 	}
 
 	public void SetSpeechBubble(bool enabled)
@@ -846,7 +972,14 @@ public class ActorView : ModelView<ActorModel>
 		DisableOnDeathObjects();
 		FadeAndDestroyShadow();
 		DestroySelectionIndicator();
-		DestroyHealthIndicator();
+		if (base.Model != null && base.Model.UsesScreenTopHealthBar && healthIndicator != null)
+		{
+			healthIndicator.ShowBossDefeated();
+		}
+		else
+		{
+			DestroyHealthIndicator(forceDestroy: true);
+		}
 		DestroyStunIndicator();
 		DestroyStaggerIndicator();
 		DestroyRemoteIndicator();
@@ -937,7 +1070,12 @@ public class ActorView : ModelView<ActorModel>
 		notificationManager = new ActorNotificationManager(base.transform);
 		if (UseModelForInitialPosition && GridView.Instance != null)
 		{
-			FixedVec3 position = GridView.Instance.GetPosition(base.Model.GridCoordinate);
+			GridCoordinate coordinate = base.Model.GridCoordinate;
+			if (base.Model is TankActorModel tankActorModel)
+			{
+				coordinate = tankActorModel.GetVisualCenterCell();
+			}
+			FixedVec3 position = GridView.Instance.GetPosition(coordinate);
 			base.transform.position = position.ToVector3();
 		}
 		if (survivorAnimationController != null)
@@ -980,7 +1118,15 @@ public class ActorView : ModelView<ActorModel>
 		}
 		CreateAbilityRangeIndicator();
 		CreateActivationRangeIndicator();
-		if (base.Model.Faction == Faction.Survivor)
+		if (base.Model.UseSpawnRotationOverride)
+		{
+			base.transform.eulerAngles = new Vector3(0f, base.Model.SpawnRotationY, 0f);
+		}
+		else if (base.Model is TankActorModel tankActorModel2)
+		{
+			base.transform.eulerAngles = new Vector3(0f, FacingDirections.ToRotationY(tankActorModel2.Facing), 0f);
+		}
+		else if (base.Model.Faction == Faction.Survivor)
 		{
 			if (GridView.Instance != null)
 			{
@@ -1003,7 +1149,7 @@ public class ActorView : ModelView<ActorModel>
 			{
 				UpdateHealthBarColor();
 			}
-			else
+			else if (healthIndicator.HealthBar != null && healthIndicator.HealthBar.foregroundWidget != null)
 			{
 				healthIndicator.HealthBar.foregroundWidget.color = Color.red;
 			}
@@ -1014,7 +1160,7 @@ public class ActorView : ModelView<ActorModel>
 		}
 		float healthIndicatorValue = (float)base.Model.Hitpoints / (float)base.Model.MaxHitPoints;
 		SetHealthIndicatorValue(healthIndicatorValue);
-		if (base.Model.IsWalker && base.Model is WalkerModel { WalkerType: WalkerType.WalkerCommonWealth } walkerModel2 && Helpers.GameObjectSetActive(healthIndicator.MultiIconIndicator.gameObject, value: true))
+		if (base.Model.IsWalker && base.Model is WalkerModel { WalkerType: WalkerType.WalkerCommonWealth } walkerModel2 && healthIndicator.MultiIconIndicator != null && Helpers.GameObjectSetActive(healthIndicator.MultiIconIndicator.gameObject, value: true))
 		{
 			TraitEntry traitWithTraitIdentifier = walkerModel2.GetTraitWithTraitIdentifier("HealthThresholdedStatusResistance");
 			int parameterCount = GameManager.Instance.gameEconomyData.GetTraitDefinition(traitWithTraitIdentifier.TraitIdentifier).GetParameterCount();
@@ -1547,21 +1693,28 @@ public class ActorView : ModelView<ActorModel>
 		}
 		if (list.Count > 0)
 		{
+			cachedTimedEffectStatusInfos = new List<ActorStatusInfoHealthBar>(list);
 			ShowTimedEffectIndicator(list);
 		}
-		else if (num <= 0)
+		else
 		{
+			cachedTimedEffectStatusInfos = null;
+			if (num > 0)
+			{
+				return;
+			}
 			DisableLocationIndicator();
 			if (healthIndicator != null)
 			{
 				healthIndicator.DisableMultipleTurnIndicator();
 			}
 		}
+		RefreshHealthBarEffectCache();
 	}
 
 	private void UpdateHealthBar()
 	{
-		if (healthIndicator != null && healthIndicator.HealthBar.value != healthValue)
+		if ((!(healthIndicator != null) || !healthIndicator.IsScreenTopBossBar) && healthIndicator != null && healthIndicator.HealthBar != null && healthIndicator.HealthBar.value != healthValue)
 		{
 			if (healthValue > healthIndicator.HealthBar.value)
 			{
@@ -1581,8 +1734,11 @@ public class ActorView : ModelView<ActorModel>
 
 	private void UpdateHealthBarColor()
 	{
-		InjuryType injuryTypeFromRatio = GetInjuryTypeFromRatio(GameManager.Instance.gameEconomyData, base.Model, healthIndicator.HealthBar.value);
-		healthIndicator.HealthBar.foregroundWidget.color = healthBarInjuryTypeColorsConfig.GetColorForInjuryType(injuryTypeFromRatio);
+		if (!(healthIndicator == null) && !(healthIndicator.HealthBar == null) && !(healthIndicator.HealthBar.foregroundWidget == null))
+		{
+			InjuryType injuryTypeFromRatio = GetInjuryTypeFromRatio(GameManager.Instance.gameEconomyData, base.Model, healthIndicator.HealthBar.value);
+			healthIndicator.HealthBar.foregroundWidget.color = healthBarInjuryTypeColorsConfig.GetColorForInjuryType(injuryTypeFromRatio);
+		}
 	}
 
 	private void UpdateCharacterSelectionIndicator()
@@ -1710,7 +1866,10 @@ public class ActorView : ModelView<ActorModel>
 
 	private void OnDisable()
 	{
-		DestroyHealthIndicator();
+		if (base.Model == null || !base.Model.UsesScreenTopHealthBar)
+		{
+			DestroyHealthIndicator(forceDestroy: true);
+		}
 		DestroySelectionIndicator();
 		DestroyStunIndicator();
 		DestroyStaggerIndicator();
@@ -1750,6 +1909,7 @@ public class ActorView : ModelView<ActorModel>
 		{
 			CombatView.Instance.RemoveActorView(this);
 		}
+		DestroyHealthIndicator(forceDestroy: true);
 	}
 
 	private void CheckForStruggleSeriousness()
@@ -2078,10 +2238,13 @@ public class ActorView : ModelView<ActorModel>
 		}
 		if (changed == "actorTurnToTarget")
 		{
-			GridCoordinate coordinate = (GridCoordinate)args;
-			FixedVec3 position = GridView.Instance.GetPosition(base.Model.GridCoordinate);
-			FixedVec3 position2 = GridView.Instance.GetPosition(coordinate);
-			VisualizationQueue.Instance.Add(new TurnToTargetVisualizationTask(base.Model, position.ToVector3(), position2.ToVector3()));
+			if (!(base.Model is TankActorModel))
+			{
+				GridCoordinate coordinate = (GridCoordinate)args;
+				FixedVec3 position = GridView.Instance.GetPosition(base.Model.GridCoordinate);
+				FixedVec3 position2 = GridView.Instance.GetPosition(coordinate);
+				VisualizationQueue.Instance.Add(new TurnToTargetVisualizationTask(base.Model, position.ToVector3(), position2.ToVector3()));
+			}
 			return;
 		}
 		if (changed == "actorCreateThreat")
@@ -2334,8 +2497,11 @@ public class ActorView : ModelView<ActorModel>
 			{
 				VisualizationQueue.Instance.Add(new DelayedNotificationVisualizationTask(base.Model, delegate
 				{
-					string localizedText5 = SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("ActorNotification.Bleeding");
-					AddNotification(new ActorNotificationMessage(localizedText5, "Ui_Icon_StatusEffect_Bleeding", NotificationSound.None, ActorNotificationType.TimedEffectNotification));
+					if (base.Model != null && !base.Model.IsDead)
+					{
+						string localizedText5 = SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("ActorNotification.Bleeding");
+						AddNotification(new ActorNotificationMessage(localizedText5, "Ui_Icon_StatusEffect_Bleeding", NotificationSound.None, ActorNotificationType.TimedEffectNotification));
+					}
 				}));
 			}
 			else if (traitDefinition != null && traitDefinition.Identifier.ToLower() == "InspirePerKillIncreaseDamageModifierTrait".ToLower())
@@ -2594,7 +2760,7 @@ public class ActorView : ModelView<ActorModel>
 				{
 					healthIndicator.HealthBar.foregroundWidget.color = Color.red;
 				}
-				if (commandSkillChangeRedHealth == "HealRedHealth")
+				if (commandSkillChangeRedHealth == "HealRedHealth" && healthIndicator != null && healthIndicator.HealthBar != null && healthIndicator.HealthBar.foregroundWidget != null)
 				{
 					if (base.Model.OnRedHealthBar)
 					{
@@ -3155,6 +3321,43 @@ public class ActorView : ModelView<ActorModel>
 				PlayRemoveNegativeEffect();
 			}));
 		}
+		else if (changed == "FortificationsStateChanged")
+		{
+			VisualizationQueue.Instance.Add(new DelayedNotificationVisualizationTask(base.Model, delegate
+			{
+				bool isInFortifications = base.Model.IsInFortifications;
+				healthIndicator?.UpdateFortifications();
+				if (isInFortifications)
+				{
+					string localizedText5 = SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("BattleTips.CommandSkillFortifications.Name");
+					AddNotification(new ActorNotificationMessage(localizedText5));
+				}
+				if (CharacterAnimationController != null && !base.Model.IsWalker)
+				{
+					if (isInFortifications)
+					{
+						CharacterAnimationController.SetIdleStance(IdleStance.HalfCover);
+					}
+					else
+					{
+						bool flag6 = (GameManager.Instance.playerModel?.Combat)?.HasCover(base.Model.GridCoordinate) ?? false;
+						CharacterAnimationController.SetIdleStance(flag6 ? IdleStance.HalfCover : IdleStance.Stand);
+					}
+				}
+				CombatHUD combatHUD2 = SingularityMonoBehaviour<HUDManager>.Instance.GetNoCreation(UIType.CombatHUD) as CombatHUD;
+				if (combatHUD2 != null)
+				{
+					combatHUD2.UpdateTheActiveSKill(base.Model);
+				}
+			}));
+		}
+		else if (changed == "FortificationsRemove")
+		{
+			VisualizationQueue.Instance.Add(new DelayedNotificationVisualizationTask(base.Model, delegate
+			{
+				AddNotification(new ActorNotificationMessage(SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("Traits.FortificationsRemove")));
+			}));
+		}
 	}
 
 	private void AddDelayedNotification(ActorModel actor, Action delayedNotification)
@@ -3397,63 +3600,41 @@ public class ActorView : ModelView<ActorModel>
 
 	private void CreateHealthIndicator()
 	{
-		if (!(healthIndicator == null))
+		if (string.IsNullOrEmpty(base.Model.Definition.Class) || !(healthIndicator == null))
 		{
 			return;
 		}
-		healthBarPosition = new GameObject("Health bar position");
-		healthBarPosition.transform.parent = base.transform;
-		healthBarPosition.transform.localPosition = new Vector3(0f, base.Model.IsAIControlled ? 1.8f : 2.1f, 0f);
-		healthIndicator = CombatView.Instance.CombatHUD.CreateHealthIndicator(base.Model.Faction);
+		bool usesScreenTopHealthBar = base.Model.UsesScreenTopHealthBar;
+		CombatHUD combatHUD = CombatView.Instance.CombatHUD;
+		if (!usesScreenTopHealthBar)
+		{
+			healthBarPosition = new GameObject("Health bar position");
+			healthBarPosition.transform.parent = base.transform;
+			healthBarPosition.transform.localPosition = new Vector3(0f, base.Model.IsAIControlled ? 1.8f : 2.1f, 0f);
+			healthIndicator = combatHUD.CreateHealthIndicator(base.Model.Faction);
+		}
+		else
+		{
+			healthIndicator = combatHUD.CreateBossTopHealthIndicator();
+		}
 		if (healthIndicator != null)
 		{
-			healthIndicator.SetBindActor(base.Model);
-			FactionColorEntry factionColorData = GameManager.Instance.GetFactionColorData(base.Model.Faction);
-			if (healthIndicator.ActionPoint1 != null && healthIndicator.ActionPoint2 != null)
+			SetupHealthIndicatorCommon();
+			if (usesScreenTopHealthBar)
 			{
-				healthIndicator.ActionPoint1.color = (base.Model.AbilityCompleted ? Color.gray : Color.green);
-				healthIndicator.ActionPoint2.color = (base.Model.MoveCompleted ? Color.gray : Color.green);
+				combatHUD.PinBossTopHealthIndicator(healthIndicator);
+				lastBossBarHitpoints = base.Model.Hitpoints;
+				lastBossBarSegmentCount = (base.Model.IsSegmentedHP ? base.Model.SegmentedHPCount : 0);
+				if (base.Model.MaxHitPoints > 0)
+				{
+					healthValue = (float)base.Model.Hitpoints / (float)base.Model.MaxHitPoints;
+				}
+				healthIndicator.SyncBossBarFromModel(base.Model, HealthBarUpdateMode.Instant);
 			}
-			if (healthIndicator.LevelLabel != null)
+			else
 			{
-				healthIndicator.LevelLabel.text = (base.Model.IsEnvironmental ? "" : base.Model.Level.ToString());
+				healthIndicator.FollowTarget(healthBarPosition);
 			}
-			if (base.Model.IsEnvironmental)
-			{
-				Vector3 localPosition = healthIndicator.transform.localPosition;
-				healthIndicator.ActorClass.transform.localPosition = new Vector3(0f, localPosition.y, localPosition.z);
-				healthIndicator.LevelBackgroundSprite.enabled = false;
-			}
-			if (healthIndicator.ChargePointBgIcons != null)
-			{
-				int maxLevel = base.Model.ChargeMeter.MaxLevel;
-				for (int i = 0; i < healthIndicator.ChargePointBgIcons.Length; i++)
-				{
-					healthIndicator.ChargePointBgIcons[i].SetActive(i < maxLevel);
-				}
-				healthIndicator.UpdateChargeMeterIcons(base.Model.ChargeMeter);
-				if (healthIndicator.ChargePointContainer != null)
-				{
-					healthIndicator.ChargePointContainer.SetActive(!base.Model.IsAIControlled);
-				}
-			}
-			healthIndicator.ActorClass.spriteName = HelpersGfx.GetHealthbarClassIconName(base.Model);
-			if (factionColorData != null)
-			{
-				if (healthIndicator.ActorClass != null)
-				{
-					healthIndicator.ActorClass.color = factionColorData.UIColor;
-				}
-				if (healthIndicator.NameLabel != null)
-				{
-					healthIndicator.NameLabel.color = factionColorData.UIColor;
-				}
-				if (healthIndicator.LevelLabel != null)
-				{
-					healthIndicator.LevelLabel.color = factionColorData.UIColor;
-				}
-			}
-			healthIndicator.FollowTarget(healthBarPosition);
 			ShowHealthIndicator(visible: true);
 			CombatModel combat = GameManager.Instance.playerModel.Combat;
 			if (combat != null && combat.HasCover(base.Model.GridCoordinate))
@@ -3475,12 +3656,80 @@ public class ActorView : ModelView<ActorModel>
 		InvokeRepeating("UpdateTimedEffectIndicator", 0f, 1f);
 	}
 
-	private void DestroyHealthIndicator()
+	private void SetupHealthIndicatorCommon()
 	{
-		if (healthIndicator != null)
+		healthIndicator.SetBindActor(base.Model);
+		FactionColorEntry factionColorData = GameManager.Instance.GetFactionColorData(base.Model.Faction);
+		if (healthIndicator.ActionPoint1 != null && healthIndicator.ActionPoint2 != null)
 		{
+			healthIndicator.ActionPoint1.color = (base.Model.AbilityCompleted ? Color.gray : Color.green);
+			healthIndicator.ActionPoint2.color = (base.Model.MoveCompleted ? Color.gray : Color.green);
+		}
+		if (healthIndicator.LevelLabel != null)
+		{
+			healthIndicator.LevelLabel.text = (base.Model.IsEnvironmental ? "" : base.Model.Level.ToString());
+		}
+		if (base.Model.IsEnvironmental && healthIndicator.LevelBackgroundSprite != null)
+		{
+			Vector3 localPosition = healthIndicator.transform.localPosition;
+			if (healthIndicator.ActorClass != null)
+			{
+				healthIndicator.ActorClass.transform.localPosition = new Vector3(0f, localPosition.y, localPosition.z);
+			}
+			healthIndicator.LevelBackgroundSprite.enabled = false;
+		}
+		if (healthIndicator.ChargePointContainer != null)
+		{
+			healthIndicator.ChargePointContainer.SetActive(!base.Model.UsesScreenTopHealthBar && !base.Model.IsAIControlled);
+		}
+		if (healthIndicator.ChargePointBgIcons != null && !base.Model.UsesScreenTopHealthBar)
+		{
+			int maxLevel = base.Model.ChargeMeter.MaxLevel;
+			for (int i = 0; i < healthIndicator.ChargePointBgIcons.Length; i++)
+			{
+				healthIndicator.ChargePointBgIcons[i].SetActive(i < maxLevel);
+			}
+			healthIndicator.UpdateChargeMeterIcons(base.Model.ChargeMeter);
+		}
+		if (healthIndicator.ActorClass != null)
+		{
+			healthIndicator.ActorClass.spriteName = HelpersGfx.GetHealthbarClassIconName(base.Model);
+		}
+		if (factionColorData != null)
+		{
+			if (healthIndicator.ActorClass != null)
+			{
+				healthIndicator.ActorClass.color = factionColorData.UIColor;
+			}
+			if (healthIndicator.NameLabel != null)
+			{
+				healthIndicator.NameLabel.color = factionColorData.UIColor;
+			}
+			if (healthIndicator.LevelLabel != null)
+			{
+				healthIndicator.LevelLabel.color = factionColorData.UIColor;
+			}
+		}
+		healthIndicator.EffectGridUpdated = RefreshHealthBarEffectCache;
+		RefreshHealthBarEffectCache();
+	}
+
+	private void DestroyHealthIndicator(bool forceDestroy = false)
+	{
+		if (!(healthIndicator == null) && (forceDestroy || base.Model == null || !base.Model.UsesScreenTopHealthBar))
+		{
+			if (healthIndicator.IsScreenTopBossBar && CombatView.Instance != null && CombatView.Instance.CombatHUD != null)
+			{
+				CombatView.Instance.CombatHUD.UnregisterBossTopHealthBar(healthIndicator);
+			}
+			healthIndicator.EffectGridUpdated = null;
 			UnityEngine.Object.Destroy(healthIndicator.gameObject);
 			healthIndicator = null;
+			if (healthBarPosition != null)
+			{
+				UnityEngine.Object.Destroy(healthBarPosition);
+				healthBarPosition = null;
+			}
 		}
 	}
 
@@ -4048,7 +4297,7 @@ public class ActorView : ModelView<ActorModel>
 			return;
 		}
 		CombatModel combat = GameManager.Instance.playerModel.Combat;
-		if (!base.Model.IsWalker && combat != null && combat.HasCover(base.Model.GridCoordinate))
+		if (!base.Model.IsWalker && combat != null && (base.Model.IsInFortifications || combat.HasCover(base.Model.GridCoordinate)))
 		{
 			CharacterAnimationController.SetIdleStance(IdleStance.HalfCover);
 		}

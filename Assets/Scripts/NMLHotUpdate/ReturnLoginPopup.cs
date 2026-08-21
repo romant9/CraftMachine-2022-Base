@@ -118,6 +118,22 @@ public class ReturnLoginPopup : HUDElement
 
 	private void RefreshLoginTabAvailability(bool selectPrivilegeWhenCompleted)
 	{
+		ReturnActivityManager manager = GetManager();
+		bool flag = manager != null && manager.ReturnLogin?.IsCompleted == true;
+		Helpers.GameObjectSetActive(loginTab, !flag);
+		if (flag && tabs != null)
+		{
+			RepositionTabs();
+		}
+		if (flag && selectPrivilegeWhenCompleted && tabs != null)
+		{
+			ReturnActivityTabType returnActivityTabType = (IsTabAvailable(ReturnActivityTabType.Privilege) ? ReturnActivityTabType.Privilege : ReturnActivityTabType.QuestsAndExchange);
+			if (IsTabAvailable(returnActivityTabType))
+			{
+				tabs.SelectTab((int)returnActivityTabType);
+				OnTabSelected((int)returnActivityTabType);
+			}
+		}
 	}
 
 	private void CloseExpiredTabs(bool enforceSelection)
@@ -152,7 +168,12 @@ public class ReturnLoginPopup : HUDElement
 
 	private void SwitchAwayFromExpiredTab()
 	{
-		if (IsTabAvailable(ReturnActivityTabType.QuestsAndExchange))
+		if (IsTabAvailable(ReturnActivityTabType.Privilege))
+		{
+			tabs.SelectTab(1);
+			OnTabSelected(1);
+		}
+		else if (IsTabAvailable(ReturnActivityTabType.QuestsAndExchange))
 		{
 			tabs.SelectTab(2);
 			OnTabSelected(2);
@@ -165,11 +186,15 @@ public class ReturnLoginPopup : HUDElement
 
 	private ReturnActivityTabType ResolveDefaultTab()
 	{
-		if (!IsTabUsable(ReturnActivityTabType.Privilege))
+		if (IsTabUsable(ReturnActivityTabType.Login))
 		{
-			return ReturnActivityTabType.QuestsAndExchange;
+			return ReturnActivityTabType.Login;
 		}
-		return ReturnActivityTabType.Privilege;
+		if (IsTabUsable(ReturnActivityTabType.Privilege))
+		{
+			return ReturnActivityTabType.Privilege;
+		}
+		return ReturnActivityTabType.QuestsAndExchange;
 	}
 
 	private bool IsTabUsable(ReturnActivityTabType tab)
@@ -193,15 +218,28 @@ public class ReturnLoginPopup : HUDElement
 		{
 			return false;
 		}
-		if (tab != ReturnActivityTabType.QuestsAndExchange)
+		switch (tab)
 		{
+		case ReturnActivityTabType.Login:
+			if (manager.IsReturnActivityAvailable())
+			{
+				ReturnLoginModel returnLogin = manager.ReturnLogin;
+				if (returnLogin == null)
+				{
+					return true;
+				}
+				return !returnLogin.IsCompleted;
+			}
+			return false;
+		default:
 			return manager.IsReturnActivityAvailable();
+		case ReturnActivityTabType.QuestsAndExchange:
+			if (!manager.IsReturnActivityAvailable())
+			{
+				return manager.IsReturnExchangeAvailable();
+			}
+			return true;
 		}
-		if (!manager.IsReturnActivityAvailable())
-		{
-			return manager.IsReturnExchangeAvailable();
-		}
-		return true;
 	}
 
 	private void RefreshRedDots()
@@ -224,12 +262,12 @@ public class ReturnLoginPopup : HUDElement
 		}
 		return tab switch
 		{
-			ReturnActivityTabType.Login => manager.ReturnLogin?.HasRedDot ?? false, 
-			ReturnActivityTabType.Privilege => manager.ReturnPrivilege?.HasRedDot ?? false, 
-			ReturnActivityTabType.QuestsAndExchange => manager.ReturnQuestAndExchange?.HasRedDot ?? false, 
-			ReturnActivityTabType.SpecialOffer => manager.ReturnThreeDay?.HasRedDot ?? false, 
-			ReturnActivityTabType.EndlessGiftDeal => manager.ReturnEndlessDeal?.HasRedDot ?? false, 
-			_ => false, 
+			ReturnActivityTabType.Login => manager.ReturnLogin?.HasRedDot ?? false,
+			ReturnActivityTabType.Privilege => manager.ReturnPrivilege?.HasRedDot ?? false,
+			ReturnActivityTabType.QuestsAndExchange => manager.ReturnQuestAndExchange?.HasRedDot ?? false,
+			ReturnActivityTabType.SpecialOffer => manager.ReturnThreeDay?.HasRedDot ?? false,
+			ReturnActivityTabType.EndlessGiftDeal => manager.ReturnEndlessDeal?.HasRedDot ?? false,
+			_ => false,
 		};
 	}
 
@@ -264,15 +302,20 @@ public class ReturnLoginPopup : HUDElement
 		CloseAllPanels();
 		switch (tabType)
 		{
+		case ReturnActivityTabType.Login:
+			returnLoginSevenDayPopup?.Open();
+			break;
 		case ReturnActivityTabType.Privilege:
 			returnLoginPrivilegePopup?.Open();
 			break;
 		case ReturnActivityTabType.QuestsAndExchange:
 			returnLoginTaskPopup?.Open();
 			break;
-		case ReturnActivityTabType.Login:
 		case ReturnActivityTabType.SpecialOffer:
+			returnLoginThreeDayPopup?.Open();
+			break;
 		case ReturnActivityTabType.EndlessGiftDeal:
+			returnLoginChainGiftPopup?.Open();
 			break;
 		}
 	}

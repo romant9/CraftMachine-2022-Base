@@ -196,36 +196,25 @@ public class RadioCallButton : MonoBehaviourExtended
 					Probability = item.Value
 				});
 			}
-			Dictionary<int, FixedPoint> genericHeroRarityToTokenAmounts = modelManager.GameEconomyData.GetGenericHeroRarityToTokenAmounts(currentDropType, radioTentLevel, DropEventDefinition.DropEventContext.Normal);
-			List<ItemAmountProbabilityData> list3 = new List<ItemAmountProbabilityData>();
-			foreach (KeyValuePair<int, FixedPoint> item2 in genericHeroRarityToTokenAmounts)
+			List<ItemAmountProbabilityData> heroRarityAmounts = BuildHeroRarityAmountsForUi(modelManager.GameEconomyData, currentDropType, radioTentLevel, PhoneCallDefinition ?? radioCallProbabilities.CallDefinition);
+			PhoneCallVisual data = GetData(PhoneCallDefinition);
+			string text = LocalizationManager.GetText((data != null) ? data.LocalisationKey : "");
+			if (PhoneCallDefinition != null && PhoneCallDefinition.SlotNumber > 2)
 			{
-				list3.Add(new ItemAmountProbabilityData
-				{
-					Amount = item2.Key.ToString(),
-					Probability = item2.Value
-				});
+				text = LocalizationManager.GetText("Droprate.Table.Name.SpecialCall");
 			}
-			this.SurvivorRarityAmounts = list2;
-			this.HeroRarityAmounts = list3;
+			list.Add(new RadioCallTableItem(radioCallProbabilities.CallDefinition)
+			{
+				DropName = text,
+				Description = LocalizationManager.GetText("Droprate.Table.Description.RadioCall"),
+				Probabilities = probabilities,
+				SurvivorRarityAmounts = list2,
+				HeroRarityAmounts = heroRarityAmounts,
+				SpecialCallProbabilities = radioCallProbabilities.HighlightedProbabilities,
+				GuarateedHero = radioCallProbabilities.GuaranteedHero
+			});
+			(SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.DropRatesInfoPopup) as DropRatesInfoPopup).TryOpenWithHeroData(list.ToArray());
 		}
-		PhoneCallVisual data = GetData(PhoneCallDefinition);
-		string text = LocalizationManager.GetText((data != null) ? data.LocalisationKey : "");
-		if (PhoneCallDefinition != null && PhoneCallDefinition.SlotNumber > 2)
-		{
-			text = LocalizationManager.GetText("Droprate.Table.Name.SpecialCall");
-		}
-		list.Add(new RadioCallTableItem
-		{
-			DropName = text,
-			Description = LocalizationManager.GetText("Droprate.Table.Description.RadioCall"),
-			Probabilities = probabilities,
-			SurvivorRarityAmounts = this.SurvivorRarityAmounts,
-			HeroRarityAmounts = this.HeroRarityAmounts,
-			SpecialCallProbabilities = radioCallProbabilities.HighlightedProbabilities,
-			GuarateedHero = radioCallProbabilities.GuaranteedHero
-		});
-		(SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.DropRatesInfoPopup) as DropRatesInfoPopup).TryOpenWithHeroData(list.ToArray());
 	}
 
 	private int GetRadioTentLevel()
@@ -241,6 +230,78 @@ public class RadioCallButton : MonoBehaviourExtended
 			}
 		}
 		return result;
+	}
+
+	private List<ItemAmountProbabilityData> BuildHeroRarityAmountsForUi(GameEconomyData ged, DropType dropType, int controlLevel, PhoneCallDefinition callDefinition)
+	{
+		List<ItemAmountProbabilityData> list = new List<ItemAmountProbabilityData>();
+		if (callDefinition != null && !string.IsNullOrEmpty(callDefinition.HeroTokensDropNumber))
+		{
+			bool parseError;
+			List<int> hreoKensDropNumberValues = callDefinition.getHreoKensDropNumberValues(out parseError);
+			if (!parseError && hreoKensDropNumberValues != null && hreoKensDropNumberValues.Count >= 3)
+			{
+				Dictionary<int, FixedPoint> equipmentAndSurvivorRarityProbabilities = ged.GetEquipmentAndSurvivorRarityProbabilities(dropType, DropRewardType.HeroToken, controlLevel);
+				FixedPoint fixedPoint = 0L;
+				FixedPoint fixedPoint2 = 0L;
+				FixedPoint fixedPoint3 = 0L;
+				foreach (KeyValuePair<int, FixedPoint> item in equipmentAndSurvivorRarityProbabilities)
+				{
+					if (item.Key == 2)
+					{
+						fixedPoint = item.Value;
+					}
+					else if (item.Key == 3)
+					{
+						fixedPoint2 = item.Value;
+					}
+					else if (item.Key >= 4)
+					{
+						fixedPoint3 += item.Value;
+					}
+				}
+				if (fixedPoint > 0L)
+				{
+					list.Add(new ItemAmountProbabilityData
+					{
+						Amount = hreoKensDropNumberValues[0].ToString(),
+						Probability = fixedPoint,
+						Rarity = 2
+					});
+				}
+				if (fixedPoint2 > 0L)
+				{
+					list.Add(new ItemAmountProbabilityData
+					{
+						Amount = hreoKensDropNumberValues[1].ToString(),
+						Probability = fixedPoint2,
+						Rarity = 3
+					});
+				}
+				if (fixedPoint3 > 0L)
+				{
+					list.Add(new ItemAmountProbabilityData
+					{
+						Amount = hreoKensDropNumberValues[2].ToString(),
+						Probability = fixedPoint3,
+						Rarity = 4
+					});
+				}
+				if (list.Count > 0)
+				{
+					return list;
+				}
+			}
+		}
+		foreach (KeyValuePair<int, FixedPoint> genericHeroRarityToTokenAmount in ged.GetGenericHeroRarityToTokenAmounts(dropType, controlLevel, DropEventDefinition.DropEventContext.Normal))
+		{
+			list.Add(new ItemAmountProbabilityData
+			{
+				Amount = genericHeroRarityToTokenAmount.Key.ToString(),
+				Probability = genericHeroRarityToTokenAmount.Value
+			});
+		}
+		return list;
 	}
 
 	private void UpdateCashier()
@@ -839,12 +900,12 @@ public class RadioCallButton : MonoBehaviourExtended
 
 	public int GetCallPrice()
 	{
-        int price = 0;
-        if (PayButton != null)
-        {
-            price = PayButton.radioPrice;
-        }
-        return price;
-    }
+		int price = 0;
+		if (PayButton != null)
+		{
+			price = PayButton.radioPrice;
+		}
+		return price;
+	}
 	#endregion
 }

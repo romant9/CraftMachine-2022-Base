@@ -6,7 +6,7 @@ using TWDModel.ContentTypes;
 
 namespace TWDModel
 {
-	public class MapMissionModel : TWDModelObject, IMapMissionModel
+	public class MapMissionModel : TWDModelObject, IMapMissionModel, IChallengeDebuffProvider
 	{
 		public const string StateChanged = "StateChanged";
 
@@ -136,6 +136,28 @@ namespace TWDModel
 					return false;
 				}
 				return weeklyChallenge.Id == ChallengeId;
+			}
+		}
+
+		[JsonIgnore]
+		public bool IsWorldBoss
+		{
+			get
+			{
+				if (base.manager == null)
+				{
+					return false;
+				}
+				MissionSpawnPointGroup spawnPointGroup = base.manager.GameEconomyData.MissionSpawnPointData.GetSpawnPointGroup(MissionSpawnPointGroupId);
+				if (spawnPointGroup != null)
+				{
+					if (spawnPointGroup.Category != MapCategory.GuildBoss && spawnPointGroup.Category != MapCategory.GuildBossPVE)
+					{
+						return spawnPointGroup.Category == MapCategory.GuildBossPVP;
+					}
+					return true;
+				}
+				return false;
 			}
 		}
 
@@ -998,21 +1020,12 @@ namespace TWDModel
 
 		public bool CheckChallengeDebuffAvoid(ChallengeDebuffType challengeDebuffType, RollDiceType rollDiceType)
 		{
-			int chance = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(GetChallengeDebuffs(), challengeDebuffType);
-			return base.manager.Player.RollDice(rollDiceType, chance) != PlayerRandomChanceResult.Failed;
+			return MapMissionDebuffHelper.CheckChallengeDebuffAvoid(this, base.manager, challengeDebuffType, rollDiceType);
 		}
 
 		public bool CheckChallengeHardtoAim(ActorModel source, ActorModel target)
 		{
-			int num = source.GridCoordinate.SquaredDistanceTo(target.GridCoordinate);
-			foreach (List<FixedPoint> item in ChallengeDebufHelps.GetDebufAllParam(GetChallengeDebuffs(), ChallengeDebuffType.HardtoAim))
-			{
-				if (item[0] * item[0] < num && base.manager.Player.RollDice(RollDiceType.Dodge, item[1]) != PlayerRandomChanceResult.Failed)
-				{
-					return true;
-				}
-			}
-			return false;
+			return MapMissionDebuffHelper.CheckChallengeHardtoAim(this, base.manager, source, target);
 		}
 
 		public static FixedPoint GetChallengeActorHit(ActorModel acotr, List<DifficultyIncrementalDebuff> debuffs, int MinHit)
@@ -1023,196 +1036,17 @@ namespace TWDModel
 
 		public bool CheckChallengeWalkerDodge(ActorModel source, ActorModel target)
 		{
-			if (!target.IsWalker)
-			{
-				return false;
-			}
-			List<DifficultyIncrementalDebuff> challengeDebuffs = GetChallengeDebuffs();
-			FixedPoint successProbability = (10000L - GetChallengeActorHit(source, challengeDebuffs, base.manager.GameEconomyData.ConfigData.MinHit)) / 10000.0;
-			return base.manager.Player.RollDice(RollDiceType.Dodge, successProbability) != PlayerRandomChanceResult.Failed;
+			return MapMissionDebuffHelper.CheckChallengeWalkerDodge(this, base.manager, source, target);
 		}
 
 		public bool IsCombatSameClass()
 		{
-			if (base.manager.CombatModel != null)
-			{
-				return (from x in base.manager.CombatModel.MissionRoster
-					group x by x.SurvivorClass into g
-					select g.Count()).Max() >= 3;
-			}
-			return false;
+			return MapMissionDebuffHelper.IsCombatSameClass(base.manager);
 		}
 
 		public void VisitActions(ModelAction action, ActorModel actor, List<ModelAction> addedActions)
 		{
-			if (!(action is StunAction stunAction))
-			{
-				if (!(action is RootAction rootAction))
-				{
-					if (!(action is CrippleAction crippleAction))
-					{
-						if (!(action is BurningOutAction burningOutAction))
-						{
-							if (!(action is DamageAction damageAction) || damageAction is DamageConsumableAction || damageAction.DamagerActor == null)
-							{
-								return;
-							}
-							ApocalypseWeeklyChallengeModel apocalypseWeeklyChallenge = base.manager.Player.ApocalypseWeeklyChallenge;
-							int num = 0;
-							List<DifficultyIncrementalDebuff> challengeDebuffs = GetChallengeDebuffs();
-							if (damageAction.DamagerActor.Faction == Faction.Survivor)
-							{
-								SurvivorModel survivorModel = damageAction.DamagerActor as SurvivorModel;
-								ActorModel targetActor = damageAction.TargetActor;
-								if (CheckChallengeHardtoAim(survivorModel, targetActor))
-								{
-									damageAction.Dodged = true;
-									return;
-								}
-								if (CheckChallengeWalkerDodge(survivorModel, targetActor))
-								{
-									damageAction.Dodged = true;
-									return;
-								}
-								if (targetActor.IsWalker)
-								{
-									EquipmentItemModel weaponEquipment = survivorModel.GetWeaponEquipment();
-									if (weaponEquipment != null && weaponEquipment.Definition.Category == EquipmentCategory.RangeWeapon && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffRangeDodge, RollDiceType.Dodge))
-									{
-										damageAction.Dodged = true;
-										return;
-									}
-									foreach (List<FixedPoint> item in ChallengeDebufHelps.GetDebufAllParam(challengeDebuffs, ChallengeDebuffType.DebuffDmgreductionPercentage))
-									{
-										if (item.Count > 0)
-										{
-											num -= (int)item[(targetActor.DamageCount > item.Count - 1) ? (item.Count - 1) : targetActor.DamageCount];
-										}
-									}
-								}
-								if (targetActor.IsRaider)
-								{
-									EquipmentItemModel weaponEquipment2 = survivorModel.GetWeaponEquipment();
-									if (weaponEquipment2 != null && weaponEquipment2.Definition.Category == EquipmentCategory.RangeWeapon && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffRangeDodgeRaider, RollDiceType.Dodge))
-									{
-										damageAction.Dodged = true;
-										return;
-									}
-									foreach (List<FixedPoint> item2 in ChallengeDebufHelps.GetDebufAllParam(challengeDebuffs, ChallengeDebuffType.DebuffDmgreductionPercentageRaider))
-									{
-										if (item2.Count > 0)
-										{
-											num -= (int)item2[(targetActor.DamageCount > item2.Count - 1) ? (item2.Count - 1) : targetActor.DamageCount];
-										}
-									}
-								}
-								if (IsInApocalyptiWeeklyChallenge)
-								{
-									num += (int)apocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.FinalDamage);
-									if (survivorModel.GridCoordinate.SquaredDistanceTo(targetActor.GridCoordinate) <= 4)
-									{
-										num += (int)apocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.CloseCombat);
-									}
-									if (targetActor.IsChallengeApocalypseEffectDmgIncStatus)
-									{
-										num += (int)apocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.EffectDmgInc);
-									}
-									num += (int)apocalypseWeeklyChallenge.GetApocalypseBuffClassDmgUp(survivorModel.SurvivorClass);
-									if (IsCombatSameClass())
-									{
-										num += (int)apocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.SameClass);
-									}
-									if (damageAction.IsTriggerExtraAttackDamage)
-									{
-										num += (int)apocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.BonusAttack);
-									}
-								}
-								num -= (int)ChallengeDebufHelps.GetDmgReductionByClass(challengeDebuffs, survivorModel.SurvivorClass);
-							}
-							else if (damageAction.DamagerActor.IsWalker && IsInApocalyptiWeeklyChallenge)
-							{
-								num -= (int)apocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.DefenseInc);
-							}
-							num = Math.Max(num, -100);
-							damageAction.CalculateFinalDamage();
-							damageAction.ModifyDamage += damageAction.FinalDamage * num / 100;
-							if (damageAction.TargetActor.IsWalker && damageAction.DamageType != DamageType.Explode)
-							{
-								List<List<FixedPoint>> debufAllParam = ChallengeDebufHelps.GetDebufAllParam(challengeDebuffs, ChallengeDebuffType.PercentageDmgReduction);
-								debufAllParam.OrderByDescending((List<FixedPoint> x) => x[0]);
-								foreach (List<FixedPoint> item3 in debufAllParam)
-								{
-									damageAction.CalculateFinalDamage();
-									if (damageAction.FinalDamage >= damageAction.TargetActor.MaxHitPoints * item3[0] / 100L)
-									{
-										damageAction.ModifyDamage -= (int)(damageAction.FinalDamage * item3[1] / 100L);
-										break;
-									}
-								}
-							}
-							if (!damageAction.TargetActor.IsRaider || damageAction.DamageType == DamageType.Explode)
-							{
-								return;
-							}
-							List<List<FixedPoint>> debufAllParam2 = ChallengeDebufHelps.GetDebufAllParam(challengeDebuffs, ChallengeDebuffType.PercentageDmgReductionRaider);
-							debufAllParam2.OrderByDescending((List<FixedPoint> x) => x[0]);
-							{
-								foreach (List<FixedPoint> item4 in debufAllParam2)
-								{
-									damageAction.CalculateFinalDamage();
-									if (damageAction.FinalDamage >= damageAction.TargetActor.MaxHitPoints * item4[0] / 100L)
-									{
-										damageAction.ModifyDamage -= (int)(damageAction.FinalDamage * item4[1] / 100L);
-										break;
-									}
-								}
-								return;
-							}
-						}
-						if (burningOutAction.TargetActor.IsWalker && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffFireRate, RollDiceType.AvoidBurn))
-						{
-							burningOutAction.Avoided = true;
-						}
-						if (burningOutAction.TargetActor.IsRaider && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffFireRateRaider, RollDiceType.AvoidBurn))
-						{
-							burningOutAction.Avoided = true;
-						}
-					}
-					else
-					{
-						if (crippleAction.TargetActor.IsWalker && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffCrippleRate, RollDiceType.AvoidCripple))
-						{
-							crippleAction.Avoided = true;
-						}
-						if (crippleAction.TargetActor.IsRaider && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffCrippleRateRaider, RollDiceType.AvoidCripple))
-						{
-							crippleAction.Avoided = true;
-						}
-					}
-				}
-				else
-				{
-					if (rootAction.TargetActor.IsWalker && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffRootRate, RollDiceType.AvoidRoot))
-					{
-						rootAction.Avoided = true;
-					}
-					if (rootAction.TargetActor.IsRaider && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffRootRateRaider, RollDiceType.AvoidRoot))
-					{
-						rootAction.Avoided = true;
-					}
-				}
-			}
-			else
-			{
-				if (stunAction.TargetActor.IsWalker && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffStunRate, RollDiceType.AvoidStun) && stunAction.CanNotAvoidStunType == CanNotAvoidStunType.None)
-				{
-					stunAction.Avoided = true;
-				}
-				if (stunAction.TargetActor.IsRaider && CheckChallengeDebuffAvoid(ChallengeDebuffType.DebuffStunRateRaider, RollDiceType.AvoidStun) && stunAction.CanNotAvoidStunType == CanNotAvoidStunType.None)
-				{
-					stunAction.Avoided = true;
-				}
-			}
+			MapMissionDebuffHelper.VisitChallengeDebuffActions(this, base.manager, action, actor, addedActions);
 		}
 	}
 }

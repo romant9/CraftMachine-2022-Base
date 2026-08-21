@@ -1160,6 +1160,7 @@ namespace TWDModel
 		StrandToken = 1152,
 		ScoutMaggieToken = 1153,
 		ReturnMedal = 1154,
-		Count = 1155
+		WorldBossExchangeCoin = 1155,
+		Count = 1156
 	}
 }

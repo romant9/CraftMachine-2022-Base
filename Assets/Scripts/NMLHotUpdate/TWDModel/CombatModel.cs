@@ -22,6 +22,9 @@ namespace TWDModel
 
 		public List<SurvivorModel> MissionRoster = new List<SurvivorModel>();
 
+		[JsonIgnore]
+		private bool missionLogicFailTurnLimitResolved;
+
 		private List<CombatColliderModel> dynamicVisibilityColliders = new List<CombatColliderModel>();
 
 		private List<CombatColliderModel> dynamicMovementColliders = new List<CombatColliderModel>();
@@ -135,6 +138,8 @@ namespace TWDModel
 
 		public const string EndlessModeScoreChanged = "EndlessModeScoreChanged";
 
+		public const string GuildBossPointChanged = "GuildBossPointChanged";
+
 		public const string BattlePassCurrencyEarned = "BattlePassCurrencyEarned";
 
 		public const string EndlessModeMultiplierReduced = "EndlessModeMultiplierReduced";
@@ -206,6 +211,10 @@ namespace TWDModel
 		public int SpawnedWalkerCount { get; set; }
 
 		public int ThreatIncreasePerTurn { get; private set; }
+
+		public double GuildBossPoint { get; set; }
+
+		public long GuildBossDamage { get; private set; }
 
 		public bool MissionStarted { get; set; }
 
@@ -351,6 +360,10 @@ namespace TWDModel
 				{
 					return MapCategory.GuildBattle;
 				}
+				if (IsWorldBossMission)
+				{
+					return GetAttackTargetWorldBossMapCategory();
+				}
 				MapMissionModel attackTargetMissionModel = base.manager.Player.MapContainerModel.AttackTargetMissionModel;
 				if (attackTargetMissionModel != null)
 				{
@@ -405,6 +418,9 @@ namespace TWDModel
 		public PvPMissionType PvPMissionType { get; set; }
 
 		public int AfterAlarmTurns { get; set; }
+
+		[JsonIgnore]
+		public int MissionLogicFailTurnLimit { get; private set; } = -1;
 
 		public int MaxTime { get; set; }
 
@@ -635,13 +651,88 @@ namespace TWDModel
 			}
 		}
 
+		[JsonIgnore]
+		public bool IsWorldBossMission => base.manager?.Player?.GetAttackTargetMissionModel() is WorldBossMissionModel;
+
+		[JsonIgnore]
+		public long WorldBossTimeLimitSeconds
+		{
+			get
+			{
+				if (!(base.manager.Player.GetAttackTargetMissionModel() is WorldBossMissionModel worldBossMissionModel) || worldBossMissionModel.TimeLimitMs <= 0)
+				{
+					return 0L;
+				}
+				return worldBossMissionModel.TimeLimitMs / 1000;
+			}
+		}
+
 		public bool IsEndlessBattleMission => MapCategory == MapCategory.Endless;
+
+		[JsonIgnore]
+		public bool IsGuildBossMission => GetAttackTargetWorldBossMapCategory() == MapCategory.GuildBoss;
+
+		[JsonIgnore]
+		public bool IsGuildBossPVEMission => GetAttackTargetWorldBossMapCategory() == MapCategory.GuildBossPVE;
+
+		[JsonIgnore]
+		public bool IsGuildBossPVPMission => GetAttackTargetWorldBossMapCategory() == MapCategory.GuildBossPVP;
+
+		[JsonIgnore]
+		public bool HasGuildBossRules
+		{
+			get
+			{
+				if (!IsGuildBossMission && !IsGuildBossPVEMission)
+				{
+					return IsGuildBossPVPMission;
+				}
+				return true;
+			}
+		}
 
 		public ResurgenceType1Container ResurgenceType1Container { get; private set; }
 
 		public ResurgenceType2Container ResurgenceType2Container { get; private set; }
 
 		public AttackChainContainer AttackChainContainer { get; set; }
+
+		public void AddGuildBossPoint(double point)
+		{
+			if (point > 0.0)
+			{
+				GuildBossPoint += point;
+				NotifyChange("GuildBossPointChanged", GuildBossPoint);
+			}
+		}
+
+		public void AddGuildBossDamage(long damage)
+		{
+			if (damage > 0)
+			{
+				GuildBossDamage = ((GuildBossDamage > long.MaxValue - damage) ? long.MaxValue : (GuildBossDamage + damage));
+			}
+		}
+
+		private MapCategory GetAttackTargetWorldBossMapCategory()
+		{
+			if (base.manager.Player.GetAttackTargetMissionModel() is WorldBossMissionModel worldBossMissionModel)
+			{
+				if (worldBossMissionModel.WorldBossMissionType == WorldBossMissionType.PVE)
+				{
+					return MapCategory.GuildBossPVE;
+				}
+				if (worldBossMissionModel.WorldBossMissionType == WorldBossMissionType.PVP)
+				{
+					return MapCategory.GuildBossPVP;
+				}
+				if (worldBossMissionModel.WorldBossMissionType == WorldBossMissionType.BOSS)
+				{
+					return MapCategory.GuildBoss;
+				}
+			}
+			return MapCategory.None;
+		}
 
 		public void AddLootSurvivor(SurvivorModel survivorModel)
 		{
@@ -938,6 +1029,10 @@ namespace TWDModel
 			MissionCompleted = false;
 			ResultsResolved = false;
 			CombatFailureReason = "";
+			GuildBossPoint = 0.0;
+			GuildBossDamage = 0L;
+			MissionLogicFailTurnLimit = -1;
+			missionLogicFailTurnLimitResolved = false;
 			TurnManager = new TurnManager();
 			TurnManager.SetManager(base.manager);
 			TurnManager.Initialize();
@@ -959,6 +1054,11 @@ namespace TWDModel
 			ConfigData configData = base.manager.Player.gameEconomyData.ConfigData;
 			ThreatIncreasePerTurn = configData.ThreatIncreasePerTurn;
 			MaxTime = configData.MaxMissionTime;
+			if (base.manager.Player.GetAttackTargetMissionModel() is MapMissionModel { IsWorldBoss: not false })
+			{
+				WorldBossConfig worldBossConfig = base.manager.Player.gameEconomyData.WorldBossConfig;
+				MaxTime = worldBossConfig.BattleTimeLimit;
+			}
 			Models = new ModelList<TWDModelObject>();
 			AllActors = new ModelList<ActorModel>();
 			Survivors = new ModelList<ActorModel>();
@@ -1041,6 +1141,10 @@ namespace TWDModel
 
 		public int GetRandomWalkerLevel()
 		{
+			if (WorldBossMissionModel.TryGetEnemyLevel(base.manager.Player.GetAttackTargetMissionModel(), out var enemyLevel))
+			{
+				return enemyLevel;
+			}
 			MissionGenerationData missionGenerationData = base.gameEconomyData.GetMissionGenerationData(base.manager.Player.SelectedMissionDifficulty);
 			return base.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel);
 		}
@@ -1815,10 +1919,147 @@ namespace TWDModel
 			}
 		}
 
+		private static FixedPoint SquaredDistanceToSegment(GridCoordinate coord, GridCoordinate start, GridCoordinate end)
+		{
+			FixedPoint fixedPoint = start.X;
+			FixedPoint fixedPoint2 = start.Y;
+			FixedPoint fixedPoint3 = end.X - fixedPoint;
+			FixedPoint fixedPoint4 = end.Y - fixedPoint2;
+			FixedPoint fixedPoint5 = fixedPoint3 * fixedPoint3 + fixedPoint4 * fixedPoint4;
+			FixedPoint fixedPoint6 = coord.X - fixedPoint;
+			FixedPoint fixedPoint7 = coord.Y - fixedPoint2;
+			if (fixedPoint5 <= 0.0)
+			{
+				return fixedPoint6 * fixedPoint6 + fixedPoint7 * fixedPoint7;
+			}
+			FixedPoint fixedPoint8 = fixedPoint3 * fixedPoint6 + fixedPoint4 * fixedPoint7;
+			if (fixedPoint8 <= 0.0)
+			{
+				return fixedPoint6 * fixedPoint6 + fixedPoint7 * fixedPoint7;
+			}
+			if (fixedPoint8 >= fixedPoint5)
+			{
+				FixedPoint fixedPoint9 = (FixedPoint)coord.X - (FixedPoint)end.X;
+				FixedPoint fixedPoint10 = (FixedPoint)coord.Y - (FixedPoint)end.Y;
+				return fixedPoint9 * fixedPoint9 + fixedPoint10 * fixedPoint10;
+			}
+			FixedPoint fixedPoint11 = fixedPoint6 * fixedPoint6 + fixedPoint7 * fixedPoint7 - fixedPoint8 * fixedPoint8 / fixedPoint5;
+			if (!(fixedPoint11 < 0.0))
+			{
+				return fixedPoint11;
+			}
+			return 0.0;
+		}
+
+		public GridCoordinate GetClosestOnLineCell(ActorModel actor, GridCoordinate from, GridCoordinate to)
+		{
+			if (actor == null)
+			{
+				return GridCoordinate.Invalid;
+			}
+			if (!actor.IsMultiCell)
+			{
+				return actor.GridCoordinate;
+			}
+			FixedPoint fixedPoint = 0.25;
+			List<GridCoordinate> occupiedCells = actor.GetOccupiedCells();
+			GridCoordinate gridCoordinate = GridCoordinate.Invalid;
+			int num = int.MaxValue;
+			for (int i = 0; i < occupiedCells.Count; i++)
+			{
+				if (SquaredDistanceToSegment(occupiedCells[i], from, to) <= fixedPoint)
+				{
+					int num2 = occupiedCells[i].SquaredDistanceTo(from);
+					if (gridCoordinate == GridCoordinate.Invalid || num2 < num)
+					{
+						num = num2;
+						gridCoordinate = occupiedCells[i];
+					}
+				}
+			}
+			if (gridCoordinate == GridCoordinate.Invalid)
+			{
+				gridCoordinate = actor.GetClosestOccupiedCell(from);
+			}
+			return gridCoordinate;
+		}
+
+		private int EdgeDistanceFromShooter(ActorModel actor, GridCoordinate from, GridCoordinate to)
+		{
+			if (!actor.IsMultiCell)
+			{
+				return actor.GridCoordinate.SquaredDistanceTo(from);
+			}
+			return GetClosestOnLineCell(actor, from, to).SquaredDistanceTo(from);
+		}
+
+		public int CountOccupiedCellsOnShotLine(ActorModel actor, GridCoordinate from, GridCoordinate to, FixedPoint halfWidthSqr)
+		{
+			if (actor == null)
+			{
+				return 0;
+			}
+			if (!actor.IsMultiCell)
+			{
+				if (!(SquaredDistanceToSegment(actor.GridCoordinate, from, to) <= halfWidthSqr))
+				{
+					return 0;
+				}
+				return 1;
+			}
+			List<GridCoordinate> occupiedCells = actor.GetOccupiedCells();
+			if (occupiedCells == null || occupiedCells.Count == 0)
+			{
+				return 0;
+			}
+			int num = 0;
+			for (int i = 0; i < occupiedCells.Count; i++)
+			{
+				if (SquaredDistanceToSegment(occupiedCells[i], from, to) <= halfWidthSqr)
+				{
+					num++;
+				}
+			}
+			return num;
+		}
+
+		public int CountOccupiedCellsInRange(ActorModel actor, GridCoordinate center, int range, bool diagonal = true)
+		{
+			if (actor == null)
+			{
+				return 0;
+			}
+			FixedPoint fixedPoint = ((float)range + (diagonal ? 0.42f : 0f)) * Grid.CellSize.X;
+			fixedPoint *= fixedPoint;
+			FixedVec3 position = Grid.GetPosition(center);
+			if (!actor.IsMultiCell)
+			{
+				if (!((Grid.GetPosition(actor.GridCoordinate) - position).SqrMagnitude <= fixedPoint))
+				{
+					return 0;
+				}
+				return 1;
+			}
+			List<GridCoordinate> occupiedCells = actor.GetOccupiedCells();
+			if (occupiedCells == null || occupiedCells.Count == 0)
+			{
+				return 0;
+			}
+			int num = 0;
+			for (int i = 0; i < occupiedCells.Count; i++)
+			{
+				if ((Grid.GetPosition(occupiedCells[i]) - position).SqrMagnitude <= fixedPoint)
+				{
+					num++;
+				}
+			}
+			return num;
+		}
+
 		public bool IsGridCellPenetrable(GridCoordinate from, GridCoordinate to, GridCoordinate target)
 		{
 			List<ActorModel> actorsInLine = GetActorsInLine(from, to);
-			actorsInLine.Sort((ActorModel x, ActorModel y) => x.GridCoordinate.SquaredDistanceTo(from) - y.GridCoordinate.SquaredDistanceTo(from));
+			actorsInLine.Sort((ActorModel x, ActorModel y) => EdgeDistanceFromShooter(x, from, to) - EdgeDistanceFromShooter(y, from, to));
 			ActorModel occupier = GetOccupier(target);
 			foreach (ActorModel item in actorsInLine)
 			{
@@ -1826,12 +2067,63 @@ namespace TWDModel
 				{
 					return true;
 				}
-				if (occupier != null && item != occupier && item.GetTraitWithTag("Impenetrable") != null)
+				if (occupier != null && item != occupier && item.IsImpenetrable)
 				{
 					return false;
 				}
 			}
 			return true;
+		}
+
+		public bool IsDamageAreaBlockTrajectoryPenetrable(ActorModel sourceActor, GridCoordinate from, GridCoordinate to, GridCoordinate target)
+		{
+			ActorModel occupier = GetOccupier(target);
+			if (occupier == null)
+			{
+				return true;
+			}
+			List<ActorModel> actorsInLine = GetActorsInLine(from, to, sourceActor);
+			if (actorsInLine == null || actorsInLine.Count == 0)
+			{
+				return true;
+			}
+			actorsInLine.Sort(delegate(ActorModel x, ActorModel y)
+			{
+				if (x == y)
+				{
+					return 0;
+				}
+				if (x == null)
+				{
+					return 1;
+				}
+				return (y == null) ? (-1) : (EdgeDistanceFromShooter(x, from, to) - EdgeDistanceFromShooter(y, from, to));
+			});
+			for (int num = 0; num < actorsInLine.Count; num++)
+			{
+				ActorModel actorModel = actorsInLine[num];
+				if (actorModel != null && actorModel != sourceActor)
+				{
+					if (actorModel == occupier)
+					{
+						return true;
+					}
+					if (actorModel.HasDamageAreaBlock && CanDamageAreaBlockProtect(actorModel, sourceActor, occupier))
+					{
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		private static bool CanDamageAreaBlockProtect(ActorModel blocker, ActorModel sourceActor, ActorModel targetActor)
+		{
+			if (blocker != null && sourceActor != null && targetActor != null)
+			{
+				return blocker.IsEnemy(sourceActor);
+			}
+			return false;
 		}
 
 		public GridCoordinate GetFirstNonPenetrableCoordinate(GridCoordinate from, GridCoordinate to)
@@ -1840,10 +2132,56 @@ namespace TWDModel
 			GridCoordinate gridCoordinate = GridCoordinate.Invalid;
 			foreach (ActorModel item in actorsInLine)
 			{
-				if (item.GetTraitWithTag("Impenetrable") != null && (gridCoordinate == GridCoordinate.Invalid || from.SquaredDistanceTo(item.GridCoordinate) < from.SquaredDistanceTo(gridCoordinate)))
+				if (item.IsImpenetrable)
 				{
-					gridCoordinate = item.GridCoordinate;
+					GridCoordinate gridCoordinate2 = (item.IsMultiCell ? GetClosestOnLineCell(item, from, to) : item.GridCoordinate);
+					if (gridCoordinate == GridCoordinate.Invalid || from.SquaredDistanceTo(gridCoordinate2) < from.SquaredDistanceTo(gridCoordinate))
+					{
+						gridCoordinate = gridCoordinate2;
+					}
 				}
+			}
+			return gridCoordinate;
+		}
+
+		public GridCoordinate GetFirstDamageAreaBlockCoordinate(GridCoordinate from, GridCoordinate to, ActorModel sourceActor = null)
+		{
+			List<ActorModel> actorsInLine = GetActorsInLine(from, to, sourceActor);
+			GridCoordinate gridCoordinate = GridCoordinate.Invalid;
+			if (actorsInLine == null)
+			{
+				return gridCoordinate;
+			}
+			for (int i = 0; i < actorsInLine.Count; i++)
+			{
+				ActorModel actorModel = actorsInLine[i];
+				if (actorModel != null && actorModel != sourceActor && actorModel.HasDamageAreaBlock && (sourceActor == null || actorModel.IsEnemy(sourceActor)))
+				{
+					GridCoordinate gridCoordinate2 = (actorModel.IsMultiCell ? GetClosestOnLineCell(actorModel, from, to) : actorModel.GridCoordinate);
+					if (!(gridCoordinate2 == GridCoordinate.Invalid) && (gridCoordinate == GridCoordinate.Invalid || from.SquaredDistanceTo(gridCoordinate2) < from.SquaredDistanceTo(gridCoordinate)))
+					{
+						gridCoordinate = gridCoordinate2;
+					}
+				}
+			}
+			return gridCoordinate;
+		}
+
+		public GridCoordinate GetFirstAimTrajectoryBlockCoordinate(GridCoordinate from, GridCoordinate to, bool includeImpenetrable, ActorModel sourceActor = null)
+		{
+			GridCoordinate gridCoordinate = (includeImpenetrable ? GetFirstNonPenetrableCoordinate(from, to) : GridCoordinate.Invalid);
+			GridCoordinate firstDamageAreaBlockCoordinate = GetFirstDamageAreaBlockCoordinate(from, to, sourceActor);
+			if (!gridCoordinate.IsValid)
+			{
+				return firstDamageAreaBlockCoordinate;
+			}
+			if (!firstDamageAreaBlockCoordinate.IsValid)
+			{
+				return gridCoordinate;
+			}
+			if (from.SquaredDistanceTo(gridCoordinate) > from.SquaredDistanceTo(firstDamageAreaBlockCoordinate))
+			{
+				return firstDamageAreaBlockCoordinate;
 			}
 			return gridCoordinate;
 		}
@@ -1887,6 +2225,48 @@ namespace TWDModel
 			for (int i = 0; i < Perceptors.Count; i++)
 			{
 				if (IsGridCellVisible(Perceptors[i].GridCoordinate, targetLocation))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public bool IsVisibleFromAnyOccupiedCell(ActorModel observer, GridCoordinate targetCell)
+		{
+			if (observer == null)
+			{
+				return false;
+			}
+			if (!observer.IsMultiCell)
+			{
+				return IsGridCellVisible(observer.GridCoordinate, targetCell);
+			}
+			List<GridCoordinate> occupiedCells = observer.GetOccupiedCells();
+			for (int i = 0; i < occupiedCells.Count; i++)
+			{
+				if (IsGridCellVisible(occupiedCells[i], targetCell))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public bool IsActorVisibleByAnySurvivor(ActorModel target)
+		{
+			if (target == null)
+			{
+				return false;
+			}
+			if (!target.IsMultiCell)
+			{
+				return IsGridCellVisibleByAnySurvivor(target.GridCoordinate);
+			}
+			List<GridCoordinate> occupiedCells = target.GetOccupiedCells();
+			for (int i = 0; i < occupiedCells.Count; i++)
+			{
+				if (IsGridCellVisibleByAnySurvivor(occupiedCells[i]))
 				{
 					return true;
 				}
@@ -2035,10 +2415,14 @@ namespace TWDModel
 				}
 				foreach (ActorModel factionActor in GetFactionActors(faction))
 				{
-					GridCoordinate gridCoordinate = factionActor.GridCoordinate;
-					if (Grid.IsCoordinateValid(gridCoordinate))
+					List<GridCoordinate> occupiedCells = factionActor.GetOccupiedCells();
+					for (int j = 0; j < occupiedCells.Count; j++)
 					{
-						Occupiers[gridCoordinate] = factionActor;
+						GridCoordinate coordinate = occupiedCells[j];
+						if (Grid.IsCoordinateValid(coordinate))
+						{
+							Occupiers[coordinate] = factionActor;
+						}
 					}
 				}
 			}
@@ -2757,7 +3141,7 @@ namespace TWDModel
 					num4 = 0;
 				}
 				bool flag2 = (byte)num4 != 0;
-				if (actorModel.Faction != Faction.Walker && actorModel.Faction != Faction.Environmental && actorModel.Faction != Faction.Dormant && actorModel.Faction != Faction.Lure && !HasPvPRules)
+				if (!(actorModel is TankActorModel) && actorModel.Faction != Faction.Walker && actorModel.Faction != Faction.Environmental && actorModel.Faction != Faction.Dormant && actorModel.Faction != Faction.Lure && !HasPvPRules)
 				{
 					bool flag3 = false;
 					if (IsGuildBattleMission && base.manager.Player.GvGSeasonModelPlayer != null)
@@ -2765,22 +3149,36 @@ namespace TWDModel
 						flag3 = base.manager.Player.GvGSeasonModelPlayer.GuildWarModelPlayer.GuildBattleModel.AttackTargetMission.IsPvPCombat;
 					}
 					bool flag4 = false;
-					if (IsSurvivalMission || IsEndlessBattleMission || flag3)
+					if (IsWorldBossMission)
+					{
+						WorldBossModelManager worldBossModelManager = base.manager.Player.WorldBossModelManager;
+						if (worldBossModelManager != null && worldBossModelManager.IsAttackTargetActive)
+						{
+							flag4 = !worldBossModelManager.AttackTarget.IsPVECapturePoint;
+						}
+					}
+					bool flag5 = false;
+					bool flag6 = IsSurvivalMission || IsEndlessBattleMission || flag3 || IsWorldBossMission;
+					if (flag6)
 					{
 						foreach (SurvivorModel item2 in MissionRoster)
 						{
 							if (!item2.IsDead)
 							{
-								flag4 = true;
+								flag5 = true;
 								break;
 							}
 						}
 					}
-					if (IsDeadly || actorModel.Faction != Faction.Survivor || ((IsSurvivalMission || flag3 || IsEndlessBattleMission) && flag4))
+					if (IsDeadly || actorModel.Faction != Faction.Survivor || (flag6 && flag5))
 					{
 						if (flag3 && actorModel.Faction != Faction.Survivor)
 						{
 							SetGuildBattlePVPSurvivorKilled(actorModel);
+						}
+						if (flag4 && actorModel.Faction != Faction.Survivor)
+						{
+							SetWorldBossDefenderKilled(actorModel);
 						}
 						ChangeActorFaction(actorModel, Faction.Lure);
 						actorModel.StartTimedEffect(new TimedEffect(TimedEffectType.Lure, 2, 0, actorModel.Faction));
@@ -2945,6 +3343,40 @@ namespace TWDModel
 			return AllActors.Models;
 		}
 
+		public List<ActorModel> GetActorsInDiamond(GridCoordinate center, int range, Faction targetFaction = Faction.Any)
+		{
+			List<ActorModel> list = ((targetFaction == Faction.Any) ? GetAllActors() : GetFactionActors(targetFaction));
+			List<ActorModel> list2 = new List<ActorModel>();
+			for (int i = 0; i < list.Count; i++)
+			{
+				ActorModel actorModel = list[i];
+				GridCoordinate closestOccupiedCell = actorModel.GetClosestOccupiedCell(center);
+				if (Math.Abs(closestOccupiedCell.X - center.X) + Math.Abs(closestOccupiedCell.Y - center.Y) <= range)
+				{
+					list2.Add(actorModel);
+				}
+			}
+			return list2;
+		}
+
+		public List<GridCoordinate> GetDiamondCoordinates(GridCoordinate center, int range)
+		{
+			List<GridCoordinate> list = new List<GridCoordinate>();
+			for (int i = -range; i <= range; i++)
+			{
+				int num = range - Math.Abs(i);
+				for (int j = -num; j <= num; j++)
+				{
+					GridCoordinate gridCoordinate = new GridCoordinate(center.X + i, center.Y + j);
+					if (Grid.IsCoordinateValid(gridCoordinate) && !IsBlocked(gridCoordinate))
+					{
+						list.Add(gridCoordinate);
+					}
+				}
+			}
+			return list;
+		}
+
 		public void RefreshDashTraitFlag()
 		{
 			if (!(base.manager.Player.GetAttackTargetMissionModel() is MapMissionModel { IsInWeeklySurvival: not false }))
@@ -2992,9 +3424,10 @@ namespace TWDModel
 			for (int i = 0; i < list.Count; i++)
 			{
 				ActorModel actorModel = list[i];
-				FixedVec3 position = Grid.GetPosition(actorModel.GridCoordinate);
+				GridCoordinate closestOccupiedCell = actorModel.GetClosestOccupiedCell(location);
+				FixedVec3 position = Grid.GetPosition(closestOccupiedCell);
 				FixedVec3 position2 = Grid.GetPosition(location);
-				if ((position - position2).SqrMagnitude <= fixedPoint && !(actorModel.GridCoordinate.Equals(location) && abartFromMe))
+				if ((position - position2).SqrMagnitude <= fixedPoint && !(closestOccupiedCell.Equals(location) && abartFromMe))
 				{
 					list2.Add(actorModel);
 				}
@@ -3005,60 +3438,63 @@ namespace TWDModel
 		public List<ActorModel> GetActorsInLine(GridCoordinate start, GridCoordinate end, ActorModel actorModel = null)
 		{
 			List<ActorModel> list = new List<ActorModel>();
+			FixedPoint lineWidthVisitHalfSqr;
+			FixedPoint x0;
+			FixedPoint y0;
+			FixedPoint x1;
+			FixedPoint y1;
+			FixedPoint dirX;
+			FixedPoint dirY;
+			FixedPoint lineLenSqr;
+			int minX;
+			int maxX;
+			int minY;
+			int maxY;
 			if (start != end)
 			{
 				FixedPoint value = 1.0;
 				AbilityManager.VisitParameter("AbilityModifierIncreaseBulletWidth", ref value, actorModel);
-				if (actorModel != null && actorModel.FocusModeState && actorModel.SelectedAbility.IsChargeAttack)
+				if (actorModel != null && actorModel.FocusModeState && actorModel.SelectedAbility != null && actorModel.SelectedAbility.IsChargeAttack)
 				{
 					AbilityManager.VisitParameter("AbilityModifierFocusModeAttackWidth", ref value, actorModel);
 				}
 				FixedPoint fixedPoint = value * 0.5;
-				FixedPoint fixedPoint2 = fixedPoint * fixedPoint;
-				FixedPoint fixedPoint3 = start.X;
-				FixedPoint fixedPoint4 = start.Y;
-				FixedPoint fixedPoint5 = end.X;
-				FixedPoint fixedPoint6 = end.Y;
-				FixedPoint fixedPoint7 = fixedPoint5 - fixedPoint3;
-				FixedPoint fixedPoint8 = fixedPoint6 - fixedPoint4;
-				FixedPoint fixedPoint9 = fixedPoint7 * fixedPoint7 + fixedPoint8 * fixedPoint8;
+				lineWidthVisitHalfSqr = fixedPoint * fixedPoint;
+				x0 = start.X;
+				y0 = start.Y;
+				x1 = end.X;
+				y1 = end.Y;
+				dirX = x1 - x0;
+				dirY = y1 - y0;
+				lineLenSqr = dirX * dirX + dirY * dirY;
 				int num = (int)FixedPoint.Ceiling(fixedPoint) + 1;
-				int num2 = Math.Min(start.X, end.X) - num;
-				int num3 = Math.Max(start.X, end.X) + num;
-				int num4 = Math.Min(start.Y, end.Y) - num;
-				int num5 = Math.Max(start.Y, end.Y) + num;
+				minX = Math.Min(start.X, end.X) - num;
+				maxX = Math.Max(start.X, end.X) + num;
+				minY = Math.Min(start.Y, end.Y) - num;
+				maxY = Math.Max(start.Y, end.Y) + num;
 				List<ActorModel> allActors = GetAllActors();
 				for (int i = 0; i < allActors.Count; i++)
 				{
 					ActorModel actorModel2 = allActors[i];
-					GridCoordinate gridCoordinate = actorModel2.GridCoordinate;
-					if (gridCoordinate.X < num2 || gridCoordinate.X > num3 || gridCoordinate.Y < num4 || gridCoordinate.Y > num5)
+					bool flag;
+					if (actorModel2.IsMultiCell)
 					{
-						continue;
-					}
-					FixedPoint fixedPoint10 = gridCoordinate.X - fixedPoint3;
-					FixedPoint fixedPoint11 = gridCoordinate.Y - fixedPoint4;
-					FixedPoint fixedPoint12 = fixedPoint7 * fixedPoint10 + fixedPoint8 * fixedPoint11;
-					FixedPoint fixedPoint13;
-					if (fixedPoint12 <= 0.0)
-					{
-						fixedPoint13 = fixedPoint10 * fixedPoint10 + fixedPoint11 * fixedPoint11;
-					}
-					else if (fixedPoint12 >= fixedPoint9)
-					{
-						FixedPoint fixedPoint14 = gridCoordinate.X - fixedPoint5;
-						FixedPoint fixedPoint15 = gridCoordinate.Y - fixedPoint6;
-						fixedPoint13 = fixedPoint14 * fixedPoint14 + fixedPoint15 * fixedPoint15;
+						flag = false;
+						List<GridCoordinate> occupiedCells = actorModel2.GetOccupiedCells();
+						for (int j = 0; j < occupiedCells.Count; j++)
+						{
+							if (CoordOnLine(occupiedCells[j]))
+							{
+								flag = true;
+								break;
+							}
+						}
 					}
 					else
 					{
-						fixedPoint13 = fixedPoint10 * fixedPoint10 + fixedPoint11 * fixedPoint11 - fixedPoint12 * fixedPoint12 / fixedPoint9;
-						if (fixedPoint13 < 0.0)
-						{
-							fixedPoint13 = 0.0;
-						}
+						flag = CoordOnLine(actorModel2.GridCoordinate);
 					}
-					if (fixedPoint13 <= fixedPoint2)
+					if (flag)
 					{
 						list.Add(actorModel2);
 					}
@@ -3073,6 +3509,36 @@ namespace TWDModel
 				}
 			}
 			return list;
+			bool CoordOnLine(GridCoordinate coord)
+			{
+				if (coord.X < minX || coord.X > maxX || coord.Y < minY || coord.Y > maxY)
+				{
+					return false;
+				}
+				FixedPoint fixedPoint2 = coord.X - x0;
+				FixedPoint fixedPoint3 = coord.Y - y0;
+				FixedPoint fixedPoint4 = dirX * fixedPoint2 + dirY * fixedPoint3;
+				FixedPoint fixedPoint5;
+				if (fixedPoint4 <= 0.0)
+				{
+					fixedPoint5 = fixedPoint2 * fixedPoint2 + fixedPoint3 * fixedPoint3;
+				}
+				else if (fixedPoint4 >= lineLenSqr)
+				{
+					FixedPoint fixedPoint6 = coord.X - x1;
+					FixedPoint fixedPoint7 = coord.Y - y1;
+					fixedPoint5 = fixedPoint6 * fixedPoint6 + fixedPoint7 * fixedPoint7;
+				}
+				else
+				{
+					fixedPoint5 = fixedPoint2 * fixedPoint2 + fixedPoint3 * fixedPoint3 - fixedPoint4 * fixedPoint4 / lineLenSqr;
+					if (fixedPoint5 < 0.0)
+					{
+						fixedPoint5 = 0.0;
+					}
+				}
+				return fixedPoint5 <= lineWidthVisitHalfSqr;
+			}
 		}
 
 		public ActorModel GetActorOfFactionAt(Faction faction, GridCoordinate position)
@@ -3166,21 +3632,22 @@ namespace TWDModel
 				{
 					continue;
 				}
-				FixedVec3 position2 = Grid.GetPosition(actorModel.GridCoordinate);
+				GridCoordinate closestOccupiedCell = actorModel.GetClosestOccupiedCell(sourceCell);
+				FixedVec3 position2 = Grid.GetPosition(closestOccupiedCell);
 				if ((position - position2).SqrMagnitude < fixedPoint)
 				{
 					bool flag2 = false;
-					if (ability.Definition.RequiresLineOfSight && !IsGridCellVisible(sourceCell, actorModel.GridCoordinate))
+					if (ability.Definition.RequiresLineOfSight && !IsGridCellVisible(sourceCell, closestOccupiedCell))
 					{
 						flag2 = true;
 					}
-					else if (ability.Definition.RequiresLineOfMovement && IsGridLineMovementBlocked(sourceCell, actorModel.GridCoordinate))
+					else if (ability.Definition.RequiresLineOfMovement && IsGridLineMovementBlocked(sourceCell, closestOccupiedCell))
 					{
 						flag2 = true;
 					}
 					if (!flag2)
 					{
-						list.Add(actorModel.GridCoordinate);
+						list.Add(closestOccupiedCell);
 					}
 				}
 			}
@@ -3519,6 +3986,10 @@ namespace TWDModel
 
 		public bool MoveActor(ActorModel actor, GridPath path)
 		{
+			if (actor is TankActorModel)
+			{
+				return false;
+			}
 			if (actor.IsValid() && path.IsValid)
 			{
 				DebugTWD.Log("MoveActor " + actor.Name, DebugType.Wars);
@@ -3528,6 +3999,7 @@ namespace TWDModel
 					path.RemoveLast();
 					return MoveActor(actor, path);
 				}
+				GridCoordinate gridCoordinate = actor.GridCoordinate;
 				actor.GridCoordinate = path.End;
 				foreach (ActorModel enemyFactionsActor in GetEnemyFactionsActors(actor.Faction))
 				{
@@ -3554,6 +4026,10 @@ namespace TWDModel
 				else
 				{
 					UpdateActorVisibility(actor);
+				}
+				if (gridCoordinate != actor.GridCoordinate && actor.IsInFortifications)
+				{
+					actor.EndFortifications(interrupted: true);
 				}
 				return true;
 			}
@@ -3673,7 +4149,7 @@ namespace TWDModel
 			{
 				return false;
 			}
-			if (attacker.IsValid() && target.IsValid() && Grid.AreNeighbors(attacker.GridCoordinate, target.GridCoordinate))
+			if (attacker.IsValid() && target.IsValid() && AreActorsAdjacent(attacker, target))
 			{
 				FixedPoint value = target.Definition.InitialStruggleTurns;
 				AbilityManager.VisitParameter("AbilityModifierIncreaseStruggleTurns", ref value, target);
@@ -3739,7 +4215,7 @@ namespace TWDModel
 			{
 				ActorModel actorModel = enemyFactionsActors[i];
 				AIController aIController = actorModel.AIController;
-				if (aIController.AIDataModel.Alertness < AIAlertness.Homing && IsGridCellVisible(attacker.GridCoordinate, actorModel.GridCoordinate) && AIBehaviorHelpers.IsTargetInActivationRange(actorModel, this, attacker) && !attacker.IsCamouflaged)
+				if (aIController.AIDataModel.Alertness < AIAlertness.Homing && IsVisibleFromAnyOccupiedCell(actorModel, attacker.GridCoordinate) && AIBehaviorHelpers.IsTargetInActivationRange(actorModel, this, attacker) && !attacker.IsCamouflaged)
 				{
 					aIController.AttackTarget(target);
 				}
@@ -3799,10 +4275,10 @@ namespace TWDModel
 				DebuffQuantunRemove = debuffQuantunRemove;
 				int num = 0;
 				int debuffQuantunRemove2 = 0;
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null)
 				{
-					List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+					List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 					if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.DebuffQuantunRemove) != null)
 					{
 						num = (int)ChallengeDebufHelps.GetDebufTotalSecondParam(challengeDebuffs, ChallengeDebuffType.DebuffQuantunRemove);
@@ -3844,10 +4320,10 @@ namespace TWDModel
 				DebuffQuantunRemoveRaider = debuffQuantunRemove;
 				int num3 = 0;
 				int debuffQuantunRemoveRaider = 0;
-				MapMissionModel mapMissionModel2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel2 != null)
+				IChallengeDebuffProvider challengeDebuffProvider2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider2 != null)
 				{
-					List<DifficultyIncrementalDebuff> challengeDebuffs2 = mapMissionModel2.GetChallengeDebuffs();
+					List<DifficultyIncrementalDebuff> challengeDebuffs2 = challengeDebuffProvider2.GetChallengeDebuffs();
 					if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs2, ChallengeDebuffType.DebuffQuantunRemoveRaider) != null)
 					{
 						num3 = (int)ChallengeDebufHelps.GetDebufTotalSecondParam(challengeDebuffs2, ChallengeDebuffType.DebuffQuantunRemoveRaider);
@@ -4004,6 +4480,11 @@ namespace TWDModel
 
 		private void OnMissionComplete(ECombatResult combatResult, bool casualtiesResolved = false, string failureReason = "")
 		{
+			WorldBossAttackTargetData worldBossAttackTargetData = base.manager?.Player?.WorldBossModelManager?.AttackTarget;
+			if (worldBossAttackTargetData != null && worldBossAttackTargetData.IsActive)
+			{
+				base.manager.Debug.LogInfo($"WorldBossSettleTrace Stage=OnMissionComplete.Entry Outcome=Observed GroupId={base.manager.Player.GuildId} PlayerHashedId={base.manager.Player.HashedId} SeasonId={worldBossAttackTargetData.SeasonId} CycleId={worldBossAttackTargetData.CycleId} CapturePoint={worldBossAttackTargetData.CapturePoint} Cell={worldBossAttackTargetData.Cell} CombatResult={combatResult} ResultsResolved={ResultsResolved} RetryState={CombatRetryChoicePendingState} HasServerService={base.manager.ServerService != null}");
+			}
 			if (combatResult == ECombatResult.Failed && string.IsNullOrEmpty(CombatFailureReason))
 			{
 				CombatFailureReason = failureReason ?? "";
@@ -4055,6 +4536,7 @@ namespace TWDModel
 				PersistentMissionVariableManager.Clear();
 				MapMissionModel mapMissionModel = base.manager.Player.GetAttackTargetMissionModel() as MapMissionModel;
 				GuildBattleMapMissionModel guildBattleMapMissionModel = base.manager.Player.GetAttackTargetMissionModel() as GuildBattleMapMissionModel;
+				WorldBossMissionModel worldBossMissionModel = base.manager.Player.GetAttackTargetMissionModel() as WorldBossMissionModel;
 				MissionStatistics.SetCombatResult(combatResult, IsDeadly, (mapMissionModel != null && (mapMissionModel.IsInWeeklyChallenge || mapMissionModel.IsInApocalyptiWeeklyChallenge)) ? true : false);
 				base.manager.Player.ReportMissionStatistics(MissionStatistics, casualtyReport);
 				if (mapMissionModel != null)
@@ -4181,9 +4663,38 @@ namespace TWDModel
 					base.manager.Metrics.TdEventPropertyTypes = new List<string> { "Mission", "MissionResult", "GvG", "GvGBattle" };
 					base.manager.Metrics.SendTdEvent();
 				}
+				else if (worldBossMissionModel != null)
+				{
+					base.manager.Debug.LogInfo($"WorldBossSettleTrace Stage=OnMissionComplete.WorldBossRoute Outcome=Selected GroupId={base.manager.Player.GuildId} PlayerHashedId={base.manager.Player.HashedId} SeasonId={(base.manager.Player.WorldBossModelManager?.AttackTarget?.SeasonId).GetValueOrDefault()} CycleId={(base.manager.Player.WorldBossModelManager?.AttackTarget?.CycleId).GetValueOrDefault()} CapturePoint={base.manager.Player.WorldBossModelManager?.AttackTarget?.CapturePoint ?? string.Empty} Cell={base.manager.Player.WorldBossModelManager?.AttackTarget?.Cell ?? string.Empty} CombatResult={combatResult} HasServerService={base.manager.ServerService != null}");
+					WorldBossModelManager worldBossModelManager = base.manager.Player.WorldBossModelManager;
+					WorldBossAttackTargetData worldBossAttackTargetData2 = worldBossModelManager?.AttackTarget;
+					if (worldBossAttackTargetData2 != null && worldBossAttackTargetData2.IsActive)
+					{
+						bool flag = combatResult == ECombatResult.Successful;
+						bool isTimeout = !flag && worldBossMissionModel.IsBattleTimedOut(base.manager.Player.UtcTimeStamp);
+						worldBossAttackTargetData2.SetResult(flag, isTimeout);
+						if (worldBossMissionModel.CapturePoint == "BOSS")
+						{
+							worldBossAttackTargetData2.SetBossScore((long)Math.Round(GuildBossPoint));
+							worldBossAttackTargetData2.SetBossDamage(GuildBossDamage);
+						}
+						WorldBossCombatHelper.SettleCombatResult(base.manager, flag, isTimeout);
+						int currentBattleDifficulty = worldBossModelManager.GetCurrentBattleDifficulty();
+						WorldBossCycleDefinition worldBossCycleDefinition = base.manager.Player.gameEconomyData.FindWorldBossCycleDefinition(worldBossAttackTargetData2.SeasonId, worldBossAttackTargetData2.CycleId);
+						int battleScoreChange = WorldBossCombatHelper.GetBattleScoreChange(worldBossMissionModel.WorldBossMissionType, base.manager.Player.gameEconomyData.WorldBossConfig, flag, isTimeout, worldBossAttackTargetData2.BossScore);
+						string heroWeaponUse = WorldBossCombatHelper.BuildHeroWeaponUse(MissionRoster);
+						base.manager.Metrics.ResetTdEvent().AddOriginalEventType();
+						base.manager.Metrics.AddEnd().AddMission().AddMissionResult(combatResult)
+							.AddWorldBossBattleResult(battleScoreChange, heroWeaponUse, worldBossCycleDefinition?.ID ?? 0, currentBattleDifficulty)
+							.Send();
+						base.manager.Metrics.TdEventType = "End_Mission_MissionResult";
+						base.manager.Metrics.TdEventPropertyTypes = new List<string> { "Mission", "MissionResult", "WorldBoss" };
+						base.manager.Metrics.SendTdEvent();
+					}
+				}
 				else
 				{
-					bool flag = true;
+					bool flag2 = true;
 					if (OutpostCombat != null && OutpostCombat.DefendingSurvivors != null && OutpostCombat.DefendingSurvivors.Count > 0)
 					{
 						for (int k = 0; k < OutpostCombat.DefendingSurvivors.Count; k++)
@@ -4192,12 +4703,12 @@ namespace TWDModel
 							if (survivorModel == null || survivorModel.manager == null)
 							{
 								base.manager.Debug.LogWarning("OnMissionComplete for Outpost, either OutpostCombat.DefendingSurvivor[" + k + "] or model.manager is NULL, not sending analytics.");
-								flag = false;
+								flag2 = false;
 								break;
 							}
 						}
 					}
-					if (flag)
+					if (flag2)
 					{
 						base.manager.Metrics.ResetTdEvent().AddOriginalEventType();
 						base.manager.Metrics.AddEnd().AddMission().AddMissionResult(combatResult)
@@ -4379,7 +4890,7 @@ namespace TWDModel
 				{
 					ActorModel actorModel3 = exclusiveTimedEffect.Target as ActorModel;
 					GridCoordinate gridCoordinate2 = actorModel3?.GridCoordinate ?? exclusiveTimedEffect.TargetCoordinate;
-					if (gridCoordinate2 != GridCoordinate.Invalid && (!Grid.AreNeighbors(actorModel.GridCoordinate, gridCoordinate2) || (actorModel3 != null && GetOccupier(gridCoordinate2) != actorModel3)))
+					if (gridCoordinate2 != GridCoordinate.Invalid && (!((actorModel3 != null) ? AreActorsAdjacent(actorModel, actorModel3) : Grid.AreNeighbors(actorModel.GridCoordinate, gridCoordinate2)) || (actorModel3 != null && GetOccupier(gridCoordinate2) != actorModel3)))
 					{
 						base.manager.Debug.LogWarning("CombatModel validation error: Actor [" + actorModel.ToString() + "] has an invalid TimedEffect: " + Enum.GetName(typeof(TimedEffectType), exclusiveTimedEffect.Type) + ". The effect is finished.");
 						actorModel.FinishTimedEffect(interrupted: true);
@@ -4401,28 +4912,28 @@ namespace TWDModel
 				{
 				case MapCategory.ApocalypticChallenge:
 				{
-					MapMissionGroupModel missionGroupModelThatContains3 = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
-					if (missionGroupModelThatContains3 != null && missionGroupModelThatContains3.MissionSpawnPointGroup != null)
+					MapMissionGroupModel missionGroupModelThatContains4 = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains4 != null && missionGroupModelThatContains4.MissionSpawnPointGroup != null)
 					{
-						result = $"A_{missionGroupModelThatContains3.MissionSpawnPointGroup.DisplayName}_M_{MissionNameEnglish}";
+						result = $"A_{missionGroupModelThatContains4.MissionSpawnPointGroup.DisplayName}_M_{MissionNameEnglish}";
 					}
 					break;
 				}
 				case MapCategory.Challenge:
 				{
-					MapMissionGroupModel missionGroupModelThatContains2 = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
-					if (missionGroupModelThatContains2 != null && missionGroupModelThatContains2.MissionSpawnPointGroup != null)
+					MapMissionGroupModel missionGroupModelThatContains3 = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains3 != null && missionGroupModelThatContains3.MissionSpawnPointGroup != null)
 					{
-						result = $"C_{missionGroupModelThatContains2.MissionSpawnPointGroup.DisplayName}_M_{MissionNameEnglish}";
+						result = $"C_{missionGroupModelThatContains3.MissionSpawnPointGroup.DisplayName}_M_{MissionNameEnglish}";
 					}
 					break;
 				}
 				case MapCategory.Survival:
 				{
-					MapMissionGroupModel missionGroupModelThatContains = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
-					if (missionGroupModelThatContains != null && missionGroupModelThatContains.MissionSpawnPointGroup != null)
+					MapMissionGroupModel missionGroupModelThatContains2 = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains2 != null && missionGroupModelThatContains2.MissionSpawnPointGroup != null)
 					{
-						result = $"S_{missionGroupModelThatContains.MissionSpawnPointGroup.DisplayName}_M_{MissionNameEnglish}";
+						result = $"S_{missionGroupModelThatContains2.MissionSpawnPointGroup.DisplayName}_M_{MissionNameEnglish}";
 					}
 					break;
 				}
@@ -4435,6 +4946,22 @@ namespace TWDModel
 				case MapCategory.Season:
 					result = "SEASON";
 					break;
+				case MapCategory.GuildBoss:
+				case MapCategory.GuildBossPVE:
+				case MapCategory.GuildBossPVP:
+				{
+					MapMissionGroupModel missionGroupModelThatContains = base.manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains != null && missionGroupModelThatContains.MissionSpawnPointGroup != null)
+					{
+						result = string.Format("{0}_{1}_M_{2}", category switch
+						{
+							MapCategory.GuildBossPVP => "GB_PVP",
+							MapCategory.GuildBossPVE => "GB_PVE",
+							_ => "GB",
+						}, missionGroupModelThatContains.MissionSpawnPointGroup.DisplayName, MissionNameEnglish);
+					}
+					break;
+				}
 				default:
 					result = "unknown_mission_kind";
 					break;
@@ -4502,10 +5029,10 @@ namespace TWDModel
 					base.manager.CombatModel.MissionStatistics.AddCollectedLoot();
 				}
 				RefreshDashTraitFlag();
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null)
 				{
-					List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+					List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 					int debuffQuantunRemove = 0;
 					int debuffQuantunRemoveRaider = 0;
 					if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.DebuffQuantunRemove) != null)
@@ -4519,6 +5046,7 @@ namespace TWDModel
 					DebuffQuantunRemove = debuffQuantunRemove;
 					DebuffQuantunRemoveRaider = debuffQuantunRemoveRaider;
 				}
+				GetOrResolveMissionLogicFailTurnLimit();
 			}
 			else
 			{
@@ -4543,19 +5071,29 @@ namespace TWDModel
 			return TWDModelResult.OK;
 		}
 
-		public TWDModelResult EndCombat()
+		public TWDModelResult EndCombat(bool forceFailure = false)
 		{
-			ECombatResult eCombatResult = ECombatResult.Failed;
+			ECombatResult endCombatResult = GetEndCombatResult(forceFailure);
+			ThreatMeter.Changed -= OnThreatValueChanged;
+			OnMissionComplete(endCombatResult, casualtiesResolved: false, (endCombatResult == ECombatResult.Failed) ? ("EndCombat_" + GetCurrentMissionFailureReason()) : "");
+			return TWDModelResult.OK;
+		}
+
+		public ECombatResult GetEndCombatResult(bool forceFailure)
+		{
+			if (forceFailure)
+			{
+				return ECombatResult.Failed;
+			}
+			ECombatResult result = ECombatResult.Failed;
 			if (IsPVPMission)
 			{
 				int survivorsIncapacitated = 0;
 				int survivorsInExits = 0;
 				GetSurvivorStatus(out survivorsIncapacitated, out survivorsInExits);
-				eCombatResult = GetPvpResult(survivorsIncapacitated, Survivors.Count);
+				result = GetPvpResult(survivorsIncapacitated, Survivors.Count);
 			}
-			ThreatMeter.Changed -= OnThreatValueChanged;
-			OnMissionComplete(eCombatResult, casualtiesResolved: false, (eCombatResult == ECombatResult.Failed) ? ("EndCombat_" + GetCurrentMissionFailureReason()) : "");
-			return TWDModelResult.OK;
+			return result;
 		}
 
 		public GridPath FindPath(ActorModel mover, GridCoordinate from, GridCoordinate to)
@@ -4689,6 +5227,41 @@ namespace TWDModel
 				return Occupiers[coordinate];
 			}
 			return null;
+		}
+
+		public GridCoordinate ResolveMultiCellTargetCell(GridCoordinate sourceCell, GridCoordinate targetCell)
+		{
+			ActorModel occupier = GetOccupier(targetCell);
+			if (occupier != null && occupier.IsMultiCell)
+			{
+				return occupier.GetClosestOccupiedCell(sourceCell);
+			}
+			return targetCell;
+		}
+
+		public bool AreActorsAdjacent(ActorModel a, ActorModel b)
+		{
+			if (a == null || b == null)
+			{
+				return false;
+			}
+			if (a.IsMultiCell || b.IsMultiCell)
+			{
+				List<GridCoordinate> occupiedCells = a.GetOccupiedCells();
+				List<GridCoordinate> occupiedCells2 = b.GetOccupiedCells();
+				for (int i = 0; i < occupiedCells.Count; i++)
+				{
+					for (int j = 0; j < occupiedCells2.Count; j++)
+					{
+						if (Grid.AreNeighbors(occupiedCells[i], occupiedCells2[j]))
+						{
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			return Grid.AreNeighbors(a.GridCoordinate, b.GridCoordinate);
 		}
 
 		public InteractiveObjectModel GetInteractiveObject(GridCoordinate coordinate, bool onlyUsable = true)
@@ -4865,7 +5438,29 @@ namespace TWDModel
 				for (int i = 0; i < enemyFactionsActors.Count; i++)
 				{
 					ActorModel actorModel = enemyFactionsActors[i];
-					if (!actorModel.IsWalker && !actorModel.AIController.IsActorIncapacitated && IsGridCellVisible(coordinate, actorModel.GridCoordinate) && !IsInCover(coordinate, actorModel.GridCoordinate))
+					if (actorModel.IsWalker || actorModel.AIController.IsActorIncapacitated)
+					{
+						continue;
+					}
+					bool flag;
+					if (!actorModel.IsMultiCell)
+					{
+						flag = IsGridCellVisible(coordinate, actorModel.GridCoordinate) && !IsInCover(coordinate, actorModel.GridCoordinate);
+					}
+					else
+					{
+						flag = false;
+						List<GridCoordinate> occupiedCells = actorModel.GetOccupiedCells();
+						for (int j = 0; j < occupiedCells.Count; j++)
+						{
+							if (IsGridCellVisible(coordinate, occupiedCells[j]) && !IsInCover(coordinate, occupiedCells[j]))
+							{
+								flag = true;
+								break;
+							}
+						}
+					}
+					if (flag)
 					{
 						return true;
 					}
@@ -4890,14 +5485,30 @@ namespace TWDModel
 				for (int i = 0; i < enemyFactionsActors.Count; i++)
 				{
 					ActorModel actorModel = enemyFactionsActors[i];
-					if (!actorModel.IsWalker && !actorModel.IsEnvironmental && !actorModel.AIController.IsActorIncapacitated)
+					if (actorModel.IsWalker || actorModel.IsEnvironmental || actorModel.AIController.IsActorIncapacitated)
 					{
-						GridCoordinate gridCoordinate = actorModel.GridCoordinate;
-						if (actorModel == movingActor)
+						continue;
+					}
+					if (actorModel == movingActor)
+					{
+						if (IsGridCellVisible(coverCoordinate, moveCoordinate) && !IsInCover(coverCoordinate, moveCoordinate))
 						{
-							gridCoordinate = moveCoordinate;
+							return true;
 						}
-						if (IsGridCellVisible(coverCoordinate, gridCoordinate) && !IsInCover(coverCoordinate, gridCoordinate))
+						continue;
+					}
+					if (!actorModel.IsMultiCell)
+					{
+						if (IsGridCellVisible(coverCoordinate, actorModel.GridCoordinate) && !IsInCover(coverCoordinate, actorModel.GridCoordinate))
+						{
+							return true;
+						}
+						continue;
+					}
+					List<GridCoordinate> occupiedCells = actorModel.GetOccupiedCells();
+					for (int j = 0; j < occupiedCells.Count; j++)
+					{
+						if (IsGridCellVisible(coverCoordinate, occupiedCells[j]) && !IsInCover(coverCoordinate, occupiedCells[j]))
 						{
 							return true;
 						}
@@ -5001,6 +5612,18 @@ namespace TWDModel
 			}
 		}
 
+		public void SetWorldBossDefenderKilled(ActorModel actor)
+		{
+			if (actor is SurvivorModel)
+			{
+				WorldBossModelManager worldBossModelManager = ((base.manager.Player != null) ? base.manager.Player.WorldBossModelManager : null);
+				if (worldBossModelManager != null && worldBossModelManager.IsAttackTargetActive)
+				{
+					worldBossModelManager.AttackTarget.AddKilledDefenders(1);
+				}
+			}
+		}
+
 		public void SetPvPDefenderKilled(ActorModel actor)
 		{
 			PvPDefendersKilledCount++;
@@ -5069,7 +5692,19 @@ namespace TWDModel
 			{
 				return null;
 			}
-			ActorModel actorModel = ActorModel.Create(faction);
+			ActorDefinition actorDefinition = base.manager.GameEconomyData.GetActorDefinition(actorID);
+			ActorModel actorModel;
+			if (faction == Faction.Raider && actorDefinition != null && actorDefinition.BossType == BossType.BossTank)
+			{
+				TankActorModel tankActorModel = new TankActorModel();
+				tankActorModel.SetFootprint(ActorFootprint.CreateFromActorDefinition(actorDefinition));
+				tankActorModel.Facing = actorDefinition?.InitialFacingDirection ?? FacingDirection.North;
+				actorModel = tankActorModel;
+			}
+			else
+			{
+				actorModel = ActorModel.Create(faction);
+			}
 			actorModel.ActorDefinitionID = actorID;
 			actorModel.ActorTag = actorTag;
 			actorModel.Faction = faction;
@@ -5403,7 +6038,7 @@ namespace TWDModel
 						FixedPoint healingTimeModifier = GetHealingTimeModifier();
 						survivor.InjuryType = injuryType;
 						survivor.PreviousCombatInjuryType = previousCombatInjuryType;
-						int missionLevel = GetMissionLevel();
+						int missionLevel = (IsWorldBossMission ? player.Level : GetMissionLevel());
 						medicTentModel.NewSurvivorInjured(survivor, missionLevel, healingTimeModifier);
 					}
 				}
@@ -5451,7 +6086,7 @@ namespace TWDModel
 		public FixedPoint GetHealingTimeModifier()
 		{
 			MapCategory category = MapCategory.None;
-			if (base.manager.Player.GetAttackTargetMissionModel() is GuildBattleMapMissionModel)
+			if (base.manager.Player.GetAttackTargetMissionModel() is GuildBattleMapMissionModel || IsWorldBossMission)
 			{
 				return base.manager.GameEconomyData.ConfigData.GetHealingTimeModifier(MapCategory.GuildBattle);
 			}
@@ -5684,6 +6319,100 @@ namespace TWDModel
 			}
 		}
 
+		public long GetWorldBossCombatTimeLeftSeconds(long nowUtcMs)
+		{
+			if (!(base.manager.Player.GetAttackTargetMissionModel() is WorldBossMissionModel worldBossMissionModel) || worldBossMissionModel.BattleStartUtcMs <= 0 || worldBossMissionModel.TimeLimitMs <= 0)
+			{
+				return 0L;
+			}
+			long num = worldBossMissionModel.BattleStartUtcMs + worldBossMissionModel.TimeLimitMs - nowUtcMs;
+			if (num <= 0)
+			{
+				return 0L;
+			}
+			return (num + 999) / 1000;
+		}
+
+		public bool IsWorldBossCombatTimedOut(long nowUtcMs)
+		{
+			if (base.manager.Player.GetAttackTargetMissionModel() is WorldBossMissionModel worldBossMissionModel)
+			{
+				return worldBossMissionModel.IsBattleTimedOut(nowUtcMs);
+			}
+			return false;
+		}
+
+		public int GetOrResolveMissionLogicFailTurnLimit()
+		{
+			if (!missionLogicFailTurnLimitResolved)
+			{
+				MissionLogicFailTurnLimit = FindMissionLogicFailTurnLimit();
+				missionLogicFailTurnLimitResolved = true;
+			}
+			return MissionLogicFailTurnLimit;
+		}
+
+		private int FindMissionLogicFailTurnLimit()
+		{
+			List<TWDModelObject> models = GetModels<NodeGraph>();
+			if (models == null || models.Count == 0)
+			{
+				return -1;
+			}
+			int num = -1;
+			for (int i = 0; i < models.Count; i++)
+			{
+				if (!(models[i] is NodeGraph { Nodes: not null } nodeGraph))
+				{
+					continue;
+				}
+				for (int j = 0; j < nodeGraph.Nodes.Count; j++)
+				{
+					if (nodeGraph.Nodes[j] is AtTurnNode { TurnToCheck: >=0 } atTurnNode && DoesNodeReachMissionFailure(nodeGraph, atTurnNode) && (num < 0 || atTurnNode.TurnToCheck < num))
+					{
+						num = atTurnNode.TurnToCheck;
+					}
+				}
+			}
+			return num;
+		}
+
+		private static bool DoesNodeReachMissionFailure(NodeGraph graph, NodeBase start)
+		{
+			if (graph == null || start == null || start.nodeConnections == null)
+			{
+				return false;
+			}
+			HashSet<int> hashSet = new HashSet<int>();
+			Queue<NodeBase> queue = new Queue<NodeBase>();
+			queue.Enqueue(start);
+			hashSet.Add(start.guidHash);
+			while (queue.Count > 0)
+			{
+				NodeBase nodeBase = queue.Dequeue();
+				if (nodeBase.nodeConnections == null)
+				{
+					continue;
+				}
+				for (int i = 0; i < nodeBase.nodeConnections.Count; i++)
+				{
+					NodeConnection nodeConnection = nodeBase.nodeConnections[i];
+					if (nodeConnection != null && graph.GetNode(nodeConnection.TargetGuidHash) is NodeBase nodeBase2)
+					{
+						if (nodeConnection.InputPinId == "Failure" && nodeBase2 is MissionCompletedNode)
+						{
+							return true;
+						}
+						if (hashSet.Add(nodeBase2.guidHash))
+						{
+							queue.Enqueue(nodeBase2);
+						}
+					}
+				}
+			}
+			return false;
+		}
+
 		public void ApplySurvivalConfig(SurvivalMissionConfig survivalMissionConfig, SurvivalSavedMissionModel savedMissionData)
 		{
 			if (survivalMissionConfig == null)
@@ -5828,13 +6557,13 @@ namespace TWDModel
 			}
 			int num = 0;
 			int num2 = 0;
-			MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-			if (mapMissionModel != null)
+			IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+			if (challengeDebuffProvider != null)
 			{
-				List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+				List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 				num += (int)ChallengeDebufHelps.GetDebufTotalSecondParam(challengeDebuffs, ChallengeDebuffType.ToolCooldown);
 				num2 += (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.ToolCooldown);
-				if (mapMissionModel.IsInApocalyptiWeeklyChallenge)
+				if (challengeDebuffProvider.IsInApocalyptiWeeklyChallenge)
 				{
 					num -= (int)base.manager.Player.ApocalypseWeeklyChallenge.GetApocalypseBuffTotalFirstParam(ChallengeApocalypseBuffType.ToolCoolDown);
 				}
@@ -6321,7 +7050,7 @@ namespace TWDModel
 				return;
 			}
 			enemiesByDistanceAndFaction.RemoveAll((ActorModel t) => t.Faction != Faction.Raider && t.Faction != Faction.Survivor && t.Faction != Faction.Walker);
-			enemiesByDistanceAndFaction.RemoveAll((ActorModel t) => !base.manager.CombatModel.IsGridCellVisibleByAnySurvivor(t.GridCoordinate));
+			enemiesByDistanceAndFaction.RemoveAll((ActorModel t) => !base.manager.CombatModel.IsActorVisibleByAnySurvivor(t));
 			enemiesByDistanceAndFaction.Remove(killedActor);
 			switch (buffFaction)
 			{

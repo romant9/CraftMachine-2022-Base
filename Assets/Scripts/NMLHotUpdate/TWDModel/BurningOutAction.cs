@@ -81,7 +81,9 @@ namespace TWDModel
 					FixedPoint? fixedPoint = value5 + obj;
 					value = (value4 * fixedPoint).Value;
 				}
-				if (twdModelManager.Player.RollDice(RollDiceType.Scorch, value) != PlayerRandomChanceResult.Failed)
+				PlayerRandomChanceResult num = twdModelManager.Player.RollDice(RollDiceType.Scorch, value);
+				bool flag = ResistNegativeEffectsTrait.TryResist(base.TargetActor, "Scorch");
+				if (num != PlayerRandomChanceResult.Failed && !flag && !EquipmentPassivePreventControlTrait.TryResistEffect(base.TargetActor, "Scorch", RollDiceType.Scorch))
 				{
 					base.TargetActor.Scorch((int)value3, base.SourceActor);
 				}

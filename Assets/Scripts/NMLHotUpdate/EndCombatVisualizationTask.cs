@@ -8,11 +8,11 @@ public class EndCombatVisualizationTask : VisualizationTask
 
 	private ECombatResult Result { get; set; }
 
-	public EndCombatVisualizationTask(ECombatResult result)
+	public EndCombatVisualizationTask(ECombatResult result, float delay = 1f)
 		: base(null)
 	{
 		Result = result;
-		DelayTimer = 1f;
+		DelayTimer = delay;
 	}
 
 	public override bool Update(float deltaTime)

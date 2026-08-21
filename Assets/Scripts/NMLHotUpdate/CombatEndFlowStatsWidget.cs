@@ -29,6 +29,12 @@ public class CombatEndFlowStatsWidget : CombatEndWidget
 	[SerializeField]
 	private SpeedUpTitle speedUpTitle;
 
+	[SerializeField]
+	private GameObject victoryContainer;
+
+	[SerializeField]
+	private GameObject defeatContainer;
+
 	private bool doubleXpActive;
 
 	private int doubleXpAmount;
@@ -64,6 +70,14 @@ public class CombatEndFlowStatsWidget : CombatEndWidget
 		if (ThirdAmountLabel != null)
 		{
 			ThirdAmountLabel.gameObject.SetActive(value: false);
+		}
+		if (victoryContainer != null)
+		{
+			victoryContainer.SetActive(value: false);
+		}
+		if (defeatContainer != null)
+		{
+			defeatContainer.SetActive(value: false);
 		}
 	}
 
@@ -141,5 +155,17 @@ public class CombatEndFlowStatsWidget : CombatEndWidget
 	public void SetBestScoreContainer(bool personalBest)
 	{
 		Helpers.GameObjectSetActive(bestScoreContainer, personalBest);
+	}
+
+	public void SetVictoryContainer(bool victory)
+	{
+		if (victoryContainer != null)
+		{
+			victoryContainer.SetActive(victory);
+		}
+		if (defeatContainer != null)
+		{
+			defeatContainer.SetActive(!victory);
+		}
 	}
 }

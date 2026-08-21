@@ -480,7 +480,7 @@ namespace TWDModel
 				bool flag5 = false;
 				string text = "";
 				bool freeAttackUsedOnAbility = false;
-				if (ootType != OOTType.PassByAttack && !flag4 && ootType != OOTType.AutoAttack)
+				if (ootType != OOTType.PassByAttack && !flag4 && ootType != OOTType.AutoAttack && ootType != OOTType.FightBack)
 				{
 					FixedPoint fixedPoint = 0.0;
 					FixedPoint value = 0.0;
@@ -579,7 +579,7 @@ namespace TWDModel
 				}
 				if (!flag2)
 				{
-					if (ootType != OOTType.PassByAttack && ootType != OOTType.AutoAttack && ootType != OOTType.FreeShooting && base.manager.CombatModel.TurnManager.ActiveFaction == sourceActor.Faction)
+					if (ootType != OOTType.PassByAttack && ootType != OOTType.AutoAttack && ootType != OOTType.FreeShooting && ootType != OOTType.FightBack && base.manager.CombatModel.TurnManager.ActiveFaction == sourceActor.Faction)
 					{
 						FixedPoint value4 = 0.0;
 						FixedPoint value5 = 0.0;
@@ -652,7 +652,7 @@ namespace TWDModel
 					}
 					sourceActor.EnsureExtraAction(text, playerRandomChanceResult == PlayerRandomChanceResult.SuccessDueToExtension);
 				}
-				bool flag16 = ability is FiringSquadAbility || ootType == OOTType.PassByAttack || ootType == OOTType.AutoAttack || ootType == OOTType.FreeShooting;
+				bool flag16 = ability is FiringSquadAbility || ootType == OOTType.PassByAttack || ootType == OOTType.AutoAttack || ootType == OOTType.FreeShooting || ootType == OOTType.FightBack;
 				if (sourceActor.CanMoveWithoutAttacking && !flag16)
 				{
 					sourceActor.HandleAdditionalAttacks(flag2, freeAttackUsedOnAbility);
@@ -665,14 +665,14 @@ namespace TWDModel
 			return abilityResult;
 		}
 
-		public List<ActorModel> GetListOfActorsToBeTargetted(AbilityModel ability, ActorModel source, GridCoordinate sourceCell, GridCoordinate targetCell)
+		public List<ActorModel> GetListOfActorsToBeTargetted(AbilityModel ability, ActorModel source, GridCoordinate sourceCell, GridCoordinate targetCell, bool deduplicate = true)
 		{
 			List<ActorModel> list = new List<ActorModel>();
 			CombatModel combatModel = base.manager.CombatModel;
 			if (source.DeathsDoor_IsPursuitAttack && !ability.IsChargeAttack)
 			{
 				ActorModel occupier = combatModel.GetOccupier(targetCell);
-				if (occupier != null && occupier.IsEnemy(source))
+				if (occupier != null && occupier.IsEnemy(source) && (!UsesDamageAreaBlockTrajectory(source, ability) || !IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, targetCell, occupier)))
 				{
 					list.Add(occupier);
 				}
@@ -698,6 +698,10 @@ namespace TWDModel
 							flag = true;
 						}
 						else if (ability.Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, actorModel.GridCoordinate))
+						{
+							flag = true;
+						}
+						if (!flag && IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, targetCell, actorModel))
 						{
 							flag = true;
 						}
@@ -735,6 +739,10 @@ namespace TWDModel
 						{
 							flag2 = true;
 						}
+						if (!flag2 && IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, coordinate, actorModel2))
+						{
+							flag2 = true;
+						}
 						if (!flag2)
 						{
 							list.Add(actorModel2);
@@ -744,7 +752,8 @@ namespace TWDModel
 			}
 			else if (ability.Definition.AbilityTargetArea == AbilityTargetAreaType.Circle)
 			{
-				List<ActorModel> actorsInRange = combatModel.GetActorsInRange(targetCell, (int)ability.Definition.AbilityTargetAreaRadius, ability.Definition.AbilityTargetDiagonal);
+				int damageAreaBlockEffectiveAreaRadius = GetDamageAreaBlockEffectiveAreaRadius(ability, targetCell, (int)ability.Definition.AbilityTargetAreaRadius);
+				List<ActorModel> actorsInRange = combatModel.GetActorsInRange(targetCell, damageAreaBlockEffectiveAreaRadius, ability.Definition.AbilityTargetDiagonal);
 				for (int k = 0; k < actorsInRange.Count; k++)
 				{
 					ActorModel actorModel3 = actorsInRange[k];
@@ -762,6 +771,32 @@ namespace TWDModel
 						if (!flag3)
 						{
 							list.Add(actorModel3);
+						}
+					}
+				}
+			}
+			else if (ability.Definition.AbilityTargetArea == AbilityTargetAreaType.Diamond)
+			{
+				int damageAreaBlockEffectiveAreaRadius2 = GetDamageAreaBlockEffectiveAreaRadius(ability, targetCell, (int)ability.Definition.AbilityTargetAreaRadius);
+				List<ActorModel> actorsInDiamond = combatModel.GetActorsInDiamond(targetCell, damageAreaBlockEffectiveAreaRadius2);
+				for (int l = 0; l < actorsInDiamond.Count; l++)
+				{
+					ActorModel actorModel4 = actorsInDiamond[l];
+					GridCoordinate closestOccupiedCell = actorModel4.GetClosestOccupiedCell(sourceCell);
+					if (actorModel4.IsEnemy(source) || (hasFriendlyFire && !actorModel4.IsStruggling))
+					{
+						bool flag4 = false;
+						if (ability.Definition.RequiresLineOfSight && ability.Definition.EffectSource == EffectSource.SourceActor && (!combatModel.IsGridCellVisible(sourceCell, closestOccupiedCell) || (canBeBlocked && !combatModel.IsGridCellPenetrable(sourceCell, closestOccupiedCell, closestOccupiedCell))))
+						{
+							flag4 = true;
+						}
+						else if (ability.Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, closestOccupiedCell))
+						{
+							flag4 = true;
+						}
+						if (!flag4)
+						{
+							list.Add(actorModel4);
 						}
 					}
 				}
@@ -786,11 +821,11 @@ namespace TWDModel
 				{
 					list2 = list2.GetRange(0, ability.Definition.MaxAffectedTargetsCount);
 				}
-				for (int l = 0; l < list2.Count; l++)
+				for (int m = 0; m < list2.Count; m++)
 				{
-					GridCoordinate coordinate2 = list2[l];
-					ActorModel occupier2 = combatModel.GetOccupier(coordinate2);
-					if (occupier2 != null && (occupier2.IsEnemy(source) || (hasFriendlyFire && !occupier2.IsStruggling)))
+					GridCoordinate gridCoordinate = list2[m];
+					ActorModel occupier2 = combatModel.GetOccupier(gridCoordinate);
+					if (occupier2 != null && (occupier2.IsEnemy(source) || (hasFriendlyFire && !occupier2.IsStruggling)) && !IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, gridCoordinate, occupier2))
 					{
 						list.Add(occupier2);
 					}
@@ -815,20 +850,28 @@ namespace TWDModel
 				{
 					list3 = list3.GetRange(0, ability.Definition.MaxAffectedTargetsCount);
 				}
-				for (int m = 0; m < list3.Count; m++)
+				for (int n = 0; n < list3.Count; n++)
 				{
-					GridCoordinate gridCoordinate = list3[m];
-					ActorModel occupier3 = combatModel.GetOccupier(gridCoordinate);
-					if (occupier3 != null && (occupier3.IsEnemy(source) || (hasFriendlyFire && !occupier3.IsStruggling)) && (!(ability.Definition.RequiresLineOfSight && ability.Definition.EffectSource == EffectSource.SourceActor && canBeBlocked) || combatModel.IsGridCellPenetrable(sourceCell, gridCoordinate, gridCoordinate)))
+					GridCoordinate gridCoordinate2 = list3[n];
+					ActorModel occupier3 = combatModel.GetOccupier(gridCoordinate2);
+					if (occupier3 != null && (occupier3.IsEnemy(source) || (hasFriendlyFire && !occupier3.IsStruggling)))
 					{
-						list.Add(occupier3);
+						bool flag5 = ability.Definition.RequiresLineOfSight && ability.Definition.EffectSource == EffectSource.SourceActor && canBeBlocked && !combatModel.IsGridCellPenetrable(sourceCell, gridCoordinate2, gridCoordinate2);
+						if (!flag5 && ability.Definition.AbilityTargetArea == AbilityTargetAreaType.Cone)
+						{
+							flag5 = IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, gridCoordinate2, occupier3);
+						}
+						if (!flag5)
+						{
+							list.Add(occupier3);
+						}
 					}
 				}
 			}
 			else
 			{
 				ActorModel occupier4 = combatModel.GetOccupier(targetCell);
-				if (occupier4 != null && occupier4.IsEnemy(source))
+				if (occupier4 != null && occupier4.IsEnemy(source) && (!UsesDamageAreaBlockTrajectory(source, ability) || !IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, targetCell, occupier4)))
 				{
 					list.Add(occupier4);
 				}
@@ -838,12 +881,12 @@ namespace TWDModel
 				List<ActorModel> oneGridEnemyActorModels = GetOneGridEnemyActorModels(source);
 				if (oneGridEnemyActorModels != null && oneGridEnemyActorModels.Count > 0)
 				{
-					for (int n = 0; n < oneGridEnemyActorModels.Count; n++)
+					for (int num = 0; num < oneGridEnemyActorModels.Count; num++)
 					{
-						if (!list.Contains(oneGridEnemyActorModels[n]))
+						if (!list.Contains(oneGridEnemyActorModels[num]))
 						{
-							oneGridEnemyActorModels[n].IsRecoilEffected = true;
-							list.Add(oneGridEnemyActorModels[n]);
+							oneGridEnemyActorModels[num].IsRecoilEffected = true;
+							list.Add(oneGridEnemyActorModels[num]);
 						}
 					}
 				}
@@ -853,6 +896,10 @@ namespace TWDModel
 			{
 				list.Remove(occupier5);
 				list.Insert(0, occupier5);
+			}
+			if (deduplicate)
+			{
+				return list.Distinct().ToList();
 			}
 			return list;
 		}
@@ -891,6 +938,10 @@ namespace TWDModel
 						{
 							flag = true;
 						}
+						if (!flag && IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, targetCell, actorModel))
+						{
+							flag = true;
+						}
 						if (!flag && IsActorVisibleForValidation(actorModel, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
 						{
 							return true;
@@ -920,6 +971,10 @@ namespace TWDModel
 						{
 							flag2 = true;
 						}
+						if (!flag2 && IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, coordinate, actorModel2))
+						{
+							flag2 = true;
+						}
 						if (!flag2 && IsActorVisibleForValidation(actorModel2, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
 						{
 							return true;
@@ -929,7 +984,8 @@ namespace TWDModel
 			}
 			else if (ability.Definition.AbilityTargetArea == AbilityTargetAreaType.Circle)
 			{
-				List<ActorModel> actorsInRange = combatModel.GetActorsInRange(targetCell, (int)ability.Definition.AbilityTargetAreaRadius, ability.Definition.AbilityTargetDiagonal);
+				int damageAreaBlockEffectiveAreaRadius = GetDamageAreaBlockEffectiveAreaRadius(ability, targetCell, (int)ability.Definition.AbilityTargetAreaRadius);
+				List<ActorModel> actorsInRange = combatModel.GetActorsInRange(targetCell, damageAreaBlockEffectiveAreaRadius, ability.Definition.AbilityTargetDiagonal);
 				for (int l = 0; l < actorsInRange.Count; l++)
 				{
 					ActorModel actorModel3 = actorsInRange[l];
@@ -945,6 +1001,32 @@ namespace TWDModel
 							flag3 = true;
 						}
 						if (!flag3 && IsActorVisibleForValidation(actorModel3, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
+						{
+							return true;
+						}
+					}
+				}
+			}
+			else if (ability.Definition.AbilityTargetArea == AbilityTargetAreaType.Diamond)
+			{
+				int damageAreaBlockEffectiveAreaRadius2 = GetDamageAreaBlockEffectiveAreaRadius(ability, targetCell, (int)ability.Definition.AbilityTargetAreaRadius);
+				List<ActorModel> actorsInDiamond = combatModel.GetActorsInDiamond(targetCell, damageAreaBlockEffectiveAreaRadius2);
+				for (int m = 0; m < actorsInDiamond.Count; m++)
+				{
+					ActorModel actorModel4 = actorsInDiamond[m];
+					GridCoordinate closestOccupiedCell = actorModel4.GetClosestOccupiedCell(sourceCell);
+					if (actorModel4.IsEnemy(source) || (hasFriendlyFire && !actorModel4.IsStruggling))
+					{
+						bool flag4 = false;
+						if (ability.Definition.RequiresLineOfSight && ability.Definition.EffectSource == EffectSource.SourceActor && (!combatModel.IsGridCellVisible(sourceCell, closestOccupiedCell) || (canBeBlocked && !combatModel.IsGridCellPenetrable(sourceCell, closestOccupiedCell, closestOccupiedCell))))
+						{
+							flag4 = true;
+						}
+						else if (ability.Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, closestOccupiedCell))
+						{
+							flag4 = true;
+						}
+						if (!flag4 && IsActorVisibleForValidation(actorModel4, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
 						{
 							return true;
 						}
@@ -972,10 +1054,10 @@ namespace TWDModel
 				{
 					num = ability.Definition.MaxAffectedTargetsCount;
 				}
-				for (int m = 0; m < num; m++)
+				for (int n = 0; n < num; n++)
 				{
-					ActorModel occupier = combatModel.GetOccupier(list2[m]);
-					if (occupier != null && (occupier.IsEnemy(source) || (hasFriendlyFire && !occupier.IsStruggling)) && IsActorVisibleForValidation(occupier, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
+					ActorModel occupier = combatModel.GetOccupier(list2[n]);
+					if (occupier != null && (occupier.IsEnemy(source) || (hasFriendlyFire && !occupier.IsStruggling)) && !IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, list2[n], occupier) && IsActorVisibleForValidation(occupier, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
 					{
 						return true;
 					}
@@ -1001,19 +1083,27 @@ namespace TWDModel
 				{
 					num2 = ability.Definition.MaxAffectedTargetsCount;
 				}
-				for (int n = 0; n < num2; n++)
+				for (int num3 = 0; num3 < num2; num3++)
 				{
-					ActorModel occupier2 = combatModel.GetOccupier(list3[n]);
-					if (occupier2 != null && (occupier2.IsEnemy(source) || (hasFriendlyFire && !occupier2.IsStruggling)) && (!(ability.Definition.RequiresLineOfSight && ability.Definition.EffectSource == EffectSource.SourceActor && canBeBlocked) || combatModel.IsGridCellPenetrable(sourceCell, list3[n], list3[n])) && IsActorVisibleForValidation(occupier2, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
+					ActorModel occupier2 = combatModel.GetOccupier(list3[num3]);
+					if (occupier2 != null && (occupier2.IsEnemy(source) || (hasFriendlyFire && !occupier2.IsStruggling)))
 					{
-						return true;
+						bool flag5 = ability.Definition.RequiresLineOfSight && ability.Definition.EffectSource == EffectSource.SourceActor && canBeBlocked && !combatModel.IsGridCellPenetrable(sourceCell, list3[num3], list3[num3]);
+						if (!flag5 && ability.Definition.AbilityTargetArea == AbilityTargetAreaType.Cone)
+						{
+							flag5 = IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, list3[num3], occupier2);
+						}
+						if (!flag5 && IsActorVisibleForValidation(occupier2, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
+						{
+							return true;
+						}
 					}
 				}
 			}
 			else
 			{
 				ActorModel occupier3 = combatModel.GetOccupier(targetCell);
-				if (occupier3 != null && occupier3.IsEnemy(source) && IsActorVisibleForValidation(occupier3, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
+				if (occupier3 != null && occupier3.IsEnemy(source) && (!UsesDamageAreaBlockTrajectory(source, ability) || !IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, targetCell, occupier3)) && IsActorVisibleForValidation(occupier3, sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
 				{
 					return true;
 				}
@@ -1023,9 +1113,9 @@ namespace TWDModel
 				List<ActorModel> oneGridEnemyActorModels = GetOneGridEnemyActorModels(source);
 				if (oneGridEnemyActorModels != null)
 				{
-					for (int num3 = 0; num3 < oneGridEnemyActorModels.Count; num3++)
+					for (int num4 = 0; num4 < oneGridEnemyActorModels.Count; num4++)
 					{
-						if (IsActorVisibleForValidation(oneGridEnemyActorModels[num3], sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
+						if (IsActorVisibleForValidation(oneGridEnemyActorModels[num4], sourceCell, targetCell, requiresLineOfSight, requiresLineOfMovement, combatModel))
 						{
 							return true;
 						}
@@ -1046,6 +1136,139 @@ namespace TWDModel
 				return true;
 			}
 			return false;
+		}
+
+		private static bool IsDamageAreaBlockTrajectoryBlocked(CombatModel combatModel, AbilityModel ability, ActorModel source, GridCoordinate sourceCell, GridCoordinate lineEndCell, ActorModel target)
+		{
+			if (combatModel == null || !IsDamageAreaBlockAttackAbility(ability) || target == null)
+			{
+				return false;
+			}
+			GridCoordinate gridCoordinate = (target.IsMultiCell ? combatModel.GetClosestOnLineCell(target, sourceCell, lineEndCell) : target.GridCoordinate);
+			if (gridCoordinate == GridCoordinate.Invalid)
+			{
+				return false;
+			}
+			return !combatModel.IsDamageAreaBlockTrajectoryPenetrable(source, sourceCell, lineEndCell, gridCoordinate);
+		}
+
+		private static bool UsesDamageAreaBlockTrajectory(ActorModel source, AbilityModel ability)
+		{
+			if (!IsDamageAreaBlockAttackAbility(ability))
+			{
+				return false;
+			}
+			if (source != null && AbilityRangeTridentSkill.ShouldApplySeparatedAttackLines(source, ability))
+			{
+				return true;
+			}
+			switch (ability.Definition.AbilityTargetArea)
+			{
+			case AbilityTargetAreaType.Cone:
+			case AbilityTargetAreaType.Line:
+			case AbilityTargetAreaType.LineMax:
+			case AbilityTargetAreaType.ConeLeft:
+			case AbilityTargetAreaType.ConeRight:
+			case AbilityTargetAreaType.LineSeparated:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		private static bool IsDamageAreaBlockAttackAbility(AbilityModel ability)
+		{
+			if (ability == null)
+			{
+				return false;
+			}
+			AbilityDefinition definition = ability.Definition;
+			if (definition == null)
+			{
+				return false;
+			}
+			if (definition.IsAttack)
+			{
+				return true;
+			}
+			List<AbilityEffectDefinition> effectDefinitions = definition.EffectDefinitions;
+			if (effectDefinitions == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < effectDefinitions.Count; i++)
+			{
+				switch (effectDefinitions[i]?.Type)
+				{
+				case "AbilityEffectRangeAttack":
+				case "AbilityEffectMeleeAttack":
+				case "AbilityEffectProjectileAttack":
+				case "AbilityEffectProjectileConsumableAttack":
+				case "AbilityEffectBazookaAttack":
+				case "AbilityEffectMaceAttack":
+				case "AbilityEffectMultipleTargetsAttack":
+				case "AbilityEffectDash":
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public int GetDamageAreaBlockEffectiveAreaRadius(AbilityModel ability, GridCoordinate targetCell, int originalRadius)
+		{
+			if (!IsDamageAreaBlockAttackAbility(ability))
+			{
+				return originalRadius;
+			}
+			return GetDamageAreaBlockEffectiveRadiusForMainTarget(targetCell, originalRadius);
+		}
+
+		public int GetDamageAreaBlockEffectiveSupportRadius(GridCoordinate targetCell, int originalRadius)
+		{
+			return GetDamageAreaBlockEffectiveRadiusForMainTarget(targetCell, originalRadius);
+		}
+
+		private int GetDamageAreaBlockEffectiveRadiusForMainTarget(GridCoordinate targetCell, int originalRadius)
+		{
+			CombatModel combatModel = ((base.manager != null) ? base.manager.CombatModel : null);
+			if (combatModel == null || combatModel.Grid == null || !targetCell.IsValid || !combatModel.Grid.IsCoordinateValid(targetCell))
+			{
+				return originalRadius;
+			}
+			ActorModel occupier = combatModel.GetOccupier(targetCell);
+			if (occupier == null || !occupier.HasDamageAreaBlock)
+			{
+				return originalRadius;
+			}
+			int num = Math.Max(0, originalRadius);
+			int num2;
+			object obj;
+			if (occupier.Definition != null)
+			{
+				num2 = (occupier.IsBossClass ? 1 : 0);
+				if (num2 != 0)
+				{
+					obj = "AbilityModifierEquipmentPassiveDamageAreaBlockBossRadiusReduction";
+					goto IL_0077;
+				}
+			}
+			else
+			{
+				num2 = 0;
+			}
+			obj = "AbilityModifierEquipmentPassiveDamageAreaBlockNormalRadiusReduction";
+			goto IL_0077;
+			IL_0077:
+			string paramName = (string)obj;
+			string paramName2 = ((num2 != 0) ? "AbilityModifierEquipmentPassiveDamageAreaBlockBossMinimumRadius" : "AbilityModifierEquipmentPassiveDamageAreaBlockNormalMinimumRadius");
+			FixedPoint value = 0.0;
+			FixedPoint value2 = 0.0;
+			VisitParameter(paramName, ref value, occupier);
+			VisitParameter(paramName2, ref value2, occupier);
+			int num3 = Math.Max(0, (int)value);
+			int val = Math.Max(0, (int)value2);
+			int val2 = Math.Max(num - num3, val);
+			return Math.Min(num, val2);
 		}
 
 		private static void AppendTridentSeparatedLineTargets(List<ActorModel> actorsThatAbilityWillTarget, CombatModel combatModel, AbilityModel ability, ActorModel source, GridCoordinate sourceCell, GridCoordinate aimCell, bool allowFriendlyFire, bool abilityCanBeBlocked)
@@ -1070,6 +1293,10 @@ namespace TWDModel
 						flag = true;
 					}
 					else if (ability.Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, actorModel.GridCoordinate))
+					{
+						flag = true;
+					}
+					if (!flag && IsDamageAreaBlockTrajectoryBlocked(combatModel, ability, source, sourceCell, lineEndCell, actorModel))
 					{
 						flag = true;
 					}

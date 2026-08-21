@@ -1537,7 +1537,7 @@ public class CallAuto : MonoBehaviour
 		}
 		else if (lootEntry.DropCurrencyType == DropCurrenciesProbabilitiesDefinition.DropCurrency.Survivor)
 		{
-			SurvivorModel generatedSurvivor = Player.SurvivorContainer.CreateRandomSurvivor(0, lootEntry.RewardedStartingLevel, lootEntry.RewardedStartingLevel, lootEntry.RewardedRarityLevel, forceSurvivorClass, null, 1, 0, lootEntry.ExcludeSurvivorClasses, includeGachaOnly: true, lootEntry.Random, SurvivorClass.None, 0, allowLockedClasses, true);
+			SurvivorModel generatedSurvivor = Player.SurvivorContainer.CreateRandomSurvivor(0, lootEntry.RewardedStartingLevel, lootEntry.RewardedStartingLevel, lootEntry.RewardedRarityLevel, forceSurvivorClass, null, 1, 0, lootEntry.ExcludeSurvivorClasses, includeGachaOnly: true, lootEntry.Random, SurvivorClass.None, 0, allowLockedClasses);
 			lootEntry.GeneratedSurvivor = generatedSurvivor;
 		}
 	}

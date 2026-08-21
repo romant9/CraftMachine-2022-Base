@@ -249,6 +249,7 @@ namespace TWDModel
 			ClaimCounts[definitionId] = value + 1;
 			returnRepeatQuestItemModel.CurrentProgress = GetRemainingProgressAfterClaim(returnRepeatQuestItemModel);
 			ensureCurrentTasks();
+			ReturnerAnalytics.SendTask(base.manager, definitionId);
 			NotifyChange("ReturnRepeatQuestChanged");
 			return true;
 		}

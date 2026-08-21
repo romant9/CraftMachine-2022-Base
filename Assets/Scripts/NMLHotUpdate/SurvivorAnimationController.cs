@@ -507,7 +507,7 @@ public class SurvivorAnimationController : CharacterAnimationController
 	public override void EnsureIdle()
 	{
 		base.EnsureIdle();
-		if (!base.IsIdle)
+		if (!IsIdle)
 		{
 			EndEnvironmentAnimation(completed: false);
 			LowerWeapon();

@@ -309,6 +309,15 @@ public class Helpers
 		return FormatTime(milliSeconds + 999);
 	}
 
+	public static string FormatTimeAsHms(long milliSeconds)
+	{
+		long num = ((milliSeconds > 0) ? ((milliSeconds + 999) / 1000) : 0);
+		long num2 = num / 3600;
+		long num3 = num % 3600 / 60;
+		long num4 = num % 60;
+		return $"{num2:00}:{num3:00}:{num4:00}";
+	}
+
 	public static int ConvertToSecondsNoZero(long milliseconds)
 	{
 		return (int)((milliseconds + 999) / 1000);

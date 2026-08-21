@@ -282,10 +282,10 @@ namespace TWDModel
 			if (ActiveFaction == Faction.Survivor)
 			{
 				TurnCount++;
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null)
 				{
-					List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+					List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 					List<List<FixedPoint>> debufAllParam = ChallengeDebufHelps.GetDebufAllParam(challengeDebuffs, ChallengeDebuffType.DebuffStunRemove);
 					ModelRandom playerRandom = base.manager.Player.PlayerRandom;
 					foreach (List<FixedPoint> item in debufAllParam)

@@ -32,7 +32,7 @@ namespace TWDModel
 			}
 			PlayerModel playerModel = manager.GetPlayer() as PlayerModel;
 			TWDModelResult tWDModelResult = TWDModelResult.Error;
-			if (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle)
+			if (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
 			{
 				tWDModelResult = playerModel.SurvivorContainer.AddSurvivorToCombat(model, survivorModel, SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival);
 				if (tWDModelResult == TWDModelResult.OK)

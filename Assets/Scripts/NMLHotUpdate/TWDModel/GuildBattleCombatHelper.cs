@@ -68,8 +68,14 @@ namespace TWDModel
 				array[i] = 1;
 			}
 			combat.manager.Player.PlayerRandom.ShuffleArray(array);
-			GuildBattleMapMissionModel guildBattleMapMissionModel = combat.manager.Player.GetAttackTargetMissionModel() as GuildBattleMapMissionModel;
-			GuildBattlePvpTeam pvpTeamForMission = combat.manager.Player.GuildWarModel.CurrentBattle.CurrentMapModel.GetPvpTeamForMission(guildBattleMapMissionModel.Id);
+			PlayerModel player = combat.manager.Player;
+			GuildBattleMapMissionModel guildBattleMapMissionModel = player.GetAttackTargetMissionModel() as GuildBattleMapMissionModel;
+			GuildBattlePvpTeam guildBattlePvpTeam = ((guildBattleMapMissionModel != null) ? player.GuildWarModel.CurrentBattle.CurrentMapModel.GetPvpTeamForMission(guildBattleMapMissionModel.Id) : null);
+			List<int> list = guildBattleMapMissionModel?.SavedData;
+			if (guildBattlePvpTeam == null)
+			{
+				return;
+			}
 			int num3 = 0;
 			int num4 = 0;
 			List<TWDModelObject> models = combat.GetModels<ActorSpawnPointModel>();
@@ -87,9 +93,9 @@ namespace TWDModel
 				}
 				RaiderSpawnPointModel raiderSpawnPointModel = (RaiderSpawnPointModel)actorSpawnPointModel;
 				bool flag = false;
-				if (num5 > 0 && num3 < pvpTeamForMission.Survivors.Count)
+				if (num5 > 0 && num3 < guildBattlePvpTeam.Survivors.Count)
 				{
-					if (!guildBattleMapMissionModel.SavedData.Contains(num3))
+					if (list == null || !list.Contains(num3))
 					{
 						flag = true;
 					}

@@ -23,6 +23,10 @@ namespace TWDModel
 				{
 					return ActionListClearFlag.Keep;
 				}
+				if (ResistNegativeEffectsTrait.TryResist(postDamageAction.TargetActor, "Ripped"))
+				{
+					return ActionListClearFlag.Keep;
+				}
 				FixedPoint value = 0.0;
 				base.manager.CombatModel.AbilityManager.VisitParameter("ExtendProbability", ref value, actor);
 				if (base.manager.Player.RollDice(RollDiceType.Ripped, RootPercent, value) != PlayerRandomChanceResult.Failed)

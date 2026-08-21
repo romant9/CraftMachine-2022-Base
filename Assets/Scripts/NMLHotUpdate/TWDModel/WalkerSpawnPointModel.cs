@@ -43,6 +43,8 @@ namespace TWDModel
 		{
 			CombatModel combatModel = base.manager.CombatModel;
 			MissionGenerationData missionGenerationData = base.gameEconomyData.GetMissionGenerationData(base.manager.Player.SelectedMissionDifficulty);
+			int enemyLevel;
+			bool flag = WorldBossMissionModel.TryGetEnemyLevel(base.manager.Player.GetAttackTargetMissionModel(), out enemyLevel);
 			string selectedMissionFlavor = base.manager.Player.SelectedMissionFlavor;
 			MissionFlavorData missionFlavorData = base.gameEconomyData.GetMissionFlavorData(selectedMissionFlavor);
 			int num = combatModel.GetFactionActors(Faction.Walker).Count + combatModel.GetFactionActors(Faction.Dormant).Count;
@@ -70,25 +72,25 @@ namespace TWDModel
 				list2.Add(item);
 			}
 			int num3 = ((base.ActivationType == ActivationType.Threat) ? combatModel.ThreatMeter.SpawnLevelOffset : 0);
-			int randomInRange = base.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel);
-			int num4 = (IsBoss ? missionGenerationData.BossCount : 0);
+			int num4 = (flag ? enemyLevel : base.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel));
+			int num5 = (IsBoss ? missionGenerationData.BossCount : 0);
 			int bossLevelOffset = missionGenerationData.BossLevelOffset;
 			List<GridCoordinate> spawnCoordinates = GetSpawnCoordinates();
 			if ((base.Location.Coordinates.Count == 1 || AllowSpawningToAdjacent) && spawnCoordinates.Count < num2)
 			{
 				spawnCoordinates.AddRange(SolveAdjacentSpawnCoordinates());
 			}
-			int num5 = 0;
+			int num6 = 0;
 			if (spawnCoordinates.Count > 0)
 			{
 				num2 = Math.Min(num2, spawnCoordinates.Count);
 				for (int i = 0; i < num2; i++)
 				{
-					int num6 = randomInRange;
+					int num7 = num4;
 					int index = 0;
 					if (IsBoss)
 					{
-						if (num4 > 0)
+						if (num5 > 0)
 						{
 							if (UseOverrideWalkerType)
 							{
@@ -109,7 +111,7 @@ namespace TWDModel
 								}
 								index = base.manager.Player.PlayerRandom.WeightedRandom(list2.ToArray());
 							}
-							num6 += bossLevelOffset;
+							num7 += bossLevelOffset;
 						}
 						else
 						{
@@ -127,12 +129,12 @@ namespace TWDModel
 					{
 						index = base.manager.Player.PlayerRandom.WeightedRandom(list2.ToArray());
 					}
-					num6 = num6 + num3 + base.LevelOffset;
+					num7 = num7 + num3 + base.LevelOffset;
 					if (OverrideWalkerLevel > 0)
 					{
-						num6 = OverrideWalkerLevel + num3;
+						num7 = OverrideWalkerLevel + num3;
 					}
-					num6 = Math.Max(1, num6);
+					num7 = Math.Max(1, num7);
 					WalkerType walkerType2 = list[index];
 					if (walkerType2 == WalkerType.WalkerNormal && combatModel.SpawnModifiers != null)
 					{
@@ -145,7 +147,7 @@ namespace TWDModel
 							if (combatModel.SpawnModifiers.UpgradePromotedWalkerCount > 0)
 							{
 								combatModel.SpawnModifiers.UpgradePromotedWalkerCount--;
-								num6++;
+								num7++;
 							}
 						}
 						else if (combatModel.SpawnModifiers.PromoteThreatWalkerCount > 0 && base.IsThreatActivated)
@@ -158,12 +160,16 @@ namespace TWDModel
 						else if (combatModel.SpawnModifiers.UpgradeWalkerCount > 0)
 						{
 							combatModel.SpawnModifiers.UpgradeWalkerCount--;
-							num6++;
+							num7++;
 						}
 					}
 					if (combatModel.WalkerRandomizer.IsEnabled() && walkerType2 == WalkerType.WalkerNormal)
 					{
 						walkerType2 = combatModel.WalkerRandomizer.RandomizeWalker(spawnCoordinates[i], walkerType2);
+					}
+					if (flag)
+					{
+						num7 = enemyLevel;
 					}
 					Faction faction = base.Faction;
 					if (WalkerType.ExplosiveBarrel == walkerType2)
@@ -171,7 +177,7 @@ namespace TWDModel
 						faction = Faction.Environmental;
 					}
 					WalkerVisualization walkerVisualVariation = RollForWalkerVisualization();
-					if (!(combatModel.CreateActor(spawnCoordinates[i], faction, num6, base.SpawnTag, Enum.GetName(typeof(WalkerType), walkerType2), null, ActorGender.NotSpecified, walkerVisualVariation) is WalkerModel walkerModel) || !walkerModel.IsValid())
+					if (!(combatModel.CreateActor(spawnCoordinates[i], faction, num7, base.SpawnTag, Enum.GetName(typeof(WalkerType), walkerType2), null, ActorGender.NotSpecified, walkerVisualVariation) is WalkerModel walkerModel) || !walkerModel.IsValid())
 					{
 						continue;
 					}
@@ -193,19 +199,19 @@ namespace TWDModel
 					}
 					walkerModel.DormantType = DormantType;
 					walkerModel.IsVisibleToSurvivors = false;
-					walkerModel.IsBoss = num4 > 0;
+					walkerModel.IsBoss = num5 > 0;
 					if (base.manager.ExecuteAction(new SpawnAction(walkerModel, this, spawnCoordinates[i], instigator)))
 					{
-						num5++;
-						num4--;
+						num6++;
+						num5--;
 					}
 				}
 			}
 			if (base.ActivationType == ActivationType.Threat)
 			{
-				combatModel.SpawnedWalkerCount += num5;
+				combatModel.SpawnedWalkerCount += num6;
 			}
-			return num5;
+			return num6;
 		}
 
 		private WalkerVisualization RollForWalkerVisualization()

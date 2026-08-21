@@ -37,6 +37,8 @@ namespace TWDModel
 
 		private static readonly string ClassWarrior = SurvivorClass.Warrior.ToString();
 
+		public const string ClassBoss = "Boss";
+
 		[JsonIgnore]
 		private bool definitionInvalid = true;
 
@@ -137,6 +139,8 @@ namespace TWDModel
 		public bool CadenceBoostingThisAttack;
 
 		private bool bloodThirst;
+
+		private bool _onRedHealthBar;
 
 		public const string ActorUndyingUpdateEvent = "actorUndyingUpdateEvent";
 
@@ -505,9 +509,20 @@ namespace TWDModel
 		public bool HasBloodMark => BloodMarkTimedEffect != null;
 
 		[JsonIgnore]
+		public FortificationsTimedEffect FortificationsTimedEffect => CoexistTimedEffectsManager?.GetCoexistTimedEffect<FortificationsTimedEffect>(CoexistTimedEffectType.Fortifications);
+
+		[JsonIgnore]
+		public bool IsInFortifications => FortificationsTimedEffect != null;
+
+		[JsonIgnore]
+		public int FortificationsLeftTurns => FortificationsTimedEffect?.LeftTurns ?? 0;
+
+		[JsonIgnore]
 		public ModifierCollection Modifiers { get; private set; }
 
 		public int ChargeAttackWithFreeShootingTriggeredCount { get; set; }
+
+		public int FightBackTimesThisRound { get; set; }
 
 		public int SharpBladeLayers { get; set; }
 
@@ -545,6 +560,42 @@ namespace TWDModel
 
 		public GridCoordinate GridCoordinate { get; set; }
 
+		[JsonIgnore]
+		public virtual bool IsMultiCell => false;
+
+		[JsonIgnore]
+		public virtual bool IsImpenetrable
+		{
+			get
+			{
+				if (base.manager != null)
+				{
+					return GetTraitWithTag("Impenetrable") != null;
+				}
+				return false;
+			}
+		}
+
+		[JsonIgnore]
+		public bool HasDamageAreaBlock
+		{
+			get
+			{
+				if (base.manager != null && TraitContainer != null)
+				{
+					return HasAnyLevelTrait("Equipment.Passive.DamageAreaBlock");
+				}
+				return false;
+			}
+		}
+
+		[JsonIgnore]
+		public virtual bool UsesScreenTopHealthBar => false;
+
+		public bool UseSpawnRotationOverride { get; set; }
+
+		public float SpawnRotationY { get; set; }
+
 		public GridCoordinate ActorsLastAbilityCell { get; set; }
 
 		[JsonIgnore]
@@ -567,7 +618,7 @@ namespace TWDModel
 			{
 				if (Faction != Faction.Civilian)
 				{
-					if (IsLoadDataManager && StartGWBattle.Instance && StartGWBattle.Instance.IsAIForSurvivors)
+					if (OfflineManager.IsLoadDataManager && StartGWBattle.Instance && StartGWBattle.Instance.IsAIForSurvivors)
 						return Faction == Faction.Raider || Faction == Faction.Survivor;
 					else
 						return Faction == Faction.Raider;
@@ -810,10 +861,10 @@ namespace TWDModel
 				FixedPoint fixedPoint = 0L;
 				if (base.manager != null && (Faction == Faction.Walker || Faction == Faction.Raider))
 				{
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+					if (challengeDebuffProvider != null)
 					{
-						List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+						List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 						if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.WalkerMoveLess) != null)
 						{
 							fixedPoint = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.WalkerMoveLess);
@@ -1312,6 +1363,9 @@ namespace TWDModel
 			}
 		}
 
+		[JsonIgnore]
+		public bool IsBossClass => Definition.Class == "Boss";
+
 		public bool IsVisibleToSurvivors { get; set; }
 
 		public bool HasGainedExtraAP { get; set; }
@@ -1428,6 +1482,27 @@ namespace TWDModel
 
 		public int MaxHitPoints { get; set; }
 
+		public bool IsSegmentedHP { get; private set; }
+
+		public int SegmentedHPCount { get; private set; }
+
+		public int SegmentedHPMax { get; private set; }
+
+		public int GuildBossDefense { get; protected set; }
+
+		[JsonIgnore]
+		public int TotalMaxHitPoints
+		{
+			get
+			{
+				if (!IsSegmentedHP)
+				{
+					return MaxHitPoints;
+				}
+				return MaxHitPoints * SegmentedHPMax;
+			}
+		}
+
 		public int Hitpoints { get; private set; }
 
 		public int MinHitpoints { get; set; }
@@ -1507,7 +1582,17 @@ namespace TWDModel
 
 		public List<ModelModifier> LeaderTraitModifiers { get; private set; }
 
-		public bool OnRedHealthBar { get; set; }
+		public bool OnRedHealthBar
+		{
+			get
+			{
+				return _onRedHealthBar;
+			}
+			set
+			{
+				_onRedHealthBar = value && !(this is TankActorModel);
+			}
+		}
 
 		public int NumberOfEnemiesAttacked { get; set; }
 
@@ -1898,6 +1983,51 @@ namespace TWDModel
 			return BerserkRageTimedEffect != null;
 		}
 
+		public void StartFortifications(int turns, int sourceSkillID, List<string> grantedTraitIds)
+		{
+			if (turns > 0)
+			{
+				StartTimedEffect(new FortificationsTimedEffect(turns, this, sourceSkillID, grantedTraitIds));
+			}
+		}
+
+		public void EndFortifications(bool interrupted, int cooldownOverride = -1)
+		{
+			FortificationsTimedEffect fortificationsTimedEffect = FortificationsTimedEffect;
+			if (fortificationsTimedEffect != null)
+			{
+				if (interrupted)
+				{
+					fortificationsTimedEffect.MarkInterrupted();
+				}
+				if (cooldownOverride >= 0)
+				{
+					fortificationsTimedEffect.SetCooldownOverride(cooldownOverride);
+				}
+				CoexistTimedEffectsManager?.RemoveCoexistTimedEffectByCoexistTimedEffectTypeList(new List<CoexistTimedEffectType> { CoexistTimedEffectType.Fortifications });
+			}
+		}
+
+		public virtual List<GridCoordinate> GetOccupiedCells()
+		{
+			return new List<GridCoordinate> { GridCoordinate };
+		}
+
+		public virtual List<GridCoordinate> GetOccupiedCellsAt(GridCoordinate anchor)
+		{
+			return new List<GridCoordinate> { anchor };
+		}
+
+		public virtual GridCoordinate GetAttackOriginCell()
+		{
+			return GridCoordinate;
+		}
+
+		public virtual GridCoordinate GetClosestOccupiedCell(GridCoordinate from)
+		{
+			return GridCoordinate;
+		}
+
 		public void SetIsRandomActiveLightState(bool state)
 		{
 			_isRandomActiveLightState = state;
@@ -1939,6 +2069,20 @@ namespace TWDModel
 			_equipmentFreeOWState = false;
 		}
 
+		public static SurvivorClass ParseSurvivorClassOrNone(string className)
+		{
+			if (!Enum.TryParse<SurvivorClass>(className, out var result))
+			{
+				return SurvivorClass.None;
+			}
+			return result;
+		}
+
+		public SurvivorClass GetSurvivorClassOrNone()
+		{
+			return ParseSurvivorClassOrNone(Definition.Class);
+		}
+
 		public void ChangeShieldHitPoints(int val)
 		{
 			int shieldHitPoints = ShieldHitPoints;
@@ -1966,6 +2110,14 @@ namespace TWDModel
 		private void NotifyReducedShieldHitPoints()
 		{
 			VengefulCharge_dmg();
+		}
+
+		public void RestoreSegmentedHpState(bool isSegmentedHP, int segmentedHPMax, int segmentedHPCount, int guildBossDefense)
+		{
+			IsSegmentedHP = isSegmentedHP;
+			SegmentedHPMax = segmentedHPMax;
+			SegmentedHPCount = segmentedHPCount;
+			GuildBossDefense = guildBossDefense;
 		}
 
 		public void ChangeHitpoints(int val)
@@ -2139,6 +2291,7 @@ namespace TWDModel
 			OverwatchedOnTurn = false;
 			PreAttackedOnTurn = false;
 			ChargeAttackWithFreeShootingTriggeredCount = 0;
+			FightBackTimesThisRound = 0;
 			PreAttackedOnRiposte = false;
 			PassByAttackedOnMove = false;
 			AttackKilledAnyEnemy = false;
@@ -2730,7 +2883,7 @@ namespace TWDModel
 							RemoveTrait(traitIdentifier);
 						}
 					}
-					List<TraitDefinition> passiveTraits = equipmentItemModel2.GetPassiveTraits();
+					List<TraitDefinition> passiveTraits = equipmentItemModel2.GetPassiveTraits(isRemove: true);
 					if (passiveTraits != null && passiveTraits.Count > 0)
 					{
 						foreach (TraitDefinition item in passiveTraits)
@@ -2889,6 +3042,7 @@ namespace TWDModel
 			OneTurnStagger = false;
 			KilledEnemyNum = 0;
 			ChargeAttackWithFreeShootingTriggeredCount = 0;
+			FightBackTimesThisRound = 0;
 			ChargeLoadFloor = 0.0;
 			BounsPhonePortraitTurn = -1;
 			IsMoving = false;
@@ -2968,11 +3122,11 @@ namespace TWDModel
 			SharpBladeLayers = 0;
 			SupportTalent_NoMoveHitrateFlag = false;
 			SupportTalent_NoMoveCritRateFlag = false;
-			MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
-			if (mapMissionModel != null)
+			IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
+			if (challengeDebuffProvider != null)
 			{
 				int debuffStatusRemoveTurns = 0;
-				List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+				List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 				if (IsWalker && ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.DebuffStatusRemove) != null)
 				{
 					debuffStatusRemoveTurns = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.DebuffStatusRemove);
@@ -4038,11 +4192,21 @@ namespace TWDModel
 			HasPerformedOOT = true;
 		}
 
-		public void DealDamage(int damage, ActorModel attacker, DamageType damageType, ActorModel originalDamageInstigator = null)
+		public void DealDamage(int damage, ActorModel attacker, DamageType damageType, ActorModel originalDamageInstigator = null, bool preHPDeductionResolved = false)
 		{
 			if (IsDead || Faction == Faction.Lure)
 			{
 				return;
+			}
+			if (!preHPDeductionResolved)
+			{
+				PreHPDeductionAction preHPDeductionAction = new PreHPDeductionAction(this, attacker, damage, damageType);
+				base.manager?.ExecuteAction(preHPDeductionAction);
+				if (preHPDeductionAction.Avoided)
+				{
+					return;
+				}
+				damage = Math.Max(0, preHPDeductionAction.Damage);
 			}
 			int hitpoints = Hitpoints;
 			if (originalDamageInstigator != null && originalDamageInstigator.Faction == Faction.Survivor)
@@ -4099,6 +4263,7 @@ namespace TWDModel
 				}
 			}
 			SetHitpoints(Hitpoints - damage, DefenseSystemType.Shield, isDealShield, ChangeHitPointSource.DealDamage);
+			int num = ((IsSegmentedHP && Hitpoints < 0) ? (-Hitpoints) : 0);
 			if (Hitpoints < 0)
 			{
 				SetHitpoints(0, DefenseSystemType.None, isDealShield, ChangeHitPointSource.DealDamage);
@@ -4106,6 +4271,21 @@ namespace TWDModel
 			if (Hitpoints > MaxHitPoints)
 			{
 				SetHitpoints(MaxHitPoints, DefenseSystemType.None, isDealShield, ChangeHitPointSource.DealDamage);
+			}
+			if (Hitpoints == 0 && IsSegmentedHP && SegmentedHPCount > 1)
+			{
+				int num2 = (SegmentedHPCount - 1) * MaxHitPoints - num;
+				if (num2 > 0 && MaxHitPoints > 0)
+				{
+					SegmentedHPCount = (num2 + MaxHitPoints - 1) / MaxHitPoints;
+					int val2 = num2 - (SegmentedHPCount - 1) * MaxHitPoints;
+					SetHitpoints(val2, DefenseSystemType.None, IsDealShield: false);
+					NotifyChange("ActorHealthChanged");
+				}
+				else
+				{
+					SegmentedHPCount = 1;
+				}
 			}
 			LastHitAttacker = attacker;
 			if (damageType != DamageType.Explosion)
@@ -4126,8 +4306,13 @@ namespace TWDModel
 				ShieldHitPoints = 0;
 				SetHitpoints(1);
 			}
-			if (Hitpoints == 0)
+			bool flag = this is TankActorModel && IsSegmentedHP && SegmentedHPCount > 1;
+			if (Hitpoints == 0 && !flag)
 			{
+				if (IsSegmentedHP)
+				{
+					SegmentedHPCount = 0;
+				}
 				ActorModel actorModel = ExclusiveTimedEffect?.Instigator;
 				FinishTimedEffect(interrupted: true);
 				if (actorModel != null && actorModel != attacker && actorModel.ExclusiveTimedEffect != null && actorModel.ExclusiveTimedEffect.Target == this)
@@ -4184,10 +4369,10 @@ namespace TWDModel
 		{
 			if (Faction == Faction.Survivor || Faction == Faction.Raider)
 			{
-				SurvivorModel obj = this as SurvivorModel;
+				SurvivorModel survivorModel = this as SurvivorModel;
 				int num = 0;
 				num = ((Hitpoints + amountHealed > MaxHitPoints) ? (MaxHitPoints - Hitpoints) : amountHealed);
-				obj.Statistics.IncreaseTotalHealingReceivedInCombat(num);
+				survivorModel?.Statistics.IncreaseTotalHealingReceivedInCombat(num);
 				SetHitPoints(Hitpoints + num, MaxHitPoints);
 			}
 		}
@@ -4253,7 +4438,12 @@ namespace TWDModel
 		{
 			ShieldHitPoints = 0;
 			SetHitpoints(0);
+			if (IsSegmentedHP)
+			{
+				SegmentedHPCount = 0;
+			}
 			FinishTimedEffect(interrupted: true);
+			EndFortifications(interrupted: true);
 			NotifyChange("actorKilledEvent");
 		}
 
@@ -4494,10 +4684,11 @@ namespace TWDModel
 			{
 				return;
 			}
-			if (giveFullHealth)
+			if (giveFullHealth && !(this is TankActorModel))
 			{
 				SetHitPoints(MaxHitPoints, MaxHitPoints);
 				OnRedHealthBar = true;
+				EndFortifications(interrupted: true);
 			}
 			if (instigator != null)
 			{
@@ -4515,16 +4706,17 @@ namespace TWDModel
 			{
 				return;
 			}
-			if (onRedHealthBar)
+			if (onRedHealthBar && !(this is TankActorModel))
 			{
 				SetHitPoints(MaxHitPoints, MaxHitPoints);
 				OnRedHealthBar = true;
+				EndFortifications(interrupted: true);
 			}
 			int num = burnTurns;
-			MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-			if (mapMissionModel != null)
+			IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+			if (challengeDebuffProvider != null)
 			{
-				FixedPoint debufMinFirstParam = ChallengeDebufHelps.GetDebufMinFirstParam(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffFireLast);
+				FixedPoint debufMinFirstParam = ChallengeDebufHelps.GetDebufMinFirstParam(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffFireLast);
 				if (debufMinFirstParam != FixedPoint.MaxValue)
 				{
 					num = (int)debufMinFirstParam;
@@ -4561,9 +4753,11 @@ namespace TWDModel
 
 		public void StartStruggle(ActorModel target, int turns)
 		{
+			EndFortifications(interrupted: true);
+			target?.EndFortifications(interrupted: true);
 			int num = ((Faction != base.manager.CombatModel.TurnManager.ActiveFaction) ? 1 : 0);
 			StartTimedEffect(new TimedEffect(TimedEffectType.Struggle, turns + num, 0, this, target));
-			if (target != null)
+			if (target != null && !(target is TankActorModel))
 			{
 				if (target.Faction == Faction.Survivor && !target.HasTrait("StruggleInvulnerable") && !base.manager.CombatModel.HasPvPRules)
 				{
@@ -4958,6 +5152,20 @@ namespace TWDModel
 				MoveRange = Definition.InitialMovementSpeed;
 				StrugglesLeft = 1;
 			}
+			ActorLevelDefinition actorLevelDefinition = GetActorLevelDefinition(ActorDefinitionID, Level);
+			if (actorLevelDefinition != null && this is TankActorModel)
+			{
+				num = actorLevelDefinition.GuildBossHP;
+				if (!IsSegmentedHP)
+				{
+					IsSegmentedHP = actorLevelDefinition.SegmentedHP;
+					if (IsSegmentedHP && actorLevelDefinition.HPBarQuantity > 0)
+					{
+						SegmentedHPMax = actorLevelDefinition.HPBarQuantity;
+						SegmentedHPCount = SegmentedHPMax;
+					}
+				}
+			}
 			SetHitPoints(num, num);
 		}
 
@@ -5242,7 +5450,7 @@ namespace TWDModel
 			ActorModel disorientAttackTarget = AIBehaviorHelpers.GetDisorientAttackTarget(this, base.manager.Player.Combat);
 			AIDataModel.SetCurrentTarget(disorientAttackTarget);
 			AIDataModel.Alertness = AIAlertness.Homing;
-			if (disorientAttackTarget != null)
+			if (disorientAttackTarget != null && !EquipmentPassivePreventControlTrait.TryResistEffect(disorientAttackTarget, "DisorientedLock", RollDiceType.Disorient))
 			{
 				DisorientLockActor = disorientAttackTarget;
 				disorientAttackTarget.StartTimedEffect(new TimedEffect(TimedEffectType.DisorientLock, turns + num, 0, instigator.Faction));
@@ -5306,6 +5514,7 @@ namespace TWDModel
 
 		public void OnTurnCountChanged()
 		{
+			FightBackTimesThisRound = 0;
 			if (FocusCoolOff > 0)
 			{
 				FocusCoolOff--;
@@ -5420,11 +5629,11 @@ namespace TWDModel
 				if (DebuffStatusRemoveTurns == 0)
 				{
 					RemoveAllNegativeEffects(base.manager.CombatModel);
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+					if (challengeDebuffProvider != null)
 					{
 						int debuffStatusRemoveTurns = 0;
-						List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+						List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 						if (IsWalker)
 						{
 							if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.DebuffStatusRemove) != null)
@@ -5581,10 +5790,10 @@ namespace TWDModel
 				FixedPoint fixedPoint = FixedPoint.Round((float)ScorchTimedEffect.DamageChance * ((float)MaxHitPoints / 100f));
 				dealBurningDamage += fixedPoint;
 			}
-			MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-			if (mapMissionModel != null)
+			IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+			if (challengeDebuffProvider != null)
 			{
-				List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+				List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 				if (IsWalker)
 				{
 					int num = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.DebuffBurningDmgReduction);
@@ -7276,10 +7485,6 @@ namespace TWDModel
 			return UndyingState.TurnsUntilNextGrant;
 		}
 
-
-		#region myparams
-		private bool IsLoadDataManager => OfflineManager.IsLoadDataManager;
-		#endregion
 
 		#region mycode
 		public void SetModifiers(ModifierCollection modifiers)

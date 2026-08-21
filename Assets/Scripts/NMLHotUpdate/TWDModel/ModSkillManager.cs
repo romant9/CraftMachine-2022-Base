@@ -334,19 +334,23 @@ namespace TWDModel
 			if (equipmentItemModel != null)
 			{
 				equipmentItemModel.SetModSkillSlot(slotIndex, modSkillMode2);
-				List<string> passiveTraits = modSkillMode2.GetSpTraitsDefaultTrait().PassiveTraits;
-				if (passiveTraits != null)
+				SPTraitsRemoldDefinitions spTraitsDefaultTrait = modSkillMode2.GetSpTraitsDefaultTrait();
+				if (spTraitsDefaultTrait != null)
 				{
-					foreach (string item in passiveTraits)
+					List<string> passiveTraits = spTraitsDefaultTrait.PassiveTraits;
+					if (passiveTraits != null && CanApplyPassiveTraits(spTraitsDefaultTrait, modSkillMode2))
 					{
-						equipmentItemModel.ApplyModSkillPassiveTraitToOwner(item);
+						foreach (string item in passiveTraits)
+						{
+							equipmentItemModel.ApplyModSkillPassiveTraitToOwner(item);
+						}
 					}
 				}
 			}
 			NotifyChange("ModSkillEquippedEvent");
 			base.manager.TdMetrics.SetEventType("EquipRemold");
-			SPTraitsRemoldDefinitions spTraitsDefaultTrait = modSkillMode2.GetSpTraitsDefaultTrait();
-			base.manager.TdMetrics.AddProperty("RemoldSkillEquiped", new BiEquipRemold(modSkillMode2.ID, spTraitsDefaultTrait?.Level ?? 0, modSkillMode2.Type));
+			SPTraitsRemoldDefinitions spTraitsDefaultTrait2 = modSkillMode2.GetSpTraitsDefaultTrait();
+			base.manager.TdMetrics.AddProperty("RemoldSkillEquiped", new BiEquipRemold(modSkillMode2.ID, spTraitsDefaultTrait2?.Level ?? 0, modSkillMode2.Type));
 			base.manager.TdMetrics.Send();
 			return TWDModelResult.OK;
 		}
@@ -530,7 +534,7 @@ namespace TWDModel
 						modSkillMode.EquipmentItemModel.RemoveModSkillPassiveTrait(passiveTrait);
 					}
 				}
-				if (modSkillUpgradeResult.NextTraitDef.PassiveTraits != null && modSkillUpgradeResult.NextTraitDef.PassiveTraits.Count > 0)
+				if (CanApplyPassiveTraits(modSkillUpgradeResult.NextTraitDef, modSkillMode))
 				{
 					foreach (string passiveTrait2 in modSkillUpgradeResult.NextTraitDef.PassiveTraits)
 					{
@@ -542,6 +546,22 @@ namespace TWDModel
 			base.manager.TdMetrics.AddProperty("RemoldSkillUpgrade", new BiEquipRemold(modSkillUpgradeResult.NextTraitDef.ID, modSkillUpgradeResult.NextTraitDef.Level));
 			base.manager.TdMetrics.Send();
 			return TWDModelResult.OK;
+		}
+
+		public bool CanApplyPassiveTraits(SPTraitsRemoldDefinitions definitions, ModSkillMode modSkill)
+		{
+			if (definitions.PassiveTraits != null && definitions.PassiveTraits.Count > 0)
+			{
+				if (definitions.EquipType == null || definitions.EquipType.Count <= 0)
+				{
+					return true;
+				}
+				if (definitions.EquipType.Contains(modSkill.EquipmentItemModel.Definition.Type.ToString()))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		public ModSkillRewardResult AddRemoldSkill(string spTraitsGroupId, int amount)

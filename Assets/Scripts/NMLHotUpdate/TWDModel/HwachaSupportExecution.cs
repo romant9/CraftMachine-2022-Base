@@ -7,16 +7,20 @@ namespace TWDModel
 	{
 		public IEnumerable<ModelAction> Execute(SupportModel supportModel, SurvivorModel attachedSurvivor, GridCoordinate target, out ICollection<ActorModel> affectedTargets)
 		{
-			CombatModel combatModel = attachedSurvivor.manager.CombatModel;
+			LinkedList<ModelAction> linkedList = new LinkedList<ModelAction>();
+			affectedTargets = new LinkedList<ActorModel>();
+			CombatModel combatModel = attachedSurvivor?.manager?.CombatModel;
+			if (supportModel?.definition == null || supportModel.manager?.Player == null || attachedSurvivor?.manager?.Player == null || combatModel?.AbilityManager == null)
+			{
+				return linkedList;
+			}
 			FixedPoint value = 0.0;
 			combatModel.AbilityManager.VisitParameter("ExtendProbability", ref value, attachedSurvivor);
 			FixedPoint successProbability = supportModel.GetParameter(2) / 100.0;
-			LinkedList<ModelAction> linkedList = new LinkedList<ModelAction>();
 			FixedPoint parameter = supportModel.GetParameter(0);
 			int damage = (int)(attachedSurvivor.GetDamageForPreferredWeapon() * supportModel.GetParameter(1) / 100.0);
 			ModelRandom playerRandom = supportModel.manager.Player.PlayerRandom;
-			List<ActorModel> targetsInternal = GetTargetsInternal(supportModel, target);
-			affectedTargets = new LinkedList<ActorModel>();
+			List<ActorModel> targetsInternal = GetTargetsInternal(supportModel, attachedSurvivor, target);
 			PlayerModel player = attachedSurvivor.manager.Player;
 			for (int i = 0; i < parameter; i++)
 			{
@@ -35,41 +39,57 @@ namespace TWDModel
 			return linkedList;
 		}
 
-		private List<ActorModel> GetTargetsInternal(SupportModel supportModel, GridCoordinate target)
+		private List<ActorModel> GetTargetsInternal(SupportModel supportModel, SurvivorModel attachedSurvivor, GridCoordinate target)
 		{
 			List<ActorModel> list = new List<ActorModel>();
-			CombatModel combatModel = supportModel.manager.CombatModel;
-			ProcessEnemies(combatModel.Walkers, supportModel, target, list);
-			ProcessEnemies(combatModel.Raiders, supportModel, target, list);
+			CombatModel combatModel = supportModel?.manager?.CombatModel;
+			if (combatModel == null || combatModel.Grid == null || supportModel.definition == null || attachedSurvivor == null || !target.IsValid || !combatModel.Grid.IsCoordinateValid(target))
+			{
+				return list;
+			}
+			FixedPoint fixedPoint = supportModel.GetParameter(4);
+			ActorModel actorModel = combatModel.GetOccupier(target);
+			if (actorModel == null || combatModel.AbilityManager == null || !actorModel.HasDamageAreaBlock || actorModel.IsDead || actorModel.IsEnvironmental || !actorModel.IsEnemy(attachedSurvivor) || ((combatModel.Walkers == null || !combatModel.Walkers.Contains(actorModel)) && (combatModel.Raiders == null || !combatModel.Raiders.Contains(actorModel))))
+			{
+				actorModel = null;
+			}
+			if (actorModel != null)
+			{
+				fixedPoint = combatModel.AbilityManager.GetDamageAreaBlockEffectiveSupportRadius(target, (int)fixedPoint);
+			}
+			ProcessEnemies(combatModel.Walkers, combatModel, target, fixedPoint, actorModel, list);
+			ProcessEnemies(combatModel.Raiders, combatModel, target, fixedPoint, actorModel, list);
 			return list;
 		}
 
-		private void ProcessEnemies(IEnumerable<ActorModel> actors, SupportModel supportModel, GridCoordinate target, List<ActorModel> targets)
+		private void ProcessEnemies(IEnumerable<ActorModel> actors, CombatModel combatModel, GridCoordinate target, FixedPoint radius, ActorModel damageAreaBlockMainTarget, List<ActorModel> targets)
 		{
 			if (actors == null)
 			{
 				return;
 			}
-			FixedPoint parameter = supportModel.GetParameter(4);
-			FixedPoint fixedPoint = parameter * parameter;
-			CombatModel combatModel = supportModel.manager.CombatModel;
+			FixedPoint fixedPoint = radius * radius;
 			foreach (ActorModel actor in actors)
 			{
-				if (!actor.IsDead && !actor.IsEnvironmental && target.SquaredDistanceTo(actor.GridCoordinate) <= fixedPoint && combatModel.IsGridCellVisibleByAnySurvivor(actor.GridCoordinate))
+				if (actor != null && !actor.IsDead && !actor.IsEnvironmental)
 				{
-					targets.Add(actor);
+					GridCoordinate other = ((actor == damageAreaBlockMainTarget) ? target : actor.GridCoordinate);
+					if (target.SquaredDistanceTo(other) <= fixedPoint && combatModel.IsGridCellVisibleByAnySurvivor(actor.GridCoordinate))
+					{
+						targets.Add(actor);
+					}
 				}
 			}
 		}
 
 		public bool CanExecute(SupportModel supportModel, SurvivorModel attachedSurvivor, GridCoordinate target)
 		{
-			return GetTargetsInternal(supportModel, target).Count > 0;
+			return GetTargetsInternal(supportModel, attachedSurvivor, target).Count > 0;
 		}
 
 		public ICollection<ActorModel> GetTargets(SupportModel supportModel, SurvivorModel attachedSurvivor, GridCoordinate target)
 		{
-			return GetTargetsInternal(supportModel, target);
+			return GetTargetsInternal(supportModel, attachedSurvivor, target);
 		}
 	}
 }

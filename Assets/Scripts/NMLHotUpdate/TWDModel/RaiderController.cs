@@ -17,6 +17,16 @@ namespace TWDModel
 			}
 		}
 
+		public override void ExecuteTurn()
+		{
+			TryAutoUseFortificationsForDefender();
+			if (base.Actor is TankActorModel)
+			{
+				OnPreExecuteBehavior();
+			}
+			base.ExecuteTurn();
+		}
+
 		public override void AttackTarget(ActorModel actor)
 		{
 			if (base.IsPvP)
@@ -71,6 +81,16 @@ namespace TWDModel
 			}
 			ActorModel buddyAidTarget = AIBehaviorHelpers.GetBuddyAidTarget(base.Actor, base.CombatModel);
 			base.AIDataModel.SetBuddyAidTarget(buddyAidTarget);
+			TryAutoUseFortificationsForDefender();
+		}
+
+		private bool TryAutoUseFortificationsForDefender()
+		{
+			if (base.Actor == null || base.Actor.Faction != Faction.Raider || base.Actor.IsDead || base.IsActorIncapacitated || base.AIDataModel == null || (base.AIDataModel.Alertness != AIAlertness.Alerted && base.AIDataModel.Alertness != AIAlertness.Aggressive) || base.Actor.IsInFortifications)
+			{
+				return false;
+			}
+			return (base.Actor.CommandSkillModelManager?.GetCommandSkill<FortificationsSkill>(CommandSkillType.CommandSkillFortifications))?.ReleaseSkillToTargetCell(GridCoordinate.Invalid) ?? false;
 		}
 
 		protected override List<BehaviorBase> CreateSystemicBehaviors()
@@ -92,6 +112,15 @@ namespace TWDModel
 					new ActorEndTurnBehavior(this),
 					new RaiderIdleBehavior(this),
 					new RaiderMoveBehavior(this),
+					new RaiderAttackBehavior(this)
+				};
+			}
+			if (base.AIDataModel.Mode == AIMode.Stationary)
+			{
+				return new List<BehaviorBase>
+				{
+					new ActorEndTurnBehavior(this),
+					new RaiderIdleBehavior(this),
 					new RaiderAttackBehavior(this)
 				};
 			}

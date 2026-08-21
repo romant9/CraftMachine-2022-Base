@@ -12,6 +12,7 @@ namespace TWDModel
 		Chained = 4,
 		ConeLeft = 5,
 		ConeRight = 6,
-		LineSeparated = 7
+		Diamond = 7,
+		LineSeparated = 8
 	}
 }

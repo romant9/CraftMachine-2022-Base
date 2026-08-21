@@ -40,16 +40,19 @@ namespace TWDModel
 
 		private void CreatePoisonRelation(ActorModel source, ActorModel target)
 		{
-			CombatModel combatModel = source.manager.CombatModel;
-			PoisonRelationsManager poisonRelationsManager = combatModel.GetModel<PoisonRelationsManager>();
-			if (poisonRelationsManager == null)
+			if (!EquipmentPassivePreventControlTrait.TryResistEffect(target, "Poison", RollDiceType.Poison))
 			{
-				poisonRelationsManager = new PoisonRelationsManager();
-				poisonRelationsManager.SetManager(source.manager);
-				combatModel.AddModel(poisonRelationsManager);
+				CombatModel combatModel = source.manager.CombatModel;
+				PoisonRelationsManager poisonRelationsManager = combatModel.GetModel<PoisonRelationsManager>();
+				if (poisonRelationsManager == null)
+				{
+					poisonRelationsManager = new PoisonRelationsManager();
+					poisonRelationsManager.SetManager(source.manager);
+					combatModel.AddModel(poisonRelationsManager);
+				}
+				PoisonRelation newRelation = new PoisonRelation(source, target, source.Faction, combatModel.TurnManager.TurnCount + Turns, AttackerDamagePercentage, MaxLayerCount, Turns);
+				poisonRelationsManager.AddRelation(newRelation);
 			}
-			PoisonRelation newRelation = new PoisonRelation(source, target, source.Faction, combatModel.TurnManager.TurnCount + Turns, AttackerDamagePercentage, MaxLayerCount, Turns);
-			poisonRelationsManager.AddRelation(newRelation);
 		}
 	}
 }

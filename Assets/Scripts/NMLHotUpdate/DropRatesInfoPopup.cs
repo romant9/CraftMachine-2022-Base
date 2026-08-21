@@ -14,7 +14,7 @@ public class DropRatesInfoPopup : HUDElement
 
 	public const string DropTableNormalPrefabPath = "DropRateTableNormal";
 
-	public const string DropTableRadioCallPrefabPath = "DropRateTableRadioCall";
+	public const string DropTableRadioCallPrefabPath = "DropRateTableRadioCall2";
 
 	public void TryOpenWithNormalData(params DropTableItem[] items)
 	{
@@ -48,7 +48,7 @@ public class DropRatesInfoPopup : HUDElement
 			}
 			else
 			{
-				dropTableList.UpdateWithList(new List<RadioCallTableItem>(items), "DropRateTableRadioCall", "DropRateTableRadioCall", callUpdateUI: true);
+				dropTableList.UpdateWithList(new List<RadioCallTableItem>(items), "DropRateTableRadioCall2", "DropRateTableRadioCall2", callUpdateUI: true);
 			}
 			Open();
 			if (dropTableList.currentItemsCount > 0)

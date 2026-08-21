@@ -133,7 +133,7 @@ public class SupportInputHandler : PlayerInputHandler
 					this.DrawnPathChanged?.Invoke(runPath, doubleMove: false);
 					lastInputCoordinate = inputCoord;
 					Vector3 start = GameManager.Instance.modelManager.CombatModel.Grid.GetPosition(lastInputCoordinate.Value).ToVector3();
-					FixedPoint fixedPoint5 = activeSupportInteraction.AreaRadius ?? ((FixedPoint)0.0);
+					FixedPoint fixedPoint5 = activeSupportInteraction.GetPreviewAreaRadius(inputCoord) ?? ((FixedPoint)0.0);
 					weaponRadiusVisualization.SetCircle(start, GetWorldRadius((float)fixedPoint5));
 					base.GridView.ClearHighlights();
 					HighlightTargets(activeSupportInteraction.GetTargets(inputCoord), inputCoord);

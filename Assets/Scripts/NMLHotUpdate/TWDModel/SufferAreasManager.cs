@@ -25,8 +25,8 @@ namespace TWDModel
 		{
 			if ((base.manager != null && actor.Faction == Faction.Walker) || actor.Faction == Faction.Raider)
 			{
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel != null && ChallengeDebufHelps.GetDebufConfig(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.WalkerMoveLess) != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null && ChallengeDebufHelps.GetDebufConfig(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.WalkerMoveLess) != null)
 				{
 					return;
 				}
@@ -37,9 +37,16 @@ namespace TWDModel
 				Faction activeFaction = base.manager.CombatModel.TurnManager.ActiveFaction;
 				foreach (TWDModelObject model in base.manager.CombatModel.Models)
 				{
-					if (model is SufferArea sufferArea && actor.Faction != sufferArea.Faction && list.Any(sufferArea.IsInArea) && actor.Faction == activeFaction)
+					if (model is SufferArea sufferArea && actor.Faction != sufferArea.Faction && list.Any(sufferArea.IsInArea))
 					{
-						TruncatedPath(sufferArea, actor, actorAction);
+						if (EquipmentPassivePreventControlTrait.TryResistEffect(actor, "SufferActive"))
+						{
+							return;
+						}
+						if (actor.Faction == activeFaction)
+						{
+							TruncatedPath(sufferArea, actor, actorAction);
+						}
 					}
 				}
 				GridPath gridPath = GridPath.Create(list);
@@ -52,7 +59,10 @@ namespace TWDModel
 						{
 							ApplyEffect(sufferArea2, actor, actorAction);
 						}
-						actor.AddTemporaryTrait("SufferActive", default(FixedPoint), null, 0L);
+						if (!ResistNegativeEffectsTrait.TryResist(actor, "SufferActive"))
+						{
+							actor.AddTemporaryTrait("SufferActive", default(FixedPoint), null, 0L);
+						}
 						return;
 					}
 				}
@@ -94,7 +104,10 @@ namespace TWDModel
 				{
 					if (model is SufferArea sufferArea && sufferArea.Faction != item.Faction && sufferArea.IsInArea(item.GridCoordinate))
 					{
-						ApplyEffect(sufferArea, item);
+						if (!EquipmentPassivePreventControlTrait.TryResistEffect(item, "SufferActive"))
+						{
+							ApplyEffect(sufferArea, item);
+						}
 						break;
 					}
 				}
@@ -108,8 +121,8 @@ namespace TWDModel
 			combatModel.AbilityManager.VisitParameter("LeaderBuffMadeToSufferDotRatio", ref value, sufferArea.Owner);
 			actor.MoveRangeConsumed = Math.Max(actor.MoveRangeConsumed, actor.MoveRange - 1);
 			int num = 0;
-			MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
-			if (mapMissionModel != null && sufferArea.Faction == Faction.Survivor && sufferArea.Owner is SurvivorModel survivorModel)
+			IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
+			if (challengeDebuffProvider != null && sufferArea.Faction == Faction.Survivor && sufferArea.Owner is SurvivorModel survivorModel)
 			{
 				TraitEntry traitAnyLevel = sufferArea.Owner.TraitContainer.GetTraitAnyLevel("LeaderBuffMadeToSuffer");
 				if (traitAnyLevel == null)
@@ -128,7 +141,7 @@ namespace TWDModel
 				}
 				if (traitAnyLevel != null)
 				{
-					FixedPoint minDebuffParamPercentageByTraitId = ChallengeDebufHelps.GetMinDebuffParamPercentageByTraitId(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffTyreeseLT, traitAnyLevel.TraitIdentifier);
+					FixedPoint minDebuffParamPercentageByTraitId = ChallengeDebufHelps.GetMinDebuffParamPercentageByTraitId(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffTyreeseLT, traitAnyLevel.TraitIdentifier);
 					if (minDebuffParamPercentageByTraitId > 0L)
 					{
 						int val = Math.Min((int)(survivorModel.GetDamageForPreferredWeapon() * minDebuffParamPercentageByTraitId), actor.Hitpoints - 1);

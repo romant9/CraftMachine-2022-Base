@@ -22,10 +22,10 @@ namespace TWDModel
 		{
 			if (action is AbilityAction { Actor: not null } abilityAction)
 			{
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null)
 				{
-					int chance = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffInstanKill);
+					int chance = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffInstanKill);
 					if (base.manager.Player.RollDice(RollDiceType.AvoidNegativeFatal, chance) == PlayerRandomChanceResult.Success)
 					{
 						return ActionListClearFlag.Keep;
@@ -66,10 +66,10 @@ namespace TWDModel
 			}
 			if (action is PostAbilityExecuteAction { DamagerActor: not null } postAbilityExecuteAction)
 			{
-				MapMissionModel mapMissionModel2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel2 != null)
+				IChallengeDebuffProvider challengeDebuffProvider2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider2 != null)
 				{
-					int chance2 = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(mapMissionModel2.GetChallengeDebuffs(), ChallengeDebuffType.DebuffInstanKill);
+					int chance2 = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffProvider2.GetChallengeDebuffs(), ChallengeDebuffType.DebuffInstanKill);
 					if (base.manager.Player.RollDice(RollDiceType.AvoidNegativeFatal, chance2) == PlayerRandomChanceResult.Success)
 					{
 						return ActionListClearFlag.Keep;

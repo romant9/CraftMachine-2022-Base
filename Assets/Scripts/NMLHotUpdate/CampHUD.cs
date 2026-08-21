@@ -129,6 +129,9 @@ public class CampHUD : HUDElement
 	[SerializeField]
 	private HUDMeter SPTraitsUpgradeTokensMeter;
 
+	[SerializeField]
+	private HUDMeter worldBossExchangeCoinMeter;
+
 	private List<HUDMeter> meters = new List<HUDMeter>();
 
 	[Header("Camp Navigation")]
@@ -241,6 +244,9 @@ public class CampHUD : HUDElement
 	private Transform collectAnimationHillTopDestination;
 
 	[SerializeField]
+	private Transform collectAnimationWorldBossExchangeDestination;
+
+	[SerializeField]
 	private Transform collectAnimationEnergyDestination;
 
 	[SerializeField]
@@ -329,11 +335,11 @@ public class CampHUD : HUDElement
 	[SerializeField]
 	private GameObject unlockedEffect;
 
+	[Tooltip("回归入口")]
 	[SerializeField]
 	private GameObject ReturnLogin;
 
 	[SerializeField]
-	[Tooltip("回归入口上的 Free 绿色提醒。")]
 	private GameObject returnLoginFreeTag;
 
 	public bool PauseCurrencyMeters { get; set; }
@@ -680,6 +686,7 @@ public class CampHUD : HUDElement
 			hillTopCoinMeter.SetCurrencyType(CurrencyType.HillTopCoin);
 			bluePrintTokensMeter.SetCurrencyType(CurrencyType.BulePrintToken);
 			SPTraitsUpgradeTokensMeter.SetCurrencyType(CurrencyType.SPTraitsUpgradeToken);
+			worldBossExchangeCoinMeter.SetCurrencyType(CurrencyType.WorldBossExchangeCoin);
 		}
 		meters.Add(suppliesMeter);
 		meters.Add(survivalPointsMeter);
@@ -700,6 +707,7 @@ public class CampHUD : HUDElement
 		meters.Add(hillTopCoinMeter);
 		meters.Add(bluePrintTokensMeter);
 		meters.Add(SPTraitsUpgradeTokensMeter);
+		meters.Add(worldBossExchangeCoinMeter);
 		if (updateTimerLabel != null && GameManager.Instance.VersionValidUntil.HasValue && GameManager.Instance.VersionUpgradeNeeded)
 		{
 			Helpers.GameObjectSetActive(updateButton, value: true);
@@ -965,13 +973,20 @@ public class CampHUD : HUDElement
 			endlessModeTokensMeter.transform.localPosition = endlessMissionVector3;
 		}
 		Helpers.GameObjectSetActive(endlessModeExpertTokensMeter, flag13 || flag14);
-		Helpers.GameObjectSetActive(tokensMeter, !flag13 && !flag14);
+		bool activeInHierarchy = (SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.WorldBossMainPopup) as WorldBossMainPopup).gameObject.activeInHierarchy;
+		Helpers.GameObjectSetActive(tokensMeter, !activeInHierarchy && !flag13 && !flag14);
+		Helpers.GameObjectSetActive(SPTraitsUpgradeTokensMeter, !activeInHierarchy);
 		SurvivorManagementPopUp survivorManagementPopUp = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.CampTrainingGrounds) as SurvivorManagementPopUp;
 		WorkshopPopup workshopPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.CampWorkshopPopup) as WorkshopPopup;
-		Helpers.GameObjectSetActive(outpostTokensMeter, flag17 && !survivorManagementPopUp.gameObject.activeInHierarchy && !workshopPopup.gameObject.activeInHierarchy && !endlessModeTokensMeter.gameObject.activeInHierarchy);
+		Helpers.GameObjectSetActive(outpostTokensMeter, flag17 && !(survivorManagementPopUp.gameObject.activeInHierarchy || workshopPopup.gameObject.activeInHierarchy || activeInHierarchy) && !endlessModeTokensMeter.gameObject.activeInHierarchy);
 		Helpers.GameObjectSetActive(traitRerollTokensMeter, survivorManagementPopUp.gameObject.activeInHierarchy);
 		Helpers.GameObjectSetActive(equipmentUpgradeTokensMeter, workshopPopup.gameObject.activeInHierarchy);
 		Helpers.GameObjectSetActive(apocalypticEquipTokensMeter, workshopPopup.gameObject.activeInHierarchy);
+		Helpers.GameObjectSetActive(worldBossExchangeCoinMeter, activeInHierarchy);
+		if (activeInHierarchy)
+		{
+			Helpers.GameObjectSetActive(endlessModeTokensMeter, value: false);
+		}
 		UpdateGuildBattleVisualization();
 	}
 
@@ -1117,6 +1132,8 @@ public class CampHUD : HUDElement
 			bluePrintTokensMeter.SetValue(playerModel.GetCurrency(CurrencyType.BulePrintToken).Value);
 			SPTraitsUpgradeTokensMeter.SetMaxValue(playerModel.GetCurrency(CurrencyType.SPTraitsUpgradeToken).Max);
 			SPTraitsUpgradeTokensMeter.SetValue(playerModel.GetCurrency(CurrencyType.SPTraitsUpgradeToken).Value);
+			worldBossExchangeCoinMeter.SetMaxValue(playerModel.GetCurrency(CurrencyType.WorldBossExchangeCoin).Max);
+			worldBossExchangeCoinMeter.SetValue(playerModel.GetCurrency(CurrencyType.WorldBossExchangeCoin).Value);
 			SetPhonesNumber();
 		}
 	}
@@ -1183,30 +1200,31 @@ public class CampHUD : HUDElement
 		TutorialModel tutorial = GameManager.Instance.playerModel.Tutorial;
 		if (tutorial != null && !tutorial.StaticTutorialComplete)
 		{
-			suppliesMeter.gameObject.SetActive(tutorial.ShowSuppliesHud);
-			survivalPointsMeter.gameObject.SetActive(TutorialView.Instance.Model.CurrentPartId != "Tutorial");
-			diamondsMeter.gameObject.SetActive(tutorial.ShowDiamondsHud);
-			SPTraitsUpgradeTokensMeter.gameObject.SetActive(!OfflineManager.IsLoadDataManager && tutorial.ShowDiamondsHud && TutorialView.Instance.Model.CurrentPartId != "Phone");
-			tokensMeter.gameObject.SetActive(tutorial.ShowGasHud);
-			apocalypticEquipTokensMeter.gameObject.SetActive(value: false);
+			Helpers.GameObjectSetActive(suppliesMeter, tutorial.ShowSuppliesHud);
+			Helpers.GameObjectSetActive(survivalPointsMeter, TutorialView.Instance.Model.CurrentPartId != "Tutorial");
+			Helpers.GameObjectSetActive(diamondsMeter, tutorial.ShowDiamondsHud);
+			Helpers.GameObjectSetActive(SPTraitsUpgradeTokensMeter, tutorial.ShowDiamondsHud && TutorialView.Instance.Model.CurrentPartId != "Phone");
+			Helpers.GameObjectSetActive(tokensMeter, tutorial.ShowGasHud);
+			Helpers.GameObjectSetActive(apocalypticEquipTokensMeter, value: false);
 			Helpers.GameObjectSetActive(survivalManualEXTokensMeter, value: false);
-			outpostTokensMeter.gameObject.SetActive(value: false);
-			equipmentUpgradeTokensMeter.gameObject.SetActive(value: false);
-			traitRerollTokensMeter.gameObject.SetActive(value: false);
-			settingsButton.gameObject.SetActive(tutorial.ShowDiamondsHud);
-			achievementButton.SetActive(tutorial.ShowDiamondsHud);
-			teamManagementButton.SetActive(tutorial.ShowDiamondsHud);
-			consumablesButton.SetActive(tutorial.ShowDiamondsHud);
-			workshopButton.SetActive(value: false);
-			playerHubButton.SetActive(value: false);
-			gvgChatButton.SetActive(value: false);
-			cinemaAdsButton.SetActive(value: false);
-			endlessModeTokensMeter.gameObject.SetActive(value: false);
-			endlessModeExpertTokensMeter.gameObject.SetActive(value: false);
+			Helpers.GameObjectSetActive(outpostTokensMeter, value: false);
+			Helpers.GameObjectSetActive(equipmentUpgradeTokensMeter, value: false);
+			Helpers.GameObjectSetActive(traitRerollTokensMeter, value: false);
+			Helpers.GameObjectSetActive(worldBossExchangeCoinMeter, value: false);
+			Helpers.GameObjectSetActive(settingsButton, tutorial.ShowDiamondsHud);
+			Helpers.GameObjectSetActive(achievementButton, tutorial.ShowDiamondsHud);
+			Helpers.GameObjectSetActive(teamManagementButton, tutorial.ShowDiamondsHud);
+			Helpers.GameObjectSetActive(consumablesButton, tutorial.ShowDiamondsHud);
+			Helpers.GameObjectSetActive(workshopButton, value: false);
+			Helpers.GameObjectSetActive(playerHubButton, value: false);
+			Helpers.GameObjectSetActive(gvgChatButton, value: false);
+			Helpers.GameObjectSetActive(cinemaAdsButton, value: false);
+			Helpers.GameObjectSetActive(endlessModeTokensMeter, value: false);
+			Helpers.GameObjectSetActive(endlessModeExpertTokensMeter, value: false);
 			showPhoneButtonInTutorial();
 			Helpers.GameObjectSetActive(shopButton, tutorial.ShowDiamondsHud);
-			specialNotificationContainer.SetActive(value: false);
-			BananaButton.SetActive(value: false);
+			Helpers.GameObjectSetActive(specialNotificationContainer, value: false);
+			Helpers.GameObjectSetActive(BananaButton, value: false);
 			if (tutorial.ShowDiamondsHud)
 			{
 				UpdateBananaButton();
@@ -1215,21 +1233,22 @@ public class CampHUD : HUDElement
 		}
 		else
 		{
-			phoneButton.SetActive(value: true);
+			Helpers.GameObjectSetActive(phoneButton, value: true);
 			SetPhonesNumber();
-			suppliesMeter.gameObject.SetActive(value: true);
-			survivalPointsMeter.gameObject.SetActive(value: true);
-			diamondsMeter.gameObject.SetActive(value: true);
-			tokensMeter.gameObject.SetActive(value: true);
-			endlessModeTokensMeter.gameObject.SetActive(value: true);
-			endlessModeExpertTokensMeter.gameObject.SetActive(value: false);
-			apocalypticEquipTokensMeter.gameObject.SetActive(value: false);
+			Helpers.GameObjectSetActive(suppliesMeter, value: true);
+			Helpers.GameObjectSetActive(survivalPointsMeter, value: true);
+			Helpers.GameObjectSetActive(diamondsMeter, value: true);
+			Helpers.GameObjectSetActive(tokensMeter, value: true);
+			Helpers.GameObjectSetActive(endlessModeTokensMeter, value: true);
+			Helpers.GameObjectSetActive(endlessModeExpertTokensMeter, value: false);
+			Helpers.GameObjectSetActive(apocalypticEquipTokensMeter, value: false);
 			Helpers.GameObjectSetActive(survivalManualEXTokensMeter, value: false);
-			equipmentUpgradeTokensMeter.gameObject.SetActive(value: false);
-			traitRerollTokensMeter.gameObject.SetActive(value: false);
-			settingsButton.gameObject.SetActive(value: true);
-			consumablesButton.gameObject.SetActive(value: true);
-			teamManagementButton.gameObject.SetActive(value: true);
+			Helpers.GameObjectSetActive(equipmentUpgradeTokensMeter, value: false);
+			Helpers.GameObjectSetActive(traitRerollTokensMeter, value: false);
+			Helpers.GameObjectSetActive(worldBossExchangeCoinMeter, value: false);
+			Helpers.GameObjectSetActive(settingsButton, value: true);
+			Helpers.GameObjectSetActive(consumablesButton, value: true);
+			Helpers.GameObjectSetActive(teamManagementButton, value: true);
 			Helpers.GameObjectSetActive(shopButton, value: true);
 			Helpers.GameObjectSetActive(cinemaAdsButton, value: false);
 			SetSPTraitsUpgradeTokensHudCurrencyVisibility(visibility: true);
@@ -1237,27 +1256,27 @@ public class CampHUD : HUDElement
 			if (GameManager.Instance != null && GameManager.Instance.playerModel != null && GameManager.Instance.playerModel.Camp != null)
 			{
 				BuildingModel building = GameManager.Instance.playerModel.Camp.GetBuilding("Workshop");
-				workshopButton.gameObject.SetActive(building != null);
-				outpostTokensMeter.gameObject.SetActive(GameManager.Instance.playerModel.GetCurrency(CurrencyType.Outpost).Max > 0);
+				Helpers.GameObjectSetActive(workshopButton, building != null);
+				Helpers.GameObjectSetActive(outpostTokensMeter, GameManager.Instance.playerModel.GetCurrency(CurrencyType.Outpost).Max > 0);
 			}
 			else
 			{
-				workshopButton.gameObject.SetActive(value: false);
-				outpostTokensMeter.gameObject.SetActive(value: false);
+				Helpers.GameObjectSetActive(workshopButton, value: false);
+				Helpers.GameObjectSetActive(outpostTokensMeter, value: false);
 			}
-			achievementButton.SetActive(GameManager.Instance.playerModel.gameEconomyData.ConfigData.EnableAchievements);
+			Helpers.GameObjectSetActive(achievementButton, GameManager.Instance.playerModel.gameEconomyData.ConfigData.EnableAchievements);
 			Helpers.GameObjectSetActive(topRightGridContainer, value: true);
 		}
 		if (tutorialStep == null)
 		{
-			mapButton.gameObject.SetActive(value: true);
+			Helpers.GameObjectSetActive(mapButton, value: true);
 		}
 		else
 		{
-			mapButton.gameObject.SetActive(tutorialStep.ShowMapButton);
+			Helpers.GameObjectSetActive(mapButton, tutorialStep.ShowMapButton);
 		}
 		UpdateGenericElementsAfterChange();
-		buildMenuButton.gameObject.SetActive(value: true);
+		Helpers.GameObjectSetActive(buildMenuButton, value: true);
 		SetSettingsNotifications(SingularityMonoBehaviour<SDKManager>.Instance.ZendeskManager.UnreadMessageCount);
 	}
 
@@ -2097,6 +2116,8 @@ public class CampHUD : HUDElement
 			return collectAnimationWorkShopDestination;
 		case CurrencyType.HillTopCoin:
 			return collectAnimationHillTopDestination;
+		case CurrencyType.WorldBossExchangeCoin:
+			return collectAnimationWorldBossExchangeDestination;
 		case CurrencyType.GoldRadio:
 			return collectAnimationGoldPhoneDestination;
 		case CurrencyType.SPTraitsUpgradeToken:
@@ -2511,6 +2532,20 @@ public class CampHUD : HUDElement
 		bool flag = returnActivityManager != null && (returnActivityManager.IsReturnActivityAvailable() || returnActivityManager.IsReturnExchangeAvailable());
 		Helpers.GameObjectSetActive(ReturnLogin, flag);
 		Helpers.GameObjectSetActive(returnLoginFreeTag, flag && returnActivityManager.HasRedDot);
+		CheckReturnLogin();
+	}
+
+	private void CheckReturnLogin()
+	{
+		if (!(ReturnLogin == null) && ReturnLogin.activeInHierarchy)
+		{
+			ReturnLoginModel returnLoginModel = GameManager.Instance?.playerModel?.ReturnActivityManager?.ReturnLogin;
+			if (!TutorialView.Instance.Running && returnLoginModel != null && returnLoginModel.ShouldPopupOnCurrentLogin)
+			{
+				OnClickReturnLogin();
+				Helpers.ExecuteCommand(new MarkReturnLoginPopupShownCommand());
+			}
+		}
 	}
 
 	public void OnClickReturnLogin()

@@ -261,6 +261,44 @@ public class UISprite : UIBasicSprite
 		}
 	}
 
+	public Color gradientLeft
+	{
+		get
+		{
+			return mGradientLeft;
+		}
+		set
+		{
+			if (mGradientLeft != value)
+			{
+				mGradientLeft = value;
+				if (mApplyGradient)
+				{
+					MarkAsChanged();
+				}
+			}
+		}
+	}
+
+	public Color gradientRight
+	{
+		get
+		{
+			return mGradientRight;
+		}
+		set
+		{
+			if (mGradientRight != value)
+			{
+				mGradientRight = value;
+				if (mApplyGradient)
+				{
+					MarkAsChanged();
+				}
+			}
+		}
+	}
+
 	public override Vector4 border
 	{
 		get

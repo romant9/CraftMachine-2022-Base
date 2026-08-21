@@ -18,6 +18,8 @@ namespace TWDModel
 
 		public bool IsPvP;
 
+		public bool IsWorldBoss;
+
 		public GuildBattleMapMissionModel.MissionState GuildBattleState;
 
 		public DropEventDefinition.DropEventTag LootTag;

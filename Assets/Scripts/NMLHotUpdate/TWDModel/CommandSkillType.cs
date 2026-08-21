@@ -17,6 +17,8 @@ namespace TWDModel
 		CommandSkillShadowedGuard = 12,
 		CommandSkillGuardianVow = 13,
 		CommandSkillDelayedActionGrenade = 14,
-		CommandSkillAbilityRangeTrident = 15
+		CommandSkillAbilityRangeTrident = 15,
+		CommandSkillFortifications = 16,
+		CommandSkillFortificationsRemove = 17
 	}
 }

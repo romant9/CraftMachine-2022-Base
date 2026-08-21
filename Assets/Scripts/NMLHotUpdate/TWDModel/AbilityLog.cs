@@ -10,6 +10,8 @@ namespace TWDModel
 
 		public List<TargetActionLog> Dodges;
 
+		public List<TargetActionLog> Jumpingshots;
+
 		public List<TargetActionLog> StunAvoids;
 
 		public List<TargetActionLog> HerdAvoids;
@@ -105,6 +107,20 @@ namespace TWDModel
 				Source = source,
 				Target = target,
 				Name = "Dodge"
+			});
+		}
+
+		public void Jumpingshot(ActorModel source, ActorModel target)
+		{
+			if (Jumpingshots == null)
+			{
+				Jumpingshots = new List<TargetActionLog>();
+			}
+			Jumpingshots.Add(new TargetActionLog
+			{
+				Source = source,
+				Target = target,
+				Name = "Jumpingshot"
 			});
 		}
 

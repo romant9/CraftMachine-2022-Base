@@ -238,6 +238,15 @@ public class TutorialView : ModelView<TutorialModel>
 		return true;
 	}
 
+	private bool HasVisibleGuidance()
+	{
+		if (!IsArrowActive && !IsHandActive)
+		{
+			return IsDialogPlaying;
+		}
+		return true;
+	}
+
 	public static bool Allowed(string actionId)
 	{
 		if (Instance != null && Instance.Running && !Instance.Allow(actionId) && !Instance.IsSuggesting)
@@ -285,6 +294,7 @@ public class TutorialView : ModelView<TutorialModel>
 		InCombatTutorial = false;
 		StopAllCoroutines();
 		HideArrow();
+		EnableCampControls(enable: true);
 		SetEnabledAllButtons(enabled: true);
 		if (suggestedGameObjects != null)
 		{
@@ -537,7 +547,7 @@ public class TutorialView : ModelView<TutorialModel>
 				break;
 			}
 			case "CameraPanToStoryTeller":
-				if (campView.CampViewActors.StoryTellerViews[0] != null && campView.CampViewActors.StoryTellerViews != null)
+				if (campView != null && campView.CampViewActors != null && campView.CampViewActors.StoryTellerViews != null && campView.CampViewActors.StoryTellerViews.Count > 0 && campView.CampViewActors.StoryTellerViews[0] != null)
 				{
 					Vector3 vector = new Vector3(ParseFloat(actionToExecuteParts[1]), 0f, ParseFloat(actionToExecuteParts[2]));
 					Pan(campView.CampViewActors.StoryTellerViews[0].transform.position + vector, ParseFloat(actionToExecuteParts[3]), ParseFloat(actionToExecuteParts[4]));
@@ -759,17 +769,28 @@ public class TutorialView : ModelView<TutorialModel>
 				}
 				break;
 			case "CameraToWalker":
+			{
 				if (SingularityMonoBehaviour<AudioManager>.Instance != null)
 				{
 					SingularityMonoBehaviour<AudioManager>.Instance.OnCampDefenseAdded(1);
 				}
-				yield return null;
-				if (CampDefenseView.Instance.Model.Walkers != null && CampDefenseView.Instance.Model.Walkers.Count > 0)
+				ActorView walker = null;
+				float walkerWaitTimeout = 1f;
+				while (walkerWaitTimeout > 0f && walker == null)
 				{
-					ActorView actorView = GameManager.Instance.GetViewForModel((ActorModel)CampDefenseView.Instance.Model.Walkers[0]) as ActorView;
-					Pan(actorView.transform.position, ParseFloat(actionToExecuteParts[1]), ParseFloat(actionToExecuteParts[2]));
+					yield return null;
+					walkerWaitTimeout -= Time.unscaledDeltaTime;
+					if (CampDefenseView.Instance != null && CampDefenseView.Instance.Model != null && CampDefenseView.Instance.Model.Walkers != null && CampDefenseView.Instance.Model.Walkers.Count > 0 && GameManager.Instance != null)
+					{
+						walker = GameManager.Instance.GetViewForModel((ActorModel)CampDefenseView.Instance.Model.Walkers[0]) as ActorView;
+					}
+				}
+				if (walker != null)
+				{
+					Pan(walker.transform.position, ParseFloat(actionToExecuteParts[1]), ParseFloat(actionToExecuteParts[2]));
 				}
 				break;
+			}
 			case "HideButton":
 				ShowButton(actionToExecuteParts[1], show: false);
 				break;
@@ -914,6 +935,7 @@ public class TutorialView : ModelView<TutorialModel>
 	private IEnumerator WaitClickBuilding(string buildingName)
 	{
 		ShowArrow(buildingName);
+		EnableCampControls(enable: true);
 		SetEnabledAllButtons(enabled: false);
 		yield return StartCoroutine(WaitClick(buildingName, hideArrow: true));
 		yield return null;
@@ -925,9 +947,14 @@ public class TutorialView : ModelView<TutorialModel>
 		if (SetButtonToClick(buttonName))
 		{
 			yield return StartCoroutine(WaitClick(clickEvent, hideArrow: true, disableAllButtonsAfterClick));
+			yield return null;
+			SetEnabledAllButtons(enabled: false);
 		}
-		yield return null;
-		SetEnabledAllButtons(enabled: false);
+		else
+		{
+			SetEnabledAllButtons(enabled: true);
+			EnableCampControls(enable: true);
+		}
 	}
 
 	private IEnumerator WaitClickButton(string clickEvent)

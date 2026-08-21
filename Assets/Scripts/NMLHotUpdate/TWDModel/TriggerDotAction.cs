@@ -101,10 +101,10 @@ namespace TWDModel
 			if (quantunTimedEffect != null)
 			{
 				int num = 0;
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(twdModelManager);
-				if (mapMissionModel != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(twdModelManager);
+				if (challengeDebuffProvider != null)
 				{
-					num = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunDmgReduction);
+					num = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunDmgReduction);
 				}
 				FixedPoint baseDamagePercentage = quantunTimedEffect.BaseDamagePercentage;
 				FixedPoint additionalDamagePercentage = quantunTimedEffect.AdditionalDamagePercentage;

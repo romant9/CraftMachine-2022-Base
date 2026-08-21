@@ -74,7 +74,7 @@ namespace TWDModel
 				}
 				foreach (TrapFlameArea existedTrapFlameArea in ExistedTrapFlameAreas)
 				{
-					if (existedTrapFlameArea.Faction != item.Faction && existedTrapFlameArea.EffectiveAreaGridCoordinate == item.GridCoordinate)
+					if (existedTrapFlameArea.Faction != item.Faction && (item.IsMultiCell ? item.GetOccupiedCells().Contains(existedTrapFlameArea.EffectiveAreaGridCoordinate) : (existedTrapFlameArea.EffectiveAreaGridCoordinate == item.GridCoordinate)))
 					{
 						ApplyDmg(existedTrapFlameArea.Owner, item, existedTrapFlameArea.InjuryHPPercent);
 						break;
@@ -128,6 +128,10 @@ namespace TWDModel
 				{
 					num++;
 				}
+			}
+			if (num > 0 && ResistNegativeEffectsTrait.TryResist(actorModel, "TrapFlame"))
+			{
+				return false;
 			}
 			if (actorModel.Faction == Faction.Survivor)
 			{

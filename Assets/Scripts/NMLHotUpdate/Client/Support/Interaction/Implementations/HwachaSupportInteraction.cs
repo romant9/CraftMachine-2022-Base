@@ -19,5 +19,20 @@ namespace Client.Support.Interaction.Implementations
 		{
 			support = supportModel;
 		}
+
+		public override FixedPoint? GetPreviewAreaRadius(GridCoordinate target)
+		{
+			FixedPoint? areaRadius = AreaRadius;
+			if (!areaRadius.HasValue)
+			{
+				return null;
+			}
+			AbilityManagerModel abilityManagerModel = base.AttachedSurvivor?.manager?.CombatModel?.AbilityManager;
+			if (abilityManagerModel == null)
+			{
+				return areaRadius;
+			}
+			return abilityManagerModel.GetDamageAreaBlockEffectiveSupportRadius(target, (int)areaRadius.Value);
+		}
 	}
 }

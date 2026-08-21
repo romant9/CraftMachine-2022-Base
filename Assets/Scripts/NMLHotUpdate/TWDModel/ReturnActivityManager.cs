@@ -223,6 +223,7 @@ namespace TWDModel
 				LastReturnIdentityTimestamp = currentTimestamp;
 				IdentityCouncilLevelSnapshot = base.manager.Player.CouncilLevel;
 				resetChildrenForNewActivity(currentTimestamp);
+				ReturnerAnalytics.SendState(base.manager, IdentityCouncilLevelSnapshot);
 			}
 		}
 

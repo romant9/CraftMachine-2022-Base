@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BaseModel;
+using Client.Constants;
 using Client.Utils;
 using TWDModel;
 using UnityEngine;
@@ -44,6 +45,10 @@ public class GridView : ModelView<GridModel>
 	public GameObject GridHighLightPrefab;
 
 	private MeshRenderer GridRenderer;
+
+	private List<GameObject> fillHighlights = new List<GameObject>();
+
+	private Material weaponRangeFillMaterial;
 
 	private GameObject currentAbilitySelectionVisualization;
 
@@ -357,6 +362,59 @@ public class GridView : ModelView<GridModel>
 			abilityHighlight.gameObject.GetComponent<CacheableObject>().Destroy();
 		}
 		abilityHighlights.Clear();
+		ClearFillHighlights();
+	}
+
+	public void HighlightCoordinatesWithFill(List<GridCoordinate> coordinates, Color fillColor)
+	{
+		ClearFillHighlights();
+		if (weaponRangeFillMaterial == null)
+		{
+			PrefabResource prefabResource = (PrefabResource)UnityUtils.LoadAsset("Combat/WeaponRangeIndicator");
+			if (prefabResource != null)
+			{
+				WeaponRangeVisualization component = prefabResource.GetPrefab().GetComponent<WeaponRangeVisualization>();
+				if (component != null && component.fillMesh != null)
+				{
+					weaponRangeFillMaterial = new Material(component.fillMesh.GetComponent<MeshRenderer>().sharedMaterial);
+				}
+			}
+		}
+		if (weaponRangeFillMaterial == null)
+		{
+			return;
+		}
+		weaponRangeFillMaterial.SetColor(MaterialParameters.TintColor, fillColor);
+		float x = (float)cellSize.X;
+		float y = (float)cellSize.Y;
+		for (int i = 0; i < coordinates.Count; i++)
+		{
+			Vector3 position = GetPosition(coordinates[i]).ToVector3();
+			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
+			gameObject.transform.parent = base.transform;
+			gameObject.transform.position = position;
+			gameObject.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+			gameObject.transform.localScale = new Vector3(x, y, 1f);
+			gameObject.GetComponent<MeshRenderer>().material = new Material(weaponRangeFillMaterial);
+			Collider component2 = gameObject.GetComponent<Collider>();
+			if (component2 != null)
+			{
+				UnityEngine.Object.Destroy(component2);
+			}
+			fillHighlights.Add(gameObject);
+		}
+	}
+
+	public void ClearFillHighlights()
+	{
+		for (int i = 0; i < fillHighlights.Count; i++)
+		{
+			if (fillHighlights[i] != null)
+			{
+				UnityEngine.Object.Destroy(fillHighlights[i]);
+			}
+		}
+		fillHighlights.Clear();
 	}
 
 	public bool HasHighlight(GridCoordinate c)

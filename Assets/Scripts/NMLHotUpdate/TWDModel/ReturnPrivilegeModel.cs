@@ -165,9 +165,12 @@ namespace TWDModel
 			}
 			CurrentTaskCompleted = true;
 			LastTaskRefreshTimestamp = GetCurrentRefreshWindowStart(valueOrDefault);
-			PrivilegeEndTimestamp = Math.Max(PrivilegeEndTimestamp, valueOrDefault) + 86400000;
+			long num = Math.Max(PrivilegeEndTimestamp, valueOrDefault);
+			PrivilegeEndTimestamp = num + 86400000;
+			int extraDays = (int)((PrivilegeEndTimestamp - num) / 86400000);
 			base.manager?.Player?.RefreshSurvivalPointsAddMultiplier();
 			base.manager?.Player?.RefreshSuppliesAddMultiplier();
+			ReturnerAnalytics.SendPerkActive(base.manager, extraDays);
 			NotifyChange("ReturnPrivilegeChanged");
 			return true;
 		}

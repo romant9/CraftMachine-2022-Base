@@ -17,6 +17,8 @@ public class HealthIndicator : HUDElementFollowTarget
 		public UILabel floorLabel;
 	}
 
+	public Action EffectGridUpdated;
+
 	[Tooltip("Current actor health progress bar.")]
 	public UIProgressBar HealthBar;
 
@@ -310,7 +312,7 @@ public class HealthIndicator : HUDElementFollowTarget
 
 	private bool updatingStatusEffects;
 
-	private ActorModel BindActor;
+	protected ActorModel BindActor;
 
 	private int PoisonMaxShow = 3;
 
@@ -362,6 +364,11 @@ public class HealthIndicator : HUDElementFollowTarget
 	[SerializeField]
 	private GameObject TridentContainer;
 
+	[SerializeField]
+	private GameObject FortificationsContainer;
+
+	public virtual bool IsScreenTopBossBar => false;
+
 	private void OnDisable()
 	{
 		if (updatingStatusEffects)
@@ -393,8 +400,21 @@ public class HealthIndicator : HUDElementFollowTarget
 		BindActor = actor;
 	}
 
+	private void RepositionEffectGrid()
+	{
+		if (EffectGrid != null)
+		{
+			EffectGrid.repositionNow = true;
+		}
+		EffectGridUpdated?.Invoke();
+	}
+
 	private IEnumerator SetStatusEffect()
 	{
+		if (StatusIndicator == null)
+		{
+			yield break;
+		}
 		updatingStatusEffects = true;
 		SetTimedEffectIndicatorVisibility(visible: true);
 		int cachedEffectCount = activeTimedEffects.Count;
@@ -407,8 +427,14 @@ public class HealthIndicator : HUDElementFollowTarget
 			ActorStatusInfoHealthBar activeStatusInfo = activeTimedEffects[statusIndex];
 			SetupStatusIndicator(activeStatusInfo);
 			yield return new WaitForSecondsRealtime(AnimationForwardDelay);
-			StatusIndicatorTweenAlpha.PlayReverse();
-			TurnIndicatorTweenAlpha.PlayReverse();
+			if (StatusIndicatorTweenAlpha != null)
+			{
+				StatusIndicatorTweenAlpha.PlayReverse();
+			}
+			if (TurnIndicatorTweenAlpha != null)
+			{
+				TurnIndicatorTweenAlpha.PlayReverse();
+			}
 			yield return new WaitForSecondsRealtime(AnimationReverseDelay);
 			statusIndex++;
 			yield return null;
@@ -419,10 +445,14 @@ public class HealthIndicator : HUDElementFollowTarget
 
 	public void UpdateChargeMeterIcons(ChargeMeterModel model)
 	{
-		if (model != null && model.Actor.Faction == Faction.Survivor)
+		if (model == null || ChargePointFgIcons == null || model.Actor.Faction != Faction.Survivor)
 		{
-			int maxLevel = model.MaxLevel;
-			for (int i = 0; maxLevel > i; i++)
+			return;
+		}
+		int maxLevel = model.MaxLevel;
+		for (int i = 0; i < maxLevel && i < ChargePointFgIcons.Length; i++)
+		{
+			if (ChargePointFgIcons[i] != null)
 			{
 				ChargePointFgIcons[i].spriteName = model.GetLevelSpriteName(i);
 			}
@@ -432,6 +462,10 @@ public class HealthIndicator : HUDElementFollowTarget
 	public void SetTimedEffectIndicator(List<ActorStatusInfoHealthBar> types)
 	{
 		activeTimedEffects = types;
+		if (activeTimedEffects == null || activeTimedEffects.Count == 0)
+		{
+			return;
+		}
 		if (activeTimedEffects.Count > 1)
 		{
 			if (!updatingStatusEffects)
@@ -454,11 +488,17 @@ public class HealthIndicator : HUDElementFollowTarget
 
 	public void DisableMultipleTurnIndicator()
 	{
-		StatusIndicator.gameObject.SetActive(value: false);
+		if (StatusIndicator != null)
+		{
+			StatusIndicator.gameObject.SetActive(value: false);
+		}
 		updatingStatusEffects = false;
 		UpdateTurnCount("");
 		activeTimedEffects.Clear();
-		ActorClass.gameObject.SetActive(value: true);
+		if (ActorClass != null)
+		{
+			ActorClass.gameObject.SetActive(value: true);
+		}
 	}
 
 	public void SetSneakContainer(bool visible)
@@ -471,7 +511,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		string content = ((count > 0) ? count.ToString() : "");
 		Helpers.GameObjectSetActive(TauntEffects, visible);
 		HelpersUI.SetContentToLabel(TauntTurnCountLabel, content);
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void SetScorchTimedEffectIndicatorVisibility(bool visible, int count)
@@ -491,7 +531,10 @@ public class HealthIndicator : HUDElementFollowTarget
 
 	public void SetTimedEffectIndicatorVisibility(bool visible)
 	{
-		Helpers.GameObjectSetActive(StatusIndicator, visible);
+		if (StatusIndicator != null)
+		{
+			Helpers.GameObjectSetActive(StatusIndicator, visible);
+		}
 	}
 
 	public void UpdateTurnCount(string text)
@@ -554,7 +597,7 @@ public class HealthIndicator : HUDElementFollowTarget
 
 	private void OnCoverIconStateChangeTweenPlayed()
 	{
-		if (coverIconState == CoverIconState.Flanked)
+		if (CoverIcon != null && coverIconState == CoverIconState.Flanked)
 		{
 			TweenManager.PlayTweenGroup(CoverIcon.gameObject, 0);
 		}
@@ -562,33 +605,54 @@ public class HealthIndicator : HUDElementFollowTarget
 
 	private void SetupStatusIndicator(ActorStatusInfoHealthBar activeStatusInfo)
 	{
+		if (StatusIndicator == null || StatusIndicatorSprite == null)
+		{
+			return;
+		}
 		if (ActorFaction == Faction.Raider || ActorFaction == Faction.Survivor)
 		{
-			Helpers.GameObjectSetActive(ActorClass, value: false);
+			if (ActorClass != null)
+			{
+				Helpers.GameObjectSetActive(ActorClass, value: false);
+			}
 		}
-		else
+		else if (ActorClass != null)
 		{
 			Helpers.GameObjectSetActive(ActorClass, value: true);
 		}
-		TimedEffectEntry timedEffectEntry = TimedEffectIndicators.Find((TimedEffectEntry x) => x.TimedEffectType == activeStatusInfo.StatusType);
-		StatusIndicatorSprite.spriteName = timedEffectEntry.Sprite;
-		StatusIndicatorSprite.gradientTop = timedEffectEntry.GradientTop;
-		StatusIndicatorSprite.gradientBottom = timedEffectEntry.GradientBottom;
-		StatusIndicatorTweenAlpha.PlayForward();
-		TurnIndicatorTweenAlpha.PlayForward();
-		TweenManager.PlayTweenGroup(StatusIndicator, timedEffectEntry.TweenGroupId);
-		UpdateTurnCount((activeStatusInfo.TurnCount > 0) ? activeStatusInfo.TurnCount.ToString() : "");
+		int num = TimedEffectIndicators.FindIndex((TimedEffectEntry x) => x.TimedEffectType == activeStatusInfo.StatusType);
+		if (num >= 0)
+		{
+			TimedEffectEntry timedEffectEntry = TimedEffectIndicators[num];
+			StatusIndicatorSprite.spriteName = timedEffectEntry.Sprite;
+			StatusIndicatorSprite.gradientTop = timedEffectEntry.GradientTop;
+			StatusIndicatorSprite.gradientBottom = timedEffectEntry.GradientBottom;
+			if (StatusIndicatorTweenAlpha != null)
+			{
+				StatusIndicatorTweenAlpha.PlayForward();
+			}
+			if (TurnIndicatorTweenAlpha != null)
+			{
+				TurnIndicatorTweenAlpha.PlayForward();
+			}
+			TweenManager.PlayTweenGroup(StatusIndicator, timedEffectEntry.TweenGroupId);
+			UpdateTurnCount((activeStatusInfo.TurnCount > 0) ? activeStatusInfo.TurnCount.ToString() : "");
+		}
 	}
 
 	private void SetupSecondaryStatusIndicator(ActorStatusInfoHealthBar activeStatusInfo)
 	{
 		if ((bool)SecondaryStatusIndicatorSprite)
 		{
-			TimedEffectEntry timedEffectEntry = TimedEffectIndicators.Find((TimedEffectEntry x) => x.TimedEffectType == activeStatusInfo.StatusType);
-			Helpers.GameObjectSetActive(SecondaryStatusIndicatorSprite, value: true);
-			SecondaryStatusIndicatorSprite.spriteName = timedEffectEntry.Sprite;
-			SecondaryStatusIndicatorSprite.gradientTop = timedEffectEntry.GradientTop;
-			SecondaryStatusIndicatorSprite.gradientBottom = timedEffectEntry.GradientBottom;
+			int num = TimedEffectIndicators.FindIndex((TimedEffectEntry x) => x.TimedEffectType == activeStatusInfo.StatusType);
+			if (num >= 0)
+			{
+				TimedEffectEntry timedEffectEntry = TimedEffectIndicators[num];
+				Helpers.GameObjectSetActive(SecondaryStatusIndicatorSprite, value: true);
+				SecondaryStatusIndicatorSprite.spriteName = timedEffectEntry.Sprite;
+				SecondaryStatusIndicatorSprite.gradientTop = timedEffectEntry.GradientTop;
+				SecondaryStatusIndicatorSprite.gradientBottom = timedEffectEntry.GradientBottom;
+			}
 		}
 	}
 
@@ -648,7 +712,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(KnockKnockMarkIcons[i], value: false);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdatePhonePortrait(bool isActive)
@@ -657,13 +721,13 @@ public class HealthIndicator : HUDElementFollowTarget
 		{
 			PhonePortrait.SetActive(isActive);
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateABtestB(bool isActive)
 	{
 		Helpers.GameObjectSetActive(ABtestB, isActive);
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateSkinned(bool isActive)
@@ -683,7 +747,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			}
 			if (EffectGrid != null)
 			{
-				EffectGrid.repositionNow = true;
+				RepositionEffectGrid();
 			}
 		}
 	}
@@ -703,7 +767,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			}
 			if (EffectGrid != null)
 			{
-				EffectGrid.repositionNow = true;
+				RepositionEffectGrid();
 			}
 		}
 	}
@@ -724,7 +788,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			}
 			if (EffectGrid != null)
 			{
-				EffectGrid.repositionNow = true;
+				RepositionEffectGrid();
 			}
 		}
 	}
@@ -751,7 +815,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		}
 		if (EffectGrid != null)
 		{
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -783,7 +847,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(igniteBoostCard.container, value: true);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdatePoison(bool isActive)
@@ -821,7 +885,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(list[j], value: false);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void OnTurnCountChangedEvent()
@@ -862,6 +926,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		UpdateSovereignStateContainerEffected();
 		UpdateBloodMark();
 		UpdateTrident();
+		UpdateFortifications();
 	}
 
 	public void OnNewTurn()
@@ -883,13 +948,13 @@ public class HealthIndicator : HUDElementFollowTarget
 			{
 				Helpers.GameObjectSetActive(EquipmentActiveChargeLoadContainer, value: false);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
 	public void ShieldChanged()
 	{
-		if (BindActor != null)
+		if (BindActor != null && !(ShieldHPBar == null))
 		{
 			if (BindActor.MaxShieldHitPoints <= 0)
 			{
@@ -917,7 +982,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			{
 				Helpers.GameObjectSetActive(FlameTriggerContainer, value: false);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -934,7 +999,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			{
 				Helpers.GameObjectSetActive(FistSpikeContainer, value: false);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -951,7 +1016,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			{
 				Helpers.GameObjectSetActive(DodgeShoteContainer, value: false);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -992,7 +1057,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			HelpersUI.SetContentToLabel(ElectronChargeEnemyContainer.GetComponentInChildren<UILabel>(), perElectronChargeStatus2.LeftTurns.ToString());
 			ElectronChargeEnemyContainer.GetComponentInChildren<UISprite>().spriteName = "Ui_Icon_Buff_ElectronCharge_Enemy_" + num2;
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateQuantun()
@@ -1006,7 +1071,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(QuantunContainer.FindInChildren("level").GetComponent<UILabel>(), BindActor.QuantunLevel.ToString());
 				Helpers.GameObjectSetActive(QuantunContainer, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1020,7 +1085,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(RiposteContainer.FindInChildren("level").GetComponent<UILabel>(), BindActor.ParryRiposteIncreaseStorey.ToString());
 				Helpers.GameObjectSetActive(RiposteContainer, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1034,7 +1099,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(MomentumContainer.FindInChildren("level").GetComponent<UILabel>(), BindActor.MomentumTimedEffect?.CurrentLayer.ToString());
 				Helpers.GameObjectSetActive(MomentumContainer, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1043,7 +1108,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		if (BindActor != null)
 		{
 			Helpers.GameObjectSetActive(SuvivalDashContainer, BindActor.IsSurvivalDashFlag);
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1052,7 +1117,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		if (BindActor != null)
 		{
 			Helpers.GameObjectSetActive(RaiderDashContainer, BindActor.IsRaiderDashFlag);
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1087,7 +1152,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(list[j], value: false);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateBloodFrenzyFlag()
@@ -1095,7 +1160,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		if (BindActor != null)
 		{
 			Helpers.GameObjectSetActive(BloodFrenzyContainer, BindActor.bloodFrenzyFlag);
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1109,7 +1174,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			{
 				TornApartTurns.text = BindActor.TornApartMarkCount.ToString();
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1123,7 +1188,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(SurvivalGameContainer.FindInChildren("turns").GetComponent<UILabel>(), BindActor.GetEnemy_SurvivalGameModel()?.LeftCount.ToString());
 				Helpers.GameObjectSetActive(SurvivalGameContainer, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1144,7 +1209,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(UnluckyContainer, value: true);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateUnlucky2()
@@ -1158,7 +1223,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(UnluckyContainer2.FindInChildren("turns").GetComponent<UILabel>(), unluckyFlagTurns.ToString());
 				Helpers.GameObjectSetActive(UnluckyContainer2, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1179,7 +1244,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(ShieldBreakerContainer, value: true);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateDeadlyFocus()
@@ -1189,7 +1254,7 @@ public class HealthIndicator : HUDElementFollowTarget
 		UpdateDeadlyFocus_SkillIncreaseAttack();
 		if (BindActor != null && EffectGrid != null)
 		{
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1324,7 +1389,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(ShadowedGuardContainer.FindInChildren("turns").GetComponent<UILabel>(), BindActor.ShadowedGuard_LeftCount.ToString());
 				Helpers.GameObjectSetActive(ShadowedGuardContainer, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1335,7 +1400,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			return;
 		}
 		Helpers.GameObjectSetActive(RageContainer, value: false);
-		if (BindActor.TotalRage > 0)
+		if (BindActor.TotalRage > 0 && RageContainer != null)
 		{
 			CombatModel combatModel = BindActor.manager.CombatModel;
 			if (combatModel != null && !combatModel.MissionCompleted)
@@ -1373,7 +1438,7 @@ public class HealthIndicator : HUDElementFollowTarget
 			{
 				Helpers.GameObjectSetActive(CitadelBeEffectedContainer_icon, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1408,7 +1473,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(UndyingStateCountLabel, BindActor.RemainingNumOfUndyingTimes().ToString());
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateKaboomStateContainerEffected()
@@ -1422,7 +1487,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(KaboomStateContainer, value: true);
 				HelpersUI.SetContentToLabel(KaboomStateLabel, traitEntry.TraitDuration.ToString());
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1436,7 +1501,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(GuardianStateContainer, value: true);
 				HelpersUI.SetContentToLabel(GuardianStateLabel, BindActor.GuardianVow_LeftTurns.ToString());
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1450,8 +1515,16 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(SovereignStateContainer, value: true);
 				HelpersUI.SetContentToLabel(SovereignStateLabel, BindActor.GuardianVowBindingAsSovereign.LeftTurns.ToString());
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
+	}
+
+	public virtual void SyncBossBarFromModel(ActorModel actor, HealthBarUpdateMode mode, float visualRatio = -1f)
+	{
+	}
+
+	public virtual void ShowBossDefeated()
+	{
 	}
 
 	public void UpdateDeathsDoor()
@@ -1465,7 +1538,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				HelpersUI.SetContentToLabel(DeathsDoorContainer.FindInChildren("turns").GetComponent<UILabel>(), BindActor.DeathsDoor_DmgUpLeftTurns.ToString());
 				Helpers.GameObjectSetActive(DeathsDoorContainer, value: true);
 			}
-			EffectGrid.repositionNow = true;
+			RepositionEffectGrid();
 		}
 	}
 
@@ -1495,7 +1568,7 @@ public class HealthIndicator : HUDElementFollowTarget
 				Helpers.GameObjectSetActive(BloodMarkContainer, value: true);
 			}
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
 	}
 
 	public void UpdateTrident()
@@ -1523,6 +1596,279 @@ public class HealthIndicator : HUDElementFollowTarget
 			}
 			Helpers.GameObjectSetActive(TridentContainer, value: true);
 		}
-		EffectGrid.repositionNow = true;
+		RepositionEffectGrid();
+	}
+
+	public void UpdateFortifications()
+	{
+		if (BindActor == null)
+		{
+			return;
+		}
+		Helpers.GameObjectSetActive(FortificationsContainer, value: false);
+		FortificationsTimedEffect fortificationsTimedEffect = BindActor.FortificationsTimedEffect;
+		if (fortificationsTimedEffect != null && FortificationsContainer != null && fortificationsTimedEffect.LeftTurns > 0)
+		{
+			GameObject gameObject = FortificationsContainer.FindInChildren("turns");
+			if (gameObject != null)
+			{
+				HelpersUI.SetContentToLabel(gameObject.GetComponent<UILabel>(), fortificationsTimedEffect.LeftTurns.ToString());
+			}
+			Helpers.GameObjectSetActive(FortificationsContainer, value: true);
+		}
+		RepositionEffectGrid();
+	}
+
+	public List<ActorEffectInfoSnapshot> CaptureVisibleEffects()
+	{
+		List<ActorEffectInfoSnapshot> list = new List<ActorEffectInfoSnapshot>();
+		CaptureCover(list);
+		CaptureScorch(list);
+		CaptureTaunt(list);
+		CaptureSneak(list);
+		CaptureKnockKnock(list);
+		CapturePhonePortrait(list);
+		CaptureABtestB(list);
+		CaptureContainer(SkinnedContainer, "Skinned", SkinnedTurns, list);
+		CaptureContainer(RemoteContainer, "RemoteWeakened", RemoteTurns, list);
+		CaptureContainer(GrenadeContainer, "GrenadeFragment", GrenadeTurns, list);
+		CaptureContainer(AstheniaContainer, "Asthenia", AstheniaTurns, list);
+		CapturePoison(list);
+		CaptureContainer(EquipmentActiveChargeLoadContainer, "EquipmentChargeLoad", null, list);
+		CaptureElectronCharge(list);
+		CaptureContainer(QuantunContainer, "Quantun", QuantunTurns, list);
+		CaptureContainer(RiposteContainer, "Riposte", null, list);
+		CaptureContainer(MomentumContainer, "Momentum", null, list);
+		CaptureContainer(SuvivalDashContainer, "SurvivalDash", null, list);
+		CaptureContainer(RaiderDashContainer, "RaiderDash", null, list);
+		CaptureAttackChain(list);
+		CaptureContainer(BloodFrenzyContainer, "BloodFrenzy", null, list);
+		CaptureContainer(TornApartContainer, "TornApart", TornApartTurns, list);
+		CaptureContainer(SurvivalGameContainer, "SurvivalGame", null, list);
+		CaptureContainer(UnluckyContainer, "Unlucky", null, list);
+		CaptureContainer(UnluckyContainer2, "Unlucky2", null, list);
+		CaptureDeadlyFocus(list);
+		CaptureContainer(ShieldBreakerContainer, "ShieldBreaker", null, list);
+		CaptureContainer(BlindContainer, "Blind", null, list);
+		CaptureContainer(SurvivalManualStorySkill_D_Container, "SurvivalManualStorySkill_D", null, list);
+		CaptureContainer(SurvivalManualStorySkill_F_Container, "SurvivalManualStorySkill_F", null, list);
+		CaptureContainer(ReduceRecoveryContainer, "ReduceRecovery", null, list);
+		CaptureContainer(ShadowedGuardContainer, "ShadowedGuard", null, list);
+		CaptureContainer(RageContainer, "Rage", null, list);
+		CaptureContainer(VengefulChargeContainer, "VengefulCharge", null, list);
+		CaptureFlameTrigger(list);
+		CaptureContainer(FistSpikeContainer, "FistSpike", FistSpikeTurns, list);
+		CaptureContainer(DodgeShoteContainer, "DodgeShot", DodgeShoteTurns, list);
+		CaptureIgniteBoost(list);
+		CaptureContainer(CitadelBeEffectedContainer_icon, "CitadelBeEffected", null, list);
+		CaptureUndying(list);
+		CaptureContainer(KaboomStateContainer, "Kaboom", KaboomStateLabel, list);
+		CaptureContainer(GuardianStateContainer, "Guardian", GuardianStateLabel, list);
+		CaptureContainer(SovereignStateContainer, "Sovereign", SovereignStateLabel, list);
+		CaptureContainer(BloodMarkContainer, "BloodMark", null, list);
+		CaptureContainer(TridentContainer, "Trident", null, list);
+		CaptureContainer(FortificationsContainer, "Fortifications", null, list);
+		CaptureSecondaryMarked(list);
+		return list;
+	}
+
+	private void CaptureCover(List<ActorEffectInfoSnapshot> results)
+	{
+		if (!(CoverIcon == null) && CoverIcon.gameObject.activeSelf)
+		{
+			string id = ((coverIconState == CoverIconState.Flanked) ? "Cover_Flanked" : "Cover");
+			TryAdd(results, id, CoverIcon, 0);
+		}
+	}
+
+	private void CaptureScorch(List<ActorEffectInfoSnapshot> results)
+	{
+		if (!(ScorchIndicator == null) && ScorchIndicator.activeSelf)
+		{
+			ActorEffectCapture capture = ((ScorchLayerSprite != null) ? HealthBarEffectIconCapture.CaptureFromSprite(ScorchLayerSprite, ScorchIndicator) : HealthBarEffectIconCapture.CaptureContainer(ScorchIndicator));
+			TryAdd(results, "Scorch", capture, ParseLabelInt(ScorchTurnCountLabel));
+		}
+	}
+
+	private void CaptureTaunt(List<ActorEffectInfoSnapshot> results)
+	{
+		TryAddContainer(results, "Taunt", TauntEffects, ParseLabelInt(TauntTurnCountLabel));
+	}
+
+	private void CaptureSneak(List<ActorEffectInfoSnapshot> results)
+	{
+		TryAddContainer(results, "Sneak", SneakContainer, 0);
+	}
+
+	private void CaptureKnockKnock(List<ActorEffectInfoSnapshot> results)
+	{
+		if (KnockKnockContainer == null || !KnockKnockContainer.activeSelf)
+		{
+			return;
+		}
+		UISprite sprite = null;
+		if (KnockKnockMarkIcons != null)
+		{
+			for (int i = 0; i < KnockKnockMarkIcons.Length; i++)
+			{
+				if (KnockKnockMarkIcons[i] != null && KnockKnockMarkIcons[i].gameObject.activeSelf)
+				{
+					Transform transform = KnockKnockMarkIcons[i].transform.Find("Foreground");
+					UISprite uISprite = ((transform != null) ? transform.GetComponent<UISprite>() : null);
+					sprite = ((uISprite != null) ? uISprite : KnockKnockMarkIcons[i]);
+					break;
+				}
+			}
+		}
+		TryAdd(results, "KnockKnock", sprite, KnockKnockContainer, 0);
+	}
+
+	private void CapturePhonePortrait(List<ActorEffectInfoSnapshot> results)
+	{
+		TryAddContainer(results, "PhonePortrait", PhonePortrait, 0);
+	}
+
+	private void CaptureABtestB(List<ActorEffectInfoSnapshot> results)
+	{
+		if (!(ABtestB == null) && ABtestB.gameObject.activeSelf)
+		{
+			TryAdd(results, "ABtestB", ABtestB, 0);
+		}
+	}
+
+	private void CapturePoison(List<ActorEffectInfoSnapshot> results)
+	{
+		CapturePoisonSlot(PoisonContainer1, PoisonSprite1, PoisonTurns1, results);
+		CapturePoisonSlot(PoisonContainer2, PoisonSprite2, PoisonTurns2, results);
+		CapturePoisonSlot(PoisonContainer3, PoisonSprite3, PoisonTurns3, results);
+	}
+
+	private void CapturePoisonSlot(GameObject container, UISprite sprite, UILabel turnsLabel, List<ActorEffectInfoSnapshot> results)
+	{
+		if (!(container == null) && container.activeSelf)
+		{
+			ActorEffectCapture capture = ((sprite != null) ? HealthBarEffectIconCapture.CaptureFromSprite(sprite, container) : HealthBarEffectIconCapture.CaptureContainer(container));
+			TryAdd(results, "Poison", capture, ParseLabelInt(turnsLabel));
+		}
+	}
+
+	private void CaptureElectronCharge(List<ActorEffectInfoSnapshot> results)
+	{
+		CaptureElectronChargeContainer(ElectronChargeContainer, "ElectronCharge", results);
+		CaptureElectronChargeContainer(ElectronChargeEnemyContainer, "ElectronChargeEnemy", results);
+	}
+
+	private void CaptureElectronChargeContainer(GameObject container, string id, List<ActorEffectInfoSnapshot> results)
+	{
+		if (!(container == null) && container.activeSelf)
+		{
+			UILabel componentInChildren = container.GetComponentInChildren<UILabel>();
+			TryAddContainer(results, id, container, ParseLabelInt(componentInChildren));
+		}
+	}
+
+	private void CaptureAttackChain(List<ActorEffectInfoSnapshot> results)
+	{
+		CaptureContainer(AttackChainContainer1, "AttackChain", AttackChainTurns1, results);
+		CaptureContainer(AttackChainContainer2, "AttackChain", AttackChainTurns2, results);
+		CaptureContainer(AttackChainContainer3, "AttackChain", AttackChainTurns3, results);
+	}
+
+	private void CaptureDeadlyFocus(List<ActorEffectInfoSnapshot> results)
+	{
+		CaptureContainer(DeadlyFocusRaiderContainer, "DeadlyFocus_Raider", null, results);
+		CaptureContainer(DeadlyFocusSurvivorContainer, "DeadlyFocus_Survivor", null, results);
+		CaptureContainer(DeadlyFocus_SkillIncreaseAttackContainer, "DeadlyFocus_EXDamage", null, results);
+	}
+
+	private void CaptureFlameTrigger(List<ActorEffectInfoSnapshot> results)
+	{
+		TryAddContainer(results, "FlameTrigger", FlameTriggerContainer, ParseLabelInt(FlameTriggerTurnsLabel));
+	}
+
+	private void CaptureIgniteBoost(List<ActorEffectInfoSnapshot> results)
+	{
+		if (IgniteBoostList != null)
+		{
+			for (int i = 0; i < IgniteBoostList.Count; i++)
+			{
+				IgniteBoostCard igniteBoostCard = IgniteBoostList[i];
+				TryAddContainer(results, "IgniteBoost", igniteBoostCard?.container, ParseLabelInt(igniteBoostCard?.turnLabel));
+			}
+		}
+	}
+
+	private void CaptureUndying(List<ActorEffectInfoSnapshot> results)
+	{
+		TryAddContainer(results, "Undying", UndyingStateContainer, ParseLabelInt(UndyingStateTurnsLabel));
+	}
+
+	private void CaptureSecondaryMarked(List<ActorEffectInfoSnapshot> results)
+	{
+		if (!(SecondaryStatusIndicatorSprite == null) && SecondaryStatusIndicatorSprite.gameObject.activeSelf)
+		{
+			TryAdd(results, "Marked", SecondaryStatusIndicatorSprite, StatusIndicator, 0);
+		}
+	}
+
+	private void CaptureContainer(GameObject container, string id, UILabel turnsLabel, List<ActorEffectInfoSnapshot> results)
+	{
+		if (container == null || !container.activeSelf)
+		{
+			return;
+		}
+		int num = ParseLabelInt(turnsLabel);
+		if (num == 0)
+		{
+			Transform transform = container.transform.FindInChildren("turns");
+			if (transform != null)
+			{
+				num = ParseLabelInt(transform.GetComponent<UILabel>());
+			}
+		}
+		TryAddContainer(results, id, container, num);
+	}
+
+	private static void TryAddContainer(List<ActorEffectInfoSnapshot> results, string id, GameObject container, int turnCount)
+	{
+		if (!(container == null) && container.activeSelf)
+		{
+			TryAdd(results, id, HealthBarEffectIconCapture.CaptureContainer(container), turnCount);
+		}
+	}
+
+	private static void TryAdd(List<ActorEffectInfoSnapshot> results, string id, UISprite sprite, GameObject searchRoot, int turnCount)
+	{
+		TryAdd(results, id, HealthBarEffectIconCapture.CaptureFromSprite(sprite, searchRoot), turnCount);
+	}
+
+	private static void TryAdd(List<ActorEffectInfoSnapshot> results, string id, UISprite sprite, int turnCount)
+	{
+		GameObject searchRoot = ((sprite != null && sprite.transform.parent != null) ? sprite.transform.parent.gameObject : null);
+		TryAdd(results, id, HealthBarEffectIconCapture.CaptureFromSprite(sprite, searchRoot), turnCount);
+	}
+
+	private static void TryAdd(List<ActorEffectInfoSnapshot> results, string id, ActorEffectCapture capture, int turnCount)
+	{
+		if (capture.Icon.IsValid)
+		{
+			results.Add(new ActorEffectInfoSnapshot
+			{
+				Id = id,
+				Icon = capture.Icon,
+				Bg = capture.Bg,
+				TurnCount = turnCount
+			});
+		}
+	}
+
+	private static int ParseLabelInt(UILabel label)
+	{
+		if (label == null || string.IsNullOrEmpty(label.text))
+		{
+			return 0;
+		}
+		int.TryParse(label.text, out var result);
+		return result;
 	}
 }

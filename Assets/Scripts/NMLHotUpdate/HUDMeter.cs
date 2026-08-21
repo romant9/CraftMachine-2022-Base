@@ -367,6 +367,12 @@ public class HUDMeter : MonoBehaviour
 			array[0] = HelpersLocalization.GetCurrencyName(CurrencyType);
 			array2[0] = GameManager.Instance.playerModel.GetCurrency(CurrencyType).Value.ToString() ?? "";
 		}
+		else if (CurrencyType == CurrencyType.WorldBossExchangeCoin)
+		{
+			text = HelpersLocalization.GetCurrencyDescription(CurrencyType) + "\n";
+			array[0] = HelpersLocalization.GetCurrencyName(CurrencyType);
+			array2[0] = GameManager.Instance.playerModel.GetCurrency(CurrencyType).TotalValue.ToString() ?? "";
+		}
 		else
 		{
 			text = HelpersLocalization.GetCurrencyDescription(CurrencyType) + "\n";

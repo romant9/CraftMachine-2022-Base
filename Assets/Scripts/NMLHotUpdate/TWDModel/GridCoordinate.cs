@@ -63,6 +63,11 @@ namespace TWDModel
 			return num + num2 - Math.Min(num, num2);
 		}
 
+		public int ManhattanDistance(GridCoordinate other)
+		{
+			return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
+		}
+
 		public List<ActorModel> GetEnemiesByDistance(GridCoordinate target, CombatModel combatModel, int distance)
 		{
 			List<ActorModel> list = new List<ActorModel>();

@@ -136,6 +136,7 @@ namespace TWDModel
 			Migrations.Add(new Migration7180());
 			Migrations.Add(new Migration7190());
 			Migrations.Add(new Migration7200());
+			Migrations.Add(new Migration7210());
 		}
 
 		public bool Migrate(PlayerModel player)

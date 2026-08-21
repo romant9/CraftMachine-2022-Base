@@ -49,6 +49,10 @@ namespace TWDModel
 				{
 					return ActionListClearFlag.Keep;
 				}
+				if (EquipmentPassivePreventControlTrait.TryResistEffect(postDamageAction.TargetActor, "ElectronCharge", RollDiceType.ElectronCharge))
+				{
+					return ActionListClearFlag.Keep;
+				}
 				CreateRelation(actor, postDamageAction.TargetActor, num, addedActions);
 			}
 			return ActionListClearFlag.Keep;

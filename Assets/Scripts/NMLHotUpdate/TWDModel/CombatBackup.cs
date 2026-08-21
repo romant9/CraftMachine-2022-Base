@@ -78,6 +78,8 @@ namespace TWDModel
 
 		public List<TWDModelObject> CombatAreaManagers { get; set; }
 
+		public List<TWDModelObject> FortificationsCoverModels { get; set; }
+
 		public List<TWDModelObject> ActorToActorRelationModels { get; set; }
 
 		public List<TWDModelObject> ActorToActorRelationManagers { get; set; }
@@ -163,6 +165,7 @@ namespace TWDModel
 			CombatHUDState = combat.CombatHUDState;
 			CombatAreaModels = RecordCombatArea(combat);
 			CombatAreaManagers = combat.GetModels<CombatAreasManager>();
+			FortificationsCoverModels = RecordFortificationsCoverModels(combat);
 			PitfallAreasManager model = combat.GetModel<PitfallAreasManager>();
 			if (model != null && model.ActorCooldownUntilTurns != null)
 			{
@@ -348,6 +351,12 @@ namespace TWDModel
 				{
 					combat.RemoveModel(x);
 				});
+			combat.ClearModels<FortificationsCoverModel>();
+			FortificationsCoverModels?.ForEach(delegate(TWDModelObject x)
+			{
+				x.SetManager(base.manager);
+				combat.AddModel(x);
+			});
 			PitfallAreasManager model = combat.GetModel<PitfallAreasManager>();
 			if (model != null)
 			{
@@ -622,6 +631,16 @@ namespace TWDModel
 				{
 					list.Add(new DelayedActionGrenadeArea(model as DelayedActionGrenadeArea));
 				}
+			}
+			return list;
+		}
+
+		public List<TWDModelObject> RecordFortificationsCoverModels(CombatModel combat)
+		{
+			List<TWDModelObject> list = new List<TWDModelObject>();
+			foreach (TWDModelObject model in combat.GetModels<FortificationsCoverModel>())
+			{
+				list.Add(new FortificationsCoverModel(model as FortificationsCoverModel));
 			}
 			return list;
 		}

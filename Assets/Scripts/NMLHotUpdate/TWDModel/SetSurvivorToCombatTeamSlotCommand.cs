@@ -26,7 +26,7 @@ namespace TWDModel
 			SurvivorModel model = manager.GetModel<SurvivorModel>(base.ModelId);
 			PlayerModel playerModel = manager.GetPlayer() as PlayerModel;
 			TWDModelResult tWDModelResult = TWDModelResult.Error;
-			if (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle)
+			if (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
 			{
 				tWDModelResult = playerModel.SurvivorContainer.AddSurvivorToCombatTeamSlot(model, SetToSlotIndex, FromSlotIndex);
 				if (tWDModelResult == TWDModelResult.OK)

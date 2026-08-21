@@ -39,5 +39,9 @@ namespace TWDModel
 		public const string AbilityRangeTridentChargeChanged = "AbilityRangeTridentChargeChanged";
 
 		public const string AbilityRangeTridentMark = "AbilityRangeTridentMark";
+
+		public const string FortificationsStateChanged = "FortificationsStateChanged";
+
+		public const string FortificationsRemove = "FortificationsRemove";
 	}
 }

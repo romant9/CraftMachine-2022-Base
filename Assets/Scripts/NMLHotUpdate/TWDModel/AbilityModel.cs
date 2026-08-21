@@ -145,6 +145,37 @@ namespace TWDModel
 			base.Initialize();
 		}
 
+		private AbilityResult EvaluateGridCellCore(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell, bool useRange, FixedPoint preComputedRange, bool acceptInteractiveObjects)
+		{
+			if (Definition.RequiresLineOfSight && !combatModel.IsGridCellVisible(sourceCell, targetCell))
+			{
+				return AbilityResult.FailedVisibilityBlocked;
+			}
+			if (Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, targetCell))
+			{
+				return AbilityResult.FailedMovementBlocked;
+			}
+			AbilityResult abilityResult = AbilityResult.Success;
+			for (int i = 0; i < Effects.Count; i++)
+			{
+				AbilityEffect abilityEffect = Effects[i];
+				if (abilityEffect != null)
+				{
+					abilityResult = (useRange ? abilityEffect.CanAbilityBePerformedOnGridCell(combatModel, sourceActor, sourceCell, targetCell, preComputedRange, acceptInteractiveObjects) : abilityEffect.CanAbilityBePerformedOnGridCell(combatModel, sourceActor, sourceCell, targetCell, acceptInteractiveObjects));
+					if (abilityResult != AbilityResult.Success)
+					{
+						break;
+					}
+				}
+			}
+			return abilityResult;
+		}
+
+		private AbilityResult EvaluateGridCellWithMultiCell(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell, bool useRange, FixedPoint preComputedRange, bool acceptInteractiveObjects)
+		{
+			return EvaluateGridCellCore(combatModel, sourceActor, sourceCell, targetCell, useRange, preComputedRange, acceptInteractiveObjects);
+		}
+
 		public AbilityResult CanAbilityBePerformedOnGridCell(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell, bool acceptInteractiveObjects = false)
 		{
 			if (sourceActor.DeathsDoor_IsPursuitAttack && !IsChargeAttack)
@@ -161,28 +192,7 @@ namespace TWDModel
 			{
 				return AbilityResult.FailedOutOfUses;
 			}
-			if (Definition.RequiresLineOfSight && !combatModel.IsGridCellVisible(sourceCell, targetCell))
-			{
-				return AbilityResult.FailedVisibilityBlocked;
-			}
-			if (Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, targetCell))
-			{
-				return AbilityResult.FailedMovementBlocked;
-			}
-			AbilityResult abilityResult = AbilityResult.Success;
-			for (int i = 0; i < Effects.Count; i++)
-			{
-				AbilityEffect abilityEffect = Effects[i];
-				if (abilityEffect != null)
-				{
-					abilityResult = abilityEffect.CanAbilityBePerformedOnGridCell(combatModel, sourceActor, sourceCell, targetCell, acceptInteractiveObjects);
-					if (abilityResult != AbilityResult.Success)
-					{
-						break;
-					}
-				}
-			}
-			return abilityResult;
+			return EvaluateGridCellWithMultiCell(combatModel, sourceActor, sourceCell, targetCell, useRange: false, default(FixedPoint), acceptInteractiveObjects);
 		}
 
 		public AbilityResult CanAbilityBePerformedOnGridCell(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell, FixedPoint preComputedRange, bool acceptInteractiveObjects = false)
@@ -191,57 +201,20 @@ namespace TWDModel
 			{
 				return AbilityResult.FailedOutOfUses;
 			}
-			if (Definition.RequiresLineOfSight && !combatModel.IsGridCellVisible(sourceCell, targetCell))
-			{
-				return AbilityResult.FailedVisibilityBlocked;
-			}
-			if (Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, targetCell))
-			{
-				return AbilityResult.FailedMovementBlocked;
-			}
-			AbilityResult abilityResult = AbilityResult.Success;
-			for (int i = 0; i < Effects.Count; i++)
-			{
-				AbilityEffect abilityEffect = Effects[i];
-				if (abilityEffect != null)
-				{
-					abilityResult = abilityEffect.CanAbilityBePerformedOnGridCell(combatModel, sourceActor, sourceCell, targetCell, preComputedRange, acceptInteractiveObjects);
-					if (abilityResult != AbilityResult.Success)
-					{
-						break;
-					}
-				}
-			}
-			return abilityResult;
+			return EvaluateGridCellWithMultiCell(combatModel, sourceActor, sourceCell, targetCell, useRange: true, preComputedRange, acceptInteractiveObjects);
 		}
 
 		public AbilityResult CanAbilityBePerformedOnGridCell_NoBypassTacticalCheck(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell, bool acceptInteractiveObjects = false)
 		{
-			if (Definition.RequiresLineOfSight && !combatModel.IsGridCellVisible(sourceCell, targetCell))
-			{
-				return AbilityResult.FailedVisibilityBlocked;
-			}
-			if (Definition.RequiresLineOfMovement && combatModel.IsGridLineMovementBlocked(sourceCell, targetCell))
-			{
-				return AbilityResult.FailedMovementBlocked;
-			}
-			AbilityResult abilityResult = AbilityResult.Success;
-			for (int i = 0; i < Effects.Count; i++)
-			{
-				AbilityEffect abilityEffect = Effects[i];
-				if (abilityEffect != null)
-				{
-					abilityResult = abilityEffect.CanAbilityBePerformedOnGridCell(combatModel, sourceActor, sourceCell, targetCell, acceptInteractiveObjects);
-					if (abilityResult != AbilityResult.Success)
-					{
-						break;
-					}
-				}
-			}
-			return abilityResult;
+			return EvaluateGridCellWithMultiCell(combatModel, sourceActor, sourceCell, targetCell, useRange: false, default(FixedPoint), acceptInteractiveObjects);
 		}
 
 		public bool CanAbilityBeTargetedOnGridCell(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell)
+		{
+			return CanAbilityBeTargetedOnGridCellCore(combatModel, sourceActor, sourceCell, targetCell);
+		}
+
+		private bool CanAbilityBeTargetedOnGridCellCore(CombatModel combatModel, ActorModel sourceActor, GridCoordinate sourceCell, GridCoordinate targetCell)
 		{
 			GridModel grid = combatModel.Grid;
 			bool flag = true;

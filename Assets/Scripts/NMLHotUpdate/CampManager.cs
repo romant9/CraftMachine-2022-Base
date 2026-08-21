@@ -49,7 +49,7 @@ public class CampManager : MonoBehaviour
 
 	private void Awake()
 	{
-		if (IsLoadDataManager)
+		if (OfflineManager.IsLoadDataManager)
 		{
 			DebugTWD.LogMycode("if (IsLoadDataManager) return");
 			return;
@@ -83,7 +83,9 @@ public class CampManager : MonoBehaviour
 		{
 			GameManager.Instance.ForceGoThatDetailMap = null;
 		}
-		bool show = GameManager.Instance.ForceGoThatDetailMap == null;
+		bool forceOpenWorldBoss = GameManager.Instance.ForceOpenWorldBoss;
+		bool flag = forceOpenWorldBoss && ShouldAutoOpenWorldBossUiAfterCombat(requireMatchingAttackTarget: false);
+		bool show = GameManager.Instance.ForceGoThatDetailMap == null && !flag;
 		ShowCamp(show);
 		if (GameManager.Instance.playerModel.PendingVideoAdReward && GameManager.Instance.playerModel.IsVideoAdRewardAvailable(AdUsage.CinemaReward) && SingularityMonoBehaviour<HUDManager>.Instance.GetNoCreation(UIType.OpenLootInUi) == null)
 		{
@@ -93,6 +95,19 @@ public class CampManager : MonoBehaviour
 		{
 			ShowDetailMap(GameManager.Instance.ForceGoThatDetailMap);
 			GameManager.Instance.ForceGoThatDetailMap = null;
+		}
+		else if (forceOpenWorldBoss)
+		{
+			GameManager.Instance.ForceOpenWorldBoss = false;
+			if (flag)
+			{
+				MissionHubNavigation.OpenWorldBoss();
+				if (CampView.Instance != null && CampView.Instance.Hud != null)
+				{
+					CampView.Instance.Hud.ShowGenericElement(show: true);
+					CampView.Instance.Hud.UpdateGenericElementsAfterChange();
+				}
+			}
 		}
 		GameManager.Instance.playerModel.CampMover.Changed += OnCampMoveModelChange;
 		GameManager.Instance.playerModel.Changed += OnPlayerModelChange;
@@ -115,8 +130,8 @@ public class CampManager : MonoBehaviour
 			}
 			string heroId = SurvivorToken.GetHeroId(rewardCurrency);
 			ActorDefinition actorDefinition = GameManager.Instance.gameEconomyData.GetActorDefinition(heroId);
-			bool flag = GameManager.Instance.playerModel.SurvivorContainer.HasHero(heroId);
-			if (actorDefinition != null && GameManager.Instance.playerModel.GetCurrency(rewardCurrency).Value >= actorDefinition.TokensToUnlock && !flag && (TutorialView.Instance == null || !TutorialView.Instance.Running))
+			bool flag2 = GameManager.Instance.playerModel.SurvivorContainer.HasHero(heroId);
+			if (actorDefinition != null && GameManager.Instance.playerModel.GetCurrency(rewardCurrency).Value >= actorDefinition.TokensToUnlock && !flag2 && (TutorialView.Instance == null || !TutorialView.Instance.Running))
 			{
 				int counter = GameManager.Instance.Blackboard.GetCounter(BlackboardModel.GetPromptedUnlocksPerActorKey(actorDefinition.ID));
 				int maxPromptedUnlocksPerActor = GameManager.Instance.gameEconomyData.ConfigData.MaxPromptedUnlocksPerActor;
@@ -168,7 +183,7 @@ public class CampManager : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		if (IsLoadDataManager || GameManager.Instance && GameManager.Instance.playerModel == null)
+		if (OfflineManager.IsLoadDataManager || GameManager.Instance && GameManager.Instance.playerModel == null)
 		{
 			DebugTWD.LogMycode("if (GameManager.Instance && GameManager.Instance.playerModel == null) return");
 		}
@@ -184,7 +199,7 @@ public class CampManager : MonoBehaviour
 		{
 			GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.Changed -= OnWeeklyChallengeActivityManagerChanged;
 		}
-			if (!IsLoadDataManager) GameManager.Instance.OnLoadCompleted -= OnLoadCompleted;
+			if (!OfflineManager.IsLoadDataManager) GameManager.Instance.OnLoadCompleted -= OnLoadCompleted;
 			instance = null;
 		}
 	}
@@ -341,7 +356,7 @@ public class CampManager : MonoBehaviour
 		}
 		SingularityMonoBehaviour<HUDManager>.Instance.CloseAllOpenPopupsAndDialogs();
 		ShowCamp(show: false);
-		DetailMapPopUp obj = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.DetailMapPopUp, IsLoadDataManager ? HUDManager.Instance.UIContainerTopCameras : null) as DetailMapPopUp;
+		DetailMapPopUp obj = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.DetailMapPopUp, OfflineManager.IsLoadDataManager ? HUDManager.Instance.UIContainerTopCameras : null) as DetailMapPopUp;
 		obj.Open();
 		obj.LoadSeason(seasonId);
 	}
@@ -692,9 +707,33 @@ public class CampManager : MonoBehaviour
 		}
 	}
 
-
-
-	#region
-	private bool IsLoadDataManager => OfflineManager.IsLoadDataManager;
-	#endregion
+	public static bool ShouldAutoOpenWorldBossUiAfterCombat(bool requireMatchingAttackTarget = true)
+	{
+		WorldBossModelManager worldBossModelManager = ((GameManager.Instance != null) ? GameManager.Instance.playerModel : null)?.WorldBossModelManager;
+		if (worldBossModelManager == null)
+		{
+			return false;
+		}
+		if (worldBossModelManager.GetUnlockState() != WorldBossUnlockState.Unlocked)
+		{
+			return false;
+		}
+		if (!worldBossModelManager.IsCycleOpen())
+		{
+			return false;
+		}
+		if (requireMatchingAttackTarget)
+		{
+			WorldBossAttackTargetData attackTarget = worldBossModelManager.AttackTarget;
+			if (attackTarget == null || !attackTarget.IsActive)
+			{
+				return false;
+			}
+			if (attackTarget.SeasonId != worldBossModelManager.GetCurrentSeasonId() || attackTarget.CycleId != worldBossModelManager.GetCurrentCycleId())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 }

@@ -23,6 +23,11 @@ public abstract class SupportInteractionBase : ISupportInteraction
 		AttachedSurvivor = attachedSurvivor;
 	}
 
+	public virtual FixedPoint? GetPreviewAreaRadius(GridCoordinate target)
+	{
+		return AreaRadius;
+	}
+
 	public virtual IEnumerable<ActorModel> GetTargets(GridCoordinate target)
 	{
 		if (AttachedSurvivor.manager.CombatModel.SupportManager.TryGetSupport(EquipIndex, out var combatSupportModel))

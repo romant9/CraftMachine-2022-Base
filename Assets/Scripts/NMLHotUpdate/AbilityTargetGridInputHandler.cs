@@ -157,6 +157,13 @@ public class AbilityTargetGridInputHandler : AbilityInputHandler
 			}
 		}
 		base.GridView.HighlightCoordinates(list, list2, list3);
+		if (currentSelectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.Diamond)
+		{
+			int damageAreaBlockEffectiveAreaRadius = base.Combat.AbilityManager.GetDamageAreaBlockEffectiveAreaRadius(currentSelectedAbility, targetPosition, (int)currentSelectedAbility.Definition.AbilityTargetAreaRadius);
+			List<GridCoordinate> diamondCoordinates = base.Combat.GetDiamondCoordinates(targetPosition, damageAreaBlockEffectiveAreaRadius);
+			Color fillColor = ((base.abilityRangeVisualizer != null) ? base.abilityRangeVisualizer.GetFillColor() : Color.green);
+			base.GridView.HighlightCoordinatesWithFill(diamondCoordinates, fillColor);
+		}
 	}
 
 	private void ClearPath()

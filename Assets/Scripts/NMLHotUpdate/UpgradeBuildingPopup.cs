@@ -44,6 +44,18 @@ public class UpgradeBuildingPopup : HUDElement
 		BuildingPhotoManager.Instance.RemoveAll();
 	}
 
+	public override void OnClickClose()
+	{
+		if (building != null && !building.CanUpgrade)
+		{
+			Close();
+		}
+		else
+		{
+			base.OnClickClose();
+		}
+	}
+
 	public override void UpdateUI()
 	{
 		if (!building.BuildingType.DisableUpgrade)

@@ -66,7 +66,7 @@ public class TeamPresetSelectionPanel : MonoBehaviour, IInterceptor
 	public void RefreshShowState(SurvivorContainerModel.SurvivorType type, MapMissionModel mapMissionModel)
 	{
 		survivorType = type;
-		if (type != SurvivorContainerModel.SurvivorType.Outpost && type != SurvivorContainerModel.SurvivorType.GvGDefenders && type != SurvivorContainerModel.SurvivorType.CombatSurvival && (mapMissionModel == null || !mapMissionModel.IsFixedSurvivorSeasonMission) && (mapMissionModel?.MaxTeamSize ?? 3) == 3 && (mapMissionModel == null || !mapMissionModel.IsEndlessMission || !EndlessModeHelpers.IsEndlessExpertMode()) && TeamPresetHelpers.IsFeatureUnlocked(player))
+		if (type != SurvivorContainerModel.SurvivorType.Outpost && type != SurvivorContainerModel.SurvivorType.GvGDefenders && type != SurvivorContainerModel.SurvivorType.CombatSurvival && type != SurvivorContainerModel.SurvivorType.WorldBoss && type != SurvivorContainerModel.SurvivorType.WorldBossPVE && type != SurvivorContainerModel.SurvivorType.WorldBossPVP && (mapMissionModel == null || !mapMissionModel.IsFixedSurvivorSeasonMission) && (mapMissionModel?.MaxTeamSize ?? 3) == 3 && (mapMissionModel == null || !mapMissionModel.IsEndlessMission || !EndlessModeHelpers.IsEndlessExpertMode()) && TeamPresetHelpers.IsFeatureUnlocked(player))
 		{
 			Show();
 		}

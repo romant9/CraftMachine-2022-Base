@@ -114,6 +114,20 @@ public class MissionHubNavigation : MonoBehaviourExtended
 		CampManager.Instance.GoToGuildBattleMap();
 	}
 
+	public static void OpenWorldBoss()
+	{
+		MissionHubPopup missionHubPopup = SingularityMonoBehaviour<HUDManager>.Instance.GetNoCreation(UIType.MissionHubPopup) as MissionHubPopup;
+		if (missionHubPopup != null)
+		{
+			missionHubPopup.Close();
+		}
+		WorldBossMainPopup worldBossMainPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.WorldBossMainPopup) as WorldBossMainPopup;
+		if (worldBossMainPopup != null)
+		{
+			worldBossMainPopup.Open();
+		}
+	}
+
 	public static void OpenSeasonSelector()
 	{
 		HUDElement hUDElement = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.SelectSeasonPopup);

@@ -617,6 +617,16 @@ namespace TWDModel
 
 		public long LastSeenDefenseLogUtcTime { get; set; }
 
+		public int WorldBossLastEnteredSeasonId { get; set; }
+
+		public int WorldBossLastEnteredCycleId { get; set; }
+
+		public WorldBossHeroFatigueState WorldBossHeroFatigue { get; set; }
+
+		public long WorldBossDailyBattleRefreshUtcMs { get; set; }
+
+		public int WorldBossDailyBattleCount { get; set; }
+
 		public WeeklyChallengeModel WeeklyChallenge { get; set; }
 
 		public ApocalypseWeeklyChallengeModel ApocalypseWeeklyChallenge { get; set; }
@@ -695,6 +705,8 @@ namespace TWDModel
 		public SurvivalManualManager SurvivalManualManager { get; set; }
 
 		public ModSkillManager ModSkillManager { get; set; }
+
+		public WorldBossModelManager WorldBossModelManager { get; set; }
 
 		[JsonIgnore]
 		public int NumNewDefenseLogEntries
@@ -1287,6 +1299,9 @@ namespace TWDModel
 			ModSkillManager = new ModSkillManager();
 			ModSkillManager.SetManager(base.manager);
 			ModSkillManager.Initialize();
+			WorldBossModelManager = new WorldBossModelManager();
+			WorldBossModelManager.SetManager(base.manager);
+			WorldBossModelManager.Initialize();
 			CurrentOutpostSeasonId = -1;
 			PreviousOutpostSeasonId = -1;
 			PendingGuildGiftsToOpen = new List<GuildGift>();
@@ -1745,6 +1760,12 @@ namespace TWDModel
 				ModSkillManager = new ModSkillManager();
 				ModSkillManager.SetManager(base.manager);
 				ModSkillManager.Initialize();
+			}
+			if (WorldBossModelManager == null)
+			{
+				WorldBossModelManager = new WorldBossModelManager();
+				WorldBossModelManager.SetManager(base.manager);
+				WorldBossModelManager.Initialize();
 			}
 			InitializeSupportModels();
 			if (!IsLoadDataManager)
@@ -2568,6 +2589,18 @@ namespace TWDModel
 					base.Debug.LogError("Survival mission config solving failed, cannot apply survival mode to mission");
 				}
 			}
+			else if (WorldBossModelManager != null && WorldBossModelManager.IsAttackTargetActive)
+			{
+				WorldBossMissionModel missionModel2 = WorldBossModelManager.AttackTarget.MissionModel;
+				if (missionModel2 != null)
+				{
+					WorldBossCombatHelper.ApplyMissionSetup(Combat, missionModel2);
+				}
+				else
+				{
+					base.Debug.LogError("WorldBoss attack target mission model is null, cannot initialize mission");
+				}
+			}
 			Combat.InitializeMission();
 			Combat.SetManager(base.manager);
 			Combat.Start();
@@ -2754,6 +2787,10 @@ namespace TWDModel
 				if (Combat != null && Combat.IsGuildBattleMission && base.manager.Player.GvGSeasonModelPlayer != null)
 				{
 					base.manager.Player.GvGSeasonModelPlayer.GuildWarModelPlayer.GuildBattleModel.ReturnFromCombat();
+				}
+				if (Combat != null && Combat.IsWorldBossMission)
+				{
+					base.manager.Player.WorldBossModelManager?.ClearAttackTarget();
 				}
 			}
 			SurvivorCombatCleanup();
@@ -4146,6 +4183,10 @@ namespace TWDModel
 			if (_attackTargetMissionModel == null && GvGSeasonModelPlayer.GuildWarModelPlayer.GuildBattleModel.AttackTargetMissionModel != null)
 			{
 				_attackTargetMissionModel = GvGSeasonModelPlayer.GuildWarModelPlayer.GuildBattleModel.AttackTargetMissionModel;
+			}
+			if (_attackTargetMissionModel == null && WorldBossModelManager != null && WorldBossModelManager.IsAttackTargetActive)
+			{
+				_attackTargetMissionModel = WorldBossModelManager.AttackTarget.MissionModel;
 			}
 			return _attackTargetMissionModel;
 		}

@@ -49,6 +49,10 @@ namespace TWDModel
 
 		public MissionFailCondition MissionFailCondition { get; set; }
 
+		public bool UseSpawnRotationOverride { get; set; }
+
+		public float SpawnRotationY { get; set; }
+
 		[JsonIgnore]
 		public bool IsThreatActivated => ActivationType == ActivationType.Threat;
 

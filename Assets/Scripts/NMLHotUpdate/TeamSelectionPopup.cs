@@ -1,15 +1,20 @@
-using BaseModel;
-using Client.Camp;
-using NextGames.Sdk.AssetBundleManager;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TwdCustomMod;
+using BaseModel;
+using Client.Camp;
+using Client.Connectivity;
 using TWDModel;
 using UnityEngine;
+using TwdCustomMod;
+using NextGames.Sdk.AssetBundleManager;
 
 public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 {
+	[SerializeField]
+	private GameObject loadingContainer;
+
 	public const string EventCloseSelectionPanel = "EventCloseSelectionPanel";
 
 	public const string EventSurvivorReplaced = "EventSurvivorReplaced";
@@ -30,6 +35,37 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 	[SerializeField]
 	private GameObject CombatInfo;
 
+	[Header("WorldBoss PVE infos")]
+	[SerializeField]
+	private GameObject worldBossPVEPlayButton;
+
+	[SerializeField]
+	private UILabel worldBossPVEPlayButtonTxt;
+
+	[SerializeField]
+	private GameObject worldBossPVEPlayButtonDisabled;
+
+	[SerializeField]
+	private UILabel worldBossPVEPlayButtonDisabledTxt;
+
+	[SerializeField]
+	private GameObject worldBossPVEInfo;
+
+	[SerializeField]
+	private UILabel worldBossTitle;
+
+	[SerializeField]
+	private UILabel worldBossDifficultyDescription;
+
+	[SerializeField]
+	private UILabel worldBossDescription;
+
+	[SerializeField]
+	private GameObject worldBossPVPInfo;
+
+	[SerializeField]
+	private UILabel worldBossPVPEnemyName;
+
 	[SerializeField]
 	private GameObject CombatOutpostInfo;
 
@@ -39,8 +75,8 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 	[SerializeField]
 	private UILabel outpostMessage;
 
-	[SerializeField]
 	[Header("Combat Info")]
+	[SerializeField]
 	private UILabel missionTypeLabel;
 
 	[SerializeField]
@@ -130,9 +166,9 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 	[SerializeField]
 	private GameObject enemyTypesContainer;
 
-	[Tooltip("Container containing all missions locked stuff.")]
-	[SerializeField]
 	[Space(10f)]
+	[SerializeField]
+	[Tooltip("Container containing all missions locked stuff.")]
 	private GameObject missionLockedContainer;
 
 	[SerializeField]
@@ -158,8 +194,8 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 	[SerializeField]
 	private OutpostDetailsPanelMatchMaking outpostMatchInfoLimited;
 
-	[SerializeField]
 	[Header("Survival mode specific")]
+	[SerializeField]
 	private GameObject survivalModeRestContainer;
 
 	[SerializeField]
@@ -187,8 +223,8 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 
 	public string OutpostDefenderHashedId;
 
-	[SerializeField]
 	[Header("Guild Battle Enemy Info")]
+	[SerializeField]
 	private GuildBattleMissionInfoEnemyPlayer guildBattleEnemyInfo;
 
 	[SerializeField]
@@ -237,11 +273,27 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 
 	private bool loadingCombat;
 
+	private readonly Dictionary<int, int> worldBossAttackReceiptCodes = new Dictionary<int, int>();
+
+	private int lastCompletedWorldBossAttackSequenceId = -1;
+
+	private SignalRClient worldBossAttackReceiptClient;
+
 	private List<SurvivorModel> lastRestedSurvivorsList;
 
 	private int shownGvGMissionCompletion;
 
 	public SurvivorContainerModel.SurvivorType SurvivorType { get; set; }
+
+	public string WorldBossCapturePoint { get; set; }
+
+	public string WorldBossCell { get; set; }
+
+	public WorldBossPVPItemItem.CellState WorldBossCellState { get; set; }
+
+	public List<string> WorldBossOccupyingSurvivorIds { get; set; }
+
+	public string WorldBossOccupyingPlayerName { get; set; }
 
 	private IMapMissionModel selectedMapMissionModel
 	{
@@ -300,6 +352,24 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 	public Transform SelectedSlotPosition => teamSelectionSelectedSurvivorPanel.GetSelectedCard();
 
 	public Transform FirstSlotPosition => teamSelectionSelectedSurvivorPanel.GetSlotAt(0);
+
+	private void Awake()
+	{
+		if (SignalRClient.Instance != null)
+		{
+			SignalRClient.Instance.OnWorldBossFullSnapshotMessage -= OnWorldBossFullSnapshotChanged;
+			SignalRClient.Instance.OnWorldBossFullSnapshotMessage += OnWorldBossFullSnapshotChanged;
+		}
+	}
+
+	private void OnDestroy()
+	{
+		CancelWorldBossAttackReceiptWait();
+		if (SignalRClient.Instance != null)
+		{
+			SignalRClient.Instance.OnWorldBossFullSnapshotMessage -= OnWorldBossFullSnapshotChanged;
+		}
+	}
 
 	private void OnEnable()
 	{
@@ -382,6 +452,7 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 		{
 			TeamSelectionTween = null;
 		}
+		CancelWorldBossAttackReceiptWait();
 		UIEvent.OnUIEvent -= OnUIEvent;
 		GameManager.Instance.playerModel.Changed -= OnPlayerChange;
 		SingularityMonoBehaviour<LocalizationManager>.Instance.OnLocalizationLanguageChanged -= OnLocalizationLanguageChanged;
@@ -512,6 +583,10 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 		{
 			Helpers.ExecuteCommand(new RestoreSavedCombatTeamCommand(SurvivorContainerModel.SurvivorType.Combat));
 		}
+		if (IsWorldBossSurvivorType())
+		{
+			RemoveUnavailableWorldBossPVEHeroes(playerModel);
+		}
 		if (teamSelectionSelectedSurvivorPanel != null)
 		{
 			teamSelectionSelectedSurvivorPanel.UpdateSlots();
@@ -522,6 +597,7 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 			DebugTWD.Log("GuildBattleMapMissionModel is: " + guildBattleMapMissionModel.Id, DebugType.Wars);
 		}
 		base.Open();
+		Helpers.GameObjectSetActive(loadingContainer, value: false);
 		if (teamSelectionSurvivorsListPanel == null)
 		{
 			teamSelectionSurvivorsListPanel = Helpers.InstantiateToParentAndLayer(teamSelectionSurvivorsListPanelPrefab, base.gameObject).GetComponent<TeamSelectionSurvivorsListPanel>();
@@ -858,6 +934,7 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 		CombatInfo.SetActive(SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle);
 		CombatOutpostInfo.SetActive(SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost);
 		OutpostInfo.SetActive(SurvivorType == SurvivorContainerModel.SurvivorType.Outpost);
+		worldBossPVEInfo.SetActive(SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss);
 		if (outpostMessage != null)
 		{
 			bool disableOutpostHeroLimits = GameManager.Instance.gameEconomyData.ConfigData.DisableOutpostHeroLimits;
@@ -866,6 +943,10 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 		if (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle)
 		{
 			UpdateUICombat();
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
+		{
+			UpdateWorldBossPVEPVP();
 		}
 		else if (SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.Outpost)
 		{
@@ -900,10 +981,493 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 		}
 	}
 
+	private void RemoveUnavailableWorldBossPVEHeroes(PlayerModel player)
+	{
+		WorldBossModelManager worldBossModelManager = player?.WorldBossModelManager;
+		if (worldBossModelManager == null)
+		{
+			return;
+		}
+		List<SurvivorModel> combatSurvivors = player.SurvivorContainer.CombatSurvivors;
+		for (int num = combatSurvivors.Count - 1; num >= 0; num--)
+		{
+			SurvivorModel survivorModel = combatSurvivors[num];
+			if (survivorModel != null && !string.IsNullOrEmpty(survivorModel.IdForAnalytics) && !worldBossModelManager.CanHeroBattle(survivorModel.IdForAnalytics))
+			{
+				Helpers.ExecuteCommand(new RemoveSurvivorFromCombatTeamCommand(survivorModel)
+				{
+					SurvivorType = SurvivorType
+				});
+			}
+		}
+	}
+
+	private void OnWorldBossFullSnapshotChanged(string message, string type)
+	{
+		if (IsWorldBossSurvivorType() && IsPopupAlive())
+		{
+			GetWorldBossFullSnapshot();
+		}
+	}
+
+	private bool IsPopupAlive()
+	{
+		if (this != null && base.gameObject != null)
+		{
+			return base.IsOpen;
+		}
+		return false;
+	}
+
+	private bool IsWorldBossSurvivorType()
+	{
+		if (SurvivorType != SurvivorContainerModel.SurvivorType.WorldBossPVE && SurvivorType != SurvivorContainerModel.SurvivorType.WorldBossPVP)
+		{
+			return SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss;
+		}
+		return true;
+	}
+
+	private void GetWorldBossFullSnapshot()
+	{
+		PlayerModel playerModel = GameManager.Instance?.playerModel;
+		WorldBossModelManager worldBossModelManager = playerModel?.WorldBossModelManager;
+		if (playerModel != null && worldBossModelManager != null && !(SignalRClient.Instance == null))
+		{
+			WorldBossGetSnapshotRequest value = ((!worldBossModelManager.IsOffSeason()) ? new WorldBossGetSnapshotRequest
+			{
+				GroupId = playerModel.GuildId,
+				SeasonId = worldBossModelManager.GetCurrentSeasonId(),
+				CycleId = worldBossModelManager.GetCurrentCycleId()
+			} : new WorldBossGetSnapshotRequest
+			{
+				GroupId = playerModel.GuildId,
+				SeasonId = worldBossModelManager.GetCurrentSeasonId(),
+				CycleId = worldBossModelManager.GetNextCycleId()
+			});
+			string arg = GameManager.Instance.jsonSerializer.Serialize(value);
+			SignalRClient.Instance.RequestCommand("WorldBossFullSnapshot", arg, OnWorldBossFullSnapshotAsync, waitForResponse: true);
+		}
+	}
+
+	private void OnWorldBossFullSnapshotAsync(string responseJson)
+	{
+		if (SignalRClient.Instance.HasError || string.IsNullOrEmpty(responseJson))
+		{
+			SignalRClient.Instance.ClearError();
+			return;
+		}
+		WorldBossGuildFullSnapshot worldBossGuildFullSnapshot = GameManager.Instance.jsonSerializer.Deserialize<WorldBossGuildFullSnapshot>(responseJson);
+		if (worldBossGuildFullSnapshot != null)
+		{
+			GameManager.Instance.modelManager.SetWorldBossGuildFullSnapshot(worldBossGuildFullSnapshot);
+		}
+		if (IsWorldBossSurvivorType() && IsPopupAlive())
+		{
+			Helpers.GameObjectSetActive(loadingContainer, value: false);
+			RefreshWorldBossTeamAfterSnapshot();
+		}
+	}
+
+	private void RefreshWorldBossTeamAfterSnapshot()
+	{
+		if (!IsPopupAlive())
+		{
+			return;
+		}
+		PlayerModel playerModel = GameManager.Instance?.playerModel;
+		if (playerModel == null)
+		{
+			return;
+		}
+		RemoveUnavailableWorldBossPVEHeroes(playerModel);
+		if (teamSelectionSelectedSurvivorPanel != null)
+		{
+			teamSelectionSelectedSurvivorPanel.UpdateSlots();
+		}
+		if (teamSelectionSurvivorsListPanel != null)
+		{
+			if (teamSelectionSelectedSurvivorPanel != null)
+			{
+				teamSelectionSurvivorsListPanel.SetCurrentTeam(teamSelectionSelectedSurvivorPanel.GetCurrentTeam());
+			}
+			if (teamSelectionSurvivorsListPanel.gameObject.activeInHierarchy)
+			{
+				teamSelectionSurvivorsListPanel.UpdateCards();
+			}
+		}
+		UpdateUI();
+	}
+
+	public void UpdateWorldBossPVEPVP()
+	{
+		WorldBossModelManager worldBossModelManager = GameManager.Instance.playerModel?.WorldBossModelManager;
+		if (worldBossModelManager != null)
+		{
+			List<SurvivorModel> combatSurvivors = GameManager.Instance.playerModel.SurvivorContainer.CombatSurvivors;
+			for (int i = 0; i < combatSurvivors.Count && i < 3; i++)
+			{
+				SurvivorModel survivorModel = combatSurvivors[i];
+				if (survivorModel != null && !string.IsNullOrEmpty(survivorModel.IdForAnalytics))
+				{
+					worldBossModelManager.GetHeroCharges(survivorModel.IdForAnalytics);
+				}
+			}
+		}
+		if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE)
+		{
+			UpdateWorldBossPveInfoPanel(GetWorldBossBattlegroundDefinition());
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
+		{
+			UpdateWorldBossBossInfoPanel(GetWorldBossBattlegroundDefinition());
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP)
+		{
+			UpdateWorldBossPvpInfoPanel(GetWorldBossBattlegroundDefinition());
+		}
+		_ = missionData;
+		_ = missionData;
+		GameManager.Instance.playerModel.SurvivorContainer.NumberCombatSurvivorsHaveRequiredLevelForMission(selectedMapMissionModel.RequiredSurvivorLevel);
+		bool hasInjuredSurvivorInCombatTeam = GameManager.Instance.playerModel.SurvivorContainer.HasInjuredSurvivorInCombatTeam;
+		bool hasUpgradingSurvivorInCombatTeam = GameManager.Instance.playerModel.SurvivorContainer.HasUpgradingSurvivorInCombatTeam;
+		bool flag = false;
+		bool flag2 = false;
+		if (guildBattleMapMissionModel != null)
+		{
+			flag2 = shownGvGMissionCompletion != guildBattleMapMissionModel.CompletionAmount;
+		}
+		bool flag3 = !hasInjuredSurvivorInCombatTeam && !hasUpgradingSurvivorInCombatTeam && !flag && !flag2;
+		worldBossPVEPlayButton.SetActive(flag3);
+		worldBossPVEPlayButtonDisabled.SetActive(!flag3);
+		if (!flag3)
+		{
+			if (flag2)
+			{
+				worldBossPVEPlayButtonDisabledTxt.text = SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("Popup.TeamSelection.GvGAlreadyCompleted");
+			}
+			else if (flag)
+			{
+				worldBossPVEPlayButtonDisabledTxt.text = LocalizationManager.GetText("Popup.TeamSelection.SurvivalOutOfActionTeamMember");
+			}
+			else if (hasUpgradingSurvivorInCombatTeam)
+			{
+				worldBossPVEPlayButtonDisabledTxt.text = LocalizationManager.GetText("Popup.TeamSelection.UpgradingTeamMember");
+			}
+			else if (hasInjuredSurvivorInCombatTeam)
+			{
+				worldBossPVEPlayButtonDisabledTxt.text = LocalizationManager.GetText("Popup.TeamSelection.InjuredTeamMember");
+			}
+		}
+		Helpers.GameObjectSetActive(missionNoRegularSurvivorsLabel.gameObject, value: false);
+		TryStartHeroTraitTutorial(missionData);
+	}
+
+	private void UpdateWorldBossBossInfoPanel(WorldBossBattlegroundDefinition definition)
+	{
+		Helpers.GameObjectSetActive(worldBossPVPInfo, value: false);
+		Helpers.GameObjectSetActive((worldBossTitle != null) ? worldBossTitle.gameObject : null, value: true);
+		Helpers.GameObjectSetActive((worldBossDifficultyDescription != null) ? worldBossDifficultyDescription.gameObject : null, value: true);
+		Helpers.GameObjectSetActive((worldBossDescription != null) ? worldBossDescription.gameObject : null, value: true);
+		if (definition != null)
+		{
+			HelpersUI.SetContentToLabel(worldBossTitle, LocalizationManager.GetText(definition.BuildingName));
+			string text = LocalizationManager.GetText("DetailMap.Popup.Distance.Difficulty");
+			HelpersUI.SetContentToLabel(worldBossDifficultyDescription, text + " " + definition.EnemyLevel);
+			HelpersUI.SetContentToLabel(worldBossDescription, LocalizationManager.GetText(definition.BuildingDoneDesc));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonTxt, "开始任务");
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonDisabledTxt, "开始任务");
+		}
+	}
+
+	private WorldBossBattlegroundDefinition GetWorldBossBattlegroundDefinition()
+	{
+		string text = WorldBossCapturePoint;
+		if (string.IsNullOrEmpty(text) && SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
+		{
+			WorldBossMissionModel worldBossMissionModel = selectedMapMissionModel as WorldBossMissionModel;
+			text = ((!string.IsNullOrEmpty(worldBossMissionModel?.CapturePoint)) ? worldBossMissionModel.CapturePoint : "BOSS");
+		}
+		if (string.IsNullOrEmpty(text))
+		{
+			return null;
+		}
+		int difficultyLevel = (GameManager.Instance?.playerModel?.WorldBossModelManager)?.GetCurrentBattleDifficulty() ?? 0;
+		return GameManager.Instance?.gameEconomyData?.FindWorldBossBattlegroundDefinitionByCapturePoint(text, difficultyLevel);
+	}
+
+	private void UpdateWorldBossPveInfoPanel(WorldBossBattlegroundDefinition definition)
+	{
+		Helpers.GameObjectSetActive(worldBossPVPInfo, value: false);
+		Helpers.GameObjectSetActive((worldBossTitle != null) ? worldBossTitle.gameObject : null, value: true);
+		Helpers.GameObjectSetActive((worldBossDifficultyDescription != null) ? worldBossDifficultyDescription.gameObject : null, value: true);
+		Helpers.GameObjectSetActive((worldBossDescription != null) ? worldBossDescription.gameObject : null, value: true);
+		if (definition != null)
+		{
+			HelpersUI.SetContentToLabel(worldBossTitle, LocalizationManager.GetText(definition.BuildingName));
+			string text = LocalizationManager.GetText("World.Boss.TeamSelection.Difficulty", definition.EnemyLevel);
+			HelpersUI.SetContentToLabel(worldBossDifficultyDescription, text);
+			HelpersUI.SetContentToLabel(worldBossDescription, LocalizationManager.GetText(definition.BuildingDoneDesc));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonTxt, LocalizationManager.GetText("World.Boss.Occupy"));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonDisabledTxt, LocalizationManager.GetText("World.Boss.Occupy"));
+		}
+	}
+
+	private void UpdateWorldBossPvpInfoPanel(WorldBossBattlegroundDefinition definition)
+	{
+		switch (WorldBossCellState)
+		{
+		case WorldBossPVPItemItem.CellState.Uncross:
+			Helpers.GameObjectSetActive(worldBossPVPInfo, value: false);
+			Helpers.GameObjectSetActive((worldBossTitle != null) ? worldBossTitle.gameObject : null, value: true);
+			Helpers.GameObjectSetActive((worldBossDifficultyDescription != null) ? worldBossDifficultyDescription.gameObject : null, value: true);
+			Helpers.GameObjectSetActive((worldBossDescription != null) ? worldBossDescription.gameObject : null, value: true);
+			if (definition != null)
+			{
+				HelpersUI.SetContentToLabel(worldBossTitle, LocalizationManager.GetText(definition.BuildingName));
+				string text = LocalizationManager.GetText("World.Boss.TeamSelection.Difficulty", definition.EnemyLevel);
+				HelpersUI.SetContentToLabel(worldBossDifficultyDescription, text);
+			}
+			HelpersUI.SetContentToLabel(worldBossDescription, LocalizationManager.GetText("World.Boss.PVPPVEenemy.desc"));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonTxt, LocalizationManager.GetText("World.Boss.Occupy"));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonDisabledTxt, LocalizationManager.GetText("World.Boss.Occupy"));
+			break;
+		case WorldBossPVPItemItem.CellState.Empty:
+			Helpers.GameObjectSetActive(worldBossPVPInfo, value: false);
+			Helpers.GameObjectSetActive((worldBossTitle != null) ? worldBossTitle.gameObject : null, value: true);
+			Helpers.GameObjectSetActive((worldBossDifficultyDescription != null) ? worldBossDifficultyDescription.gameObject : null, value: false);
+			Helpers.GameObjectSetActive((worldBossDescription != null) ? worldBossDescription.gameObject : null, value: true);
+			if (definition != null)
+			{
+				HelpersUI.SetContentToLabel(worldBossTitle, LocalizationManager.GetText(definition.BuildingName));
+			}
+			HelpersUI.SetContentToLabel(worldBossDescription, LocalizationManager.GetText("World.Boss.NOONEHERE.desc"));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonTxt, LocalizationManager.GetText("World.Boss.DeployTeam"));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonDisabledTxt, LocalizationManager.GetText("World.Boss.DeployTeam"));
+			break;
+		case WorldBossPVPItemItem.CellState.GetOtherGroup:
+			Helpers.GameObjectSetActive((worldBossTitle != null) ? worldBossTitle.gameObject : null, value: false);
+			Helpers.GameObjectSetActive((worldBossDescription != null) ? worldBossDescription.gameObject : null, value: false);
+			Helpers.GameObjectSetActive((worldBossDifficultyDescription != null) ? worldBossDifficultyDescription.gameObject : null, value: false);
+			Helpers.GameObjectSetActive(worldBossPVPInfo, value: true);
+			HelpersUI.SetContentToLabel(worldBossPVPEnemyName, WorldBossOccupyingPlayerName);
+			UpdateWorldBossOccupyingClassIcons();
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonTxt, LocalizationManager.GetText("World.Boss.Occupy"));
+			HelpersUI.SetContentToLabel(worldBossPVEPlayButtonDisabledTxt, LocalizationManager.GetText("World.Boss.Occupy"));
+			break;
+		case WorldBossPVPItemItem.CellState.Fight:
+		case WorldBossPVPItemItem.CellState.FightHero:
+			break;
+		}
+	}
+
+	private void UpdateWorldBossOccupyingClassIcons()
+	{
+		if (worldBossPVPInfo == null)
+		{
+			return;
+		}
+		List<SurvivorMockData> occupyingSurvivorMocksForDisplay = GetOccupyingSurvivorMocksForDisplay();
+		for (int i = 0; i < 3; i++)
+		{
+			Transform transform = worldBossPVPInfo.transform.Find("Survivor_Icon" + (i + 1));
+			if (transform == null)
+			{
+				continue;
+			}
+			SurvivorMockData survivorMockData = ((occupyingSurvivorMocksForDisplay != null && i < occupyingSurvivorMocksForDisplay.Count) ? occupyingSurvivorMocksForDisplay[i] : null);
+			string text = null;
+			if (WorldBossOccupyingSurvivorIds != null && i < WorldBossOccupyingSurvivorIds.Count)
+			{
+				text = WorldBossOccupyingSurvivorIds[i];
+			}
+			bool flag = survivorMockData != null || !string.IsNullOrEmpty(text);
+			Helpers.GameObjectSetActive(transform.gameObject, flag);
+			if (!flag)
+			{
+				continue;
+			}
+			Transform transform2 = transform.Find("Class_Icon") ?? transform.Find("ClassIcon");
+			UISprite uISprite = ((transform2 != null) ? transform2.GetComponent<UISprite>() : null);
+			if (!(uISprite == null))
+			{
+				string text2 = ((survivorMockData != null) ? HelpersGfx.GetSurvivorClassIconName(survivorMockData.SurvivorClass.ToString(), survivorMockData.RarityLevel) : GetWorldBossOccupyingClassIconName(text));
+				if (!string.IsNullOrEmpty(text2))
+				{
+					uISprite.spriteName = text2;
+				}
+			}
+		}
+	}
+
+	private List<SurvivorMockData> GetOccupyingSurvivorMocksForDisplay()
+	{
+		List<SurvivorMockData> occupyingDefenderMocks = GetOccupyingDefenderMocks();
+		if (WorldBossOccupyingSurvivorIds == null || WorldBossOccupyingSurvivorIds.Count == 0)
+		{
+			return occupyingDefenderMocks;
+		}
+		if (occupyingDefenderMocks == null || occupyingDefenderMocks.Count == 0)
+		{
+			return null;
+		}
+		List<SurvivorMockData> list = new List<SurvivorMockData>();
+		for (int i = 0; i < WorldBossOccupyingSurvivorIds.Count; i++)
+		{
+			string text = WorldBossOccupyingSurvivorIds[i];
+			if (string.IsNullOrEmpty(text))
+			{
+				continue;
+			}
+			SurvivorMockData item = null;
+			for (int j = 0; j < occupyingDefenderMocks.Count; j++)
+			{
+				if (occupyingDefenderMocks[j] != null && occupyingDefenderMocks[j].AnalyticsId == text)
+				{
+					item = occupyingDefenderMocks[j];
+					break;
+				}
+			}
+			list.Add(item);
+		}
+		return list;
+	}
+
+	private List<SurvivorMockData> GetOccupyingDefenderMocks()
+	{
+		if (string.IsNullOrEmpty(WorldBossCapturePoint) || string.IsNullOrEmpty(WorldBossCell))
+		{
+			return null;
+		}
+		WorldBossGuildFullSnapshot worldBossGuildFullSnapshot = GameManager.Instance?.playerModel?.WorldBossModelManager?.WorldBossGuildFullSnapshot;
+		if (worldBossGuildFullSnapshot?.CapturePoints == null || GameManager.Instance?.jsonSerializer == null)
+		{
+			return null;
+		}
+		string value = null;
+		for (int i = 0; i < worldBossGuildFullSnapshot.CapturePoints.Count; i++)
+		{
+			WorldBossCapturePointSnapshot worldBossCapturePointSnapshot = worldBossGuildFullSnapshot.CapturePoints[i];
+			if (worldBossCapturePointSnapshot == null || worldBossCapturePointSnapshot.CapturePoint != WorldBossCapturePoint)
+			{
+				continue;
+			}
+			if (worldBossCapturePointSnapshot.Defenders == null)
+			{
+				break;
+			}
+			for (int j = 0; j < worldBossCapturePointSnapshot.Defenders.Count; j++)
+			{
+				WorldBossCellDefenderSnapshot worldBossCellDefenderSnapshot = worldBossCapturePointSnapshot.Defenders[j];
+				if (worldBossCellDefenderSnapshot != null && worldBossCellDefenderSnapshot.Cell == WorldBossCell)
+				{
+					value = worldBossCellDefenderSnapshot.DefenderInfo;
+					break;
+				}
+			}
+			break;
+		}
+		if (string.IsNullOrEmpty(value))
+		{
+			return null;
+		}
+		return GameManager.Instance.jsonSerializer.Deserialize<GuildBattleParticipantInfo>(value)?.SelectedSurvivors;
+	}
+
+	private string GetWorldBossOccupyingClassIconName(string survivorAnalyticsId)
+	{
+		if (string.IsNullOrEmpty(survivorAnalyticsId))
+		{
+			return null;
+		}
+		SurvivorModel survivorModel = FindSurvivorByAnalyticsId(survivorAnalyticsId);
+		if (survivorModel != null)
+		{
+			return HelpersGfx.GetSurvivorClassIconName(survivorModel);
+		}
+		SurvivorMockData survivorMockData = FindOccupyingSurvivorMockData(survivorAnalyticsId);
+		if (survivorMockData != null)
+		{
+			return HelpersGfx.GetSurvivorClassIconName(survivorMockData.SurvivorClass.ToString(), survivorMockData.RarityLevel);
+		}
+		ActorDefinition actorDefinition = GameManager.Instance?.gameEconomyData?.GetActorDefinition(survivorAnalyticsId);
+		if (actorDefinition != null && !string.IsNullOrEmpty(actorDefinition.Class))
+		{
+			return HelpersGfx.GetSurvivorClassIconName(actorDefinition.Class, actorDefinition.RarityLevel);
+		}
+		return null;
+	}
+
+	private static SurvivorModel FindSurvivorByAnalyticsId(string analyticsId)
+	{
+		ModelList<SurvivorModel> modelList = GameManager.Instance?.playerModel?.SurvivorContainer?.Survivors;
+		if (modelList == null)
+		{
+			return null;
+		}
+		for (int i = 0; i < modelList.Count; i++)
+		{
+			if (modelList[i] != null && modelList[i].IdForAnalytics == analyticsId)
+			{
+				return modelList[i];
+			}
+		}
+		return null;
+	}
+
+	private SurvivorMockData FindOccupyingSurvivorMockData(string analyticsId)
+	{
+		if (string.IsNullOrEmpty(WorldBossCapturePoint) || string.IsNullOrEmpty(WorldBossCell))
+		{
+			return null;
+		}
+		WorldBossGuildFullSnapshot worldBossGuildFullSnapshot = GameManager.Instance?.playerModel?.WorldBossModelManager?.WorldBossGuildFullSnapshot;
+		if (worldBossGuildFullSnapshot?.CapturePoints == null || GameManager.Instance?.jsonSerializer == null)
+		{
+			return null;
+		}
+		string value = null;
+		for (int i = 0; i < worldBossGuildFullSnapshot.CapturePoints.Count; i++)
+		{
+			WorldBossCapturePointSnapshot worldBossCapturePointSnapshot = worldBossGuildFullSnapshot.CapturePoints[i];
+			if (worldBossCapturePointSnapshot == null || worldBossCapturePointSnapshot.CapturePoint != WorldBossCapturePoint || worldBossCapturePointSnapshot.Defenders == null)
+			{
+				continue;
+			}
+			for (int j = 0; j < worldBossCapturePointSnapshot.Defenders.Count; j++)
+			{
+				WorldBossCellDefenderSnapshot worldBossCellDefenderSnapshot = worldBossCapturePointSnapshot.Defenders[j];
+				if (worldBossCellDefenderSnapshot != null && worldBossCellDefenderSnapshot.Cell == WorldBossCell)
+				{
+					value = worldBossCellDefenderSnapshot.DefenderInfo;
+					break;
+				}
+			}
+			break;
+		}
+		if (string.IsNullOrEmpty(value))
+		{
+			return null;
+		}
+		GuildBattleParticipantInfo guildBattleParticipantInfo = GameManager.Instance.jsonSerializer.Deserialize<GuildBattleParticipantInfo>(value);
+		if (guildBattleParticipantInfo?.SelectedSurvivors == null)
+		{
+			return null;
+		}
+		for (int k = 0; k < guildBattleParticipantInfo.SelectedSurvivors.Count; k++)
+		{
+			SurvivorMockData survivorMockData = guildBattleParticipantInfo.SelectedSurvivors[k];
+			if (survivorMockData != null && survivorMockData.AnalyticsId == analyticsId)
+			{
+				return survivorMockData;
+			}
+		}
+		return null;
+	}
+
 	public void UpdateUICombat()
 	{
-		SurvivalMissionConfig survivalMissionConfig = null;
-		survivalMissionConfig = selectedMapMissionModel.SolveSurvivalConfigForCurrentMission();
+		SurvivalMissionConfig survivalMissionConfig = (selectedMapMissionModel.IsUsingSurvivalConfig() ? selectedMapMissionModel.SolveSurvivalConfigForCurrentMission() : null);
 		bool flag = mapMissionModel?.IsFixedSurvivorSeasonMission ?? false;
 		missionLevelLabel.text = LocalizationManager.GetText("Popup.TeamSelection.MissionLevel{Level}", selectedMapMissionModel.MissionLevel.ToString());
 		MapMissionModel obj = mapMissionModel;
@@ -1457,9 +2021,116 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 			});
 			confirmationPopup.Open();
 		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP)
+		{
+			RequestWorldBossCellStatusBeforeCombat();
+		}
 		else
 		{
 			GoToCombat();
+		}
+	}
+
+	private void RequestWorldBossCellStatusBeforeCombat()
+	{
+		string text = WorldBossCapturePoint;
+		string text2 = WorldBossCell;
+		if ((string.IsNullOrEmpty(text) || string.IsNullOrEmpty(text2)) && selectedMapMissionModel is WorldBossMissionModel worldBossMissionModel)
+		{
+			text = worldBossMissionModel.CapturePoint;
+			text2 = worldBossMissionModel.Cell;
+		}
+		if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(text2))
+		{
+			BeginWorldBossCombatEnterCover();
+			WorldBossCellStatusRequest value = new WorldBossCellStatusRequest
+			{
+				GroupId = GameManager.Instance.playerModel.GuildId,
+				SeasonId = GameManager.Instance.playerModel.WorldBossModelManager.GetCurrentSeasonId(),
+				CycleId = GameManager.Instance.playerModel.WorldBossModelManager.GetCurrentCycleId(),
+				CapturePoint = text,
+				Cell = text2
+			};
+			string arg = GameManager.Instance.jsonSerializer.Serialize(value);
+			SignalRClient.Instance.RequestCommand("WorldBossCellStatus", arg, OnWorldBossCellStatusAsync, waitForResponse: true);
+		}
+	}
+
+	private void OnWorldBossCellStatusAsync(string responseJson)
+	{
+		if (IsPopupAlive())
+		{
+			WorldBossCellStatusResult worldBossCellStatusResult = GameManager.Instance.jsonSerializer.Deserialize<WorldBossCellStatusResult>(responseJson);
+			if (IsWorldBossCellReadyForCombat(worldBossCellStatusResult))
+			{
+				GoToCombat();
+				return;
+			}
+			EndWorldBossCombatEnterCover();
+			HUDNotification.Info(LocalizationManager.GetText((worldBossCellStatusResult != null && worldBossCellStatusResult.IsOccupied) ? "World.Boss.Occupied.Tips" : "World.Boss.AtWar.Tips"));
+			RefreshWorldBossDetailSnapshot();
+			Close();
+		}
+	}
+
+	private void BeginWorldBossCombatEnterCover()
+	{
+		TransitionScreenHUD transitionScreenHUD = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.Transition) as TransitionScreenHUD;
+		if (!(transitionScreenHUD == null) && !transitionScreenHUD.IsOpen)
+		{
+			transitionScreenHUD.AnimationInCallback = null;
+			transitionScreenHUD.SceneToLoadAfterInAnimation = null;
+			transitionScreenHUD.SceneToUnload = null;
+			transitionScreenHUD.Open();
+		}
+	}
+
+	private void EndWorldBossCombatEnterCover()
+	{
+		SingularityMonoBehaviour<HUDManager>.Instance.CloseIfExists(UIType.Transition);
+	}
+
+	private bool IsWorldBossCellReadyForCombat(WorldBossCellStatusResult response)
+	{
+		if (response == null || !response.Success || response.IsFighting)
+		{
+			return false;
+		}
+		if (response.IsOccupied)
+		{
+			if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE)
+			{
+				return false;
+			}
+			if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP && WorldBossCellState == WorldBossPVPItemItem.CellState.Empty)
+			{
+				return false;
+			}
+			if (response.OccupyingGroupId == GameManager.Instance.playerModel.GuildId)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void RefreshWorldBossDetailSnapshot()
+	{
+		if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE)
+		{
+			WorldBossPVEDetailBackPopup worldBossPVEDetailBackPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.WorldBossPVEDetailBackPopup) as WorldBossPVEDetailBackPopup;
+			if (worldBossPVEDetailBackPopup != null)
+			{
+				worldBossPVEDetailBackPopup.GetWorldBossFullSnapshot();
+			}
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP)
+		{
+			WorldBossPVPDetailPopup worldBossPVPDetailPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.WorldBossPVPDetailPopup) as WorldBossPVPDetailPopup;
+			if (worldBossPVPDetailPopup != null)
+			{
+				worldBossPVPDetailPopup.GetWorldBossFullSnapshot();
+			}
 		}
 	}
 
@@ -1528,6 +2199,10 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 			{
 				Cashier = GameManager.Instance.playerModel.OutpostModel.GetRaidCashier()
 			}, OnGoToOutpostCombatCallback);
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
+		{
+			StartWorldBossCombat();
 		}
 		else if (mapMissionModel != null)
 		{
@@ -1799,6 +2474,229 @@ public class TeamSelectionPopup : HUDElement, ISurvivorSlotProvider
 			playButtonTable.repositionNow = true;
 		}
 	}
+
+	private void StartWorldBossCombat()
+	{
+		PlayerModel playerModel = GameManager.Instance.playerModel;
+		WorldBossModelManager worldBossModelManager = playerModel.WorldBossModelManager;
+		List<string> worldBossParticipantSurvivorIds = GetWorldBossParticipantSurvivorIds(playerModel);
+		if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE)
+		{
+			if (selectedMapMissionModel is WorldBossMissionModel worldBossMissionModel)
+			{
+				ExecuteWorldBossAttackAndEnterCombat(playerModel, worldBossModelManager, worldBossMissionModel.CapturePoint, worldBossMissionModel.Cell, worldBossParticipantSurvivorIds);
+			}
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP)
+		{
+			if (!string.IsNullOrEmpty(WorldBossCapturePoint) && !string.IsNullOrEmpty(WorldBossCell))
+			{
+				if (WorldBossCellState == WorldBossPVPItemItem.CellState.Empty)
+				{
+					OccupyWorldBossEmptyCellCommand command = new OccupyWorldBossEmptyCellCommand(worldBossModelManager.GetCurrentSeasonId(), worldBossModelManager.GetCurrentCycleId(), WorldBossCapturePoint, WorldBossCell, worldBossParticipantSurvivorIds);
+					StartCoroutine(WaitWorldBossOccupyReceiptAndClose(command));
+				}
+				else if (WorldBossCellState == WorldBossPVPItemItem.CellState.Uncross || WorldBossCellState == WorldBossPVPItemItem.CellState.GetOtherGroup)
+				{
+					ExecuteWorldBossAttackAndEnterCombat(playerModel, worldBossModelManager, WorldBossCapturePoint, WorldBossCell, worldBossParticipantSurvivorIds);
+				}
+			}
+		}
+		else if (SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss)
+		{
+			TWDModelResult result = Helpers.ExecuteCommand(new AttackWorldBossTankCommand(worldBossModelManager.GetCurrentSeasonId(), worldBossModelManager.GetCurrentCycleId(), worldBossParticipantSurvivorIds));
+			OnGoToCombatWorldBossCallback(result);
+		}
+	}
+
+	private static List<string> GetWorldBossParticipantSurvivorIds(PlayerModel player)
+	{
+		return (from survivor in player.SurvivorContainer.CombatSurvivors
+			where survivor != null && !string.IsNullOrEmpty(survivor.IdForAnalytics)
+			select survivor.IdForAnalytics).ToList();
+	}
+
+	private void ExecuteWorldBossAttackAndEnterCombat(PlayerModel player, WorldBossModelManager worldBossModelManager, string capturePoint, string cell, List<string> participantSurvivorIds)
+	{
+		AttackWorldBossCellCommand command = new AttackWorldBossCellCommand(worldBossModelManager.GetCurrentSeasonId(), worldBossModelManager.GetCurrentCycleId(), player.GuildId, capturePoint, cell, participantSurvivorIds);
+		StartCoroutine(WaitWorldBossAttackReceiptAndEnterCombat(command));
+	}
+
+	private IEnumerator WaitWorldBossOccupyReceiptAndClose(OccupyWorldBossEmptyCellCommand command)
+	{
+		if (loadingCombat)
+		{
+			yield break;
+		}
+		SignalRClient signalRClient = SignalRClient.Instance;
+		if (signalRClient == null)
+		{
+			yield break;
+		}
+		loadingCombat = true;
+		CancelWorldBossAttackReceiptWait();
+		worldBossAttackReceiptClient = signalRClient;
+		worldBossAttackReceiptClient.OnCommandCompletedMessage += HandleWorldBossAttackCommandCompleted;
+		if (Helpers.ExecuteCommand(command) != TWDModelResult.OK)
+		{
+			CancelWorldBossAttackReceiptWait();
+			loadingCombat = false;
+			EndWorldBossCombatEnterCover();
+			HUDNotification.Info(LocalizationManager.GetText("World.Boss.Occupied.Tips"));
+			RefreshWorldBossDetailSnapshot();
+			Close();
+			yield break;
+		}
+		int targetSequenceId = command.SequenceId;
+		float waited = 0f;
+		float timeout = GetWorldBossCommandTimeout(signalRClient);
+		while (signalRClient != null && signalRClient.IsConnected && lastCompletedWorldBossAttackSequenceId < targetSequenceId && waited < timeout)
+		{
+			waited += Time.deltaTime;
+			yield return null;
+		}
+		bool flag = lastCompletedWorldBossAttackSequenceId >= targetSequenceId;
+		worldBossAttackReceiptCodes.TryGetValue(targetSequenceId, out var value);
+		CancelWorldBossAttackReceiptWait();
+		if (IsPopupAlive() && flag)
+		{
+			loadingCombat = false;
+			EndWorldBossCombatEnterCover();
+			switch (value)
+			{
+			case 70:
+				Close();
+				break;
+			case 0:
+				Close();
+				break;
+			}
+		}
+	}
+
+	private IEnumerator WaitWorldBossAttackReceiptAndEnterCombat(AttackWorldBossCellCommand command)
+	{
+		if (loadingCombat)
+		{
+			yield break;
+		}
+		SignalRClient signalRClient = SignalRClient.Instance;
+		if (signalRClient == null)
+		{
+			yield break;
+		}
+		loadingCombat = true;
+		BeginWorldBossCombatEnterCover();
+		CancelWorldBossAttackReceiptWait();
+		worldBossAttackReceiptClient = signalRClient;
+		worldBossAttackReceiptClient.OnCommandCompletedMessage += HandleWorldBossAttackCommandCompleted;
+		TWDModelResult tWDModelResult = Helpers.ExecuteCommand(command);
+		if (tWDModelResult != TWDModelResult.OK)
+		{
+			CancelWorldBossAttackReceiptWait();
+			loadingCombat = false;
+			EndWorldBossCombatEnterCover();
+			OnGoToCombatWorldBossCallback(tWDModelResult);
+			yield break;
+		}
+		int targetSequenceId = command.SequenceId;
+		float waited = 0f;
+		float timeout = GetWorldBossCommandTimeout(signalRClient);
+		while (signalRClient != null && signalRClient.IsConnected && lastCompletedWorldBossAttackSequenceId < targetSequenceId && waited < timeout)
+		{
+			waited += Time.deltaTime;
+			yield return null;
+		}
+		bool flag = lastCompletedWorldBossAttackSequenceId >= targetSequenceId;
+		worldBossAttackReceiptCodes.TryGetValue(targetSequenceId, out var value);
+		CancelWorldBossAttackReceiptWait();
+		if (IsPopupAlive() && flag)
+		{
+			switch (value)
+			{
+			case 70:
+				loadingCombat = false;
+				EndWorldBossCombatEnterCover();
+				Close();
+				break;
+			case 0:
+				OnGoToCombatWorldBossCallback(TWDModelResult.OK);
+				break;
+			}
+		}
+	}
+
+	private void HandleWorldBossAttackCommandCompleted(int code, int sequenceId)
+	{
+		lastCompletedWorldBossAttackSequenceId = Math.Max(lastCompletedWorldBossAttackSequenceId, sequenceId);
+		worldBossAttackReceiptCodes[sequenceId] = code;
+	}
+
+	private void CancelWorldBossAttackReceiptWait()
+	{
+		if (worldBossAttackReceiptClient != null)
+		{
+			worldBossAttackReceiptClient.OnCommandCompletedMessage -= HandleWorldBossAttackCommandCompleted;
+			worldBossAttackReceiptClient = null;
+		}
+		lastCompletedWorldBossAttackSequenceId = -1;
+		worldBossAttackReceiptCodes.Clear();
+	}
+
+	private static float GetWorldBossCommandTimeout(SignalRClient signalRClient)
+	{
+		float result = signalRClient.CommandTimeout;
+		ConfigData configData = GameManager.Instance?.gameEconomyData?.ConfigData;
+		if (configData != null && configData.ReloadTimer > 0)
+		{
+			result = configData.ReloadTimer;
+		}
+		return result;
+	}
+
+	private void OnGoToCombatWorldBossCallback(TWDModelResult result)
+	{
+		switch (result)
+		{
+		case TWDModelResult.OK:
+		{
+			loadingCombat = true;
+			SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("map/start_mission");
+			EventManager.NotifyClick("StartMission");
+			EventManager.NotifyEvent(EventManager.EventType.StartMission);
+			WorldBossMissionModel worldBossMissionModel = (GameManager.Instance.playerModel.GetAttackTargetMissionModel() as WorldBossMissionModel) ?? (selectedMapMissionModel as WorldBossMissionModel);
+			if (worldBossMissionModel == null || !worldBossMissionModel.HasValidMissionBinding())
+			{
+				loadingCombat = false;
+				break;
+			}
+			MapMissionParameters missionInfo = worldBossMissionModel.ToMissionParameters();
+			GameManager.Instance.LoadVisitModel(VisitMode.PVE, missionInfo);
+			SingularityMonoBehaviour<HUDManager>.Instance.CloseAllOpenPopupsAndDialogs();
+			break;
+		}
+		case TWDModelResult.NotEnoughSurvivors:
+			HUDNotification.Error(LocalizationManager.GetText("Notification.AttemptCombatWithoutSurvivors"));
+			break;
+		}
+	}
+
+	public void OpenForWorldBoss(WorldBossMissionModel missionModel, SurvivorContainerModel.SurvivorType survivorType)
+	{
+		if (missionModel != null && (!base.gameObject.activeSelf || _selectedMapMissionModel != missionModel))
+		{
+			model = null;
+			groupModelChild = null;
+			_mapMissionModel = null;
+			_guildBattleMapMissionModel = null;
+			_selectedMapMissionModel = missionModel;
+			startCashier = null;
+			survivalRestCashier = null;
+			SurvivorType = survivorType;
+			Open();
+		}
+	}
+
 
 
 	#region myparams

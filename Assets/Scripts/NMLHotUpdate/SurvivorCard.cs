@@ -1,10 +1,10 @@
-using BaseModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TwdCustomMod;
+using BaseModel;
 using TWDModel;
 using UnityEngine;
+using TwdCustomMod;
 
 public class SurvivorCard : UIListCard<SurvivorModel>
 {
@@ -18,6 +18,58 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 		RadioPhoneForReroll = 5,
 		EnemyPreview = 6
 	}
+
+	[Header("WorldBoss info")]
+	[SerializeField]
+	private GameObject worldBossTiredContainer;
+
+	[SerializeField]
+	private GameObject worldBossTiredUpContainer;
+
+	[SerializeField]
+	private GameObject worldBossTiredTimeContainer;
+
+	[SerializeField]
+	private UILabel worldBossTiredTimer;
+
+	[SerializeField]
+	private GameObject worldBossNoTiredContainer;
+
+	[SerializeField]
+	private GameObject worldBossSetContainer;
+
+	[SerializeField]
+	private UIButton worldBossSetButton;
+
+	[SerializeField]
+	private UILabel worldBossSetTimeTxt;
+
+	[SerializeField]
+	private UILabel worldBossSetNameTxt;
+
+	[SerializeField]
+	private GameObject worldBossGetContainer;
+
+	[SerializeField]
+	private UIButton worldBossGetButton;
+
+	[SerializeField]
+	private UILabel worldBossGetTimeTxt;
+
+	[SerializeField]
+	private UILabel worldBossGetNameTxt;
+
+	private static readonly Color WorldBossTiredFullColor = new Color(32f / 51f, 67f / 85f, 0.18431373f, 1f);
+
+	private static readonly Color WorldBossTiredTwoColor = new Color(0.96862745f, 0.7607843f, 0.14509805f, 1f);
+
+	private static readonly Color WorldBossTiredOneColor = new Color(0.99215686f, 0.20784314f, 0.20784314f, 1f);
+
+	private bool isWorldBossTiredTimerActive;
+
+	private bool worldBossTiredTimerUseFullTimeFormat;
+
+	private bool isWorldBossGetTimerActive;
 
 	[Header("Main surivor info")]
 	[SerializeField]
@@ -205,6 +257,7 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 	[SerializeField]
 	private GameObject healTokenSpeedupContainer;
 
+	[SerializeField]
 	public SurvivorCardTokenAccept surviorCardTokenAccept;
 
 	[SerializeField]
@@ -374,6 +427,8 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 
 	private SurvivorInfoPopup survivorInfoPopup;
 
+	public bool WorldBossSelectedTeamTiredOnlyDisplay { get; set; }
+
 	public bool Locked { get; set; }
 
 	public bool IsMissionSurvivor { get; set; }
@@ -381,6 +436,8 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 	public bool IsEndlessModeExpertActor { get; set; }
 
 	public bool IsSurvivalMode { get; set; }
+
+	public SurvivorContainerModel.SurvivorType TeamSelectionSurvivorType { get; set; }
 
 	public bool IsOutOfAction { get; set; }
 
@@ -451,6 +508,57 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 		}
 		UIEvent.OnUIEvent -= OnUIEvent;
 		IsSurvivalMode = false;
+		TeamSelectionSurvivorType = SurvivorContainerModel.SurvivorType.Combat;
+		isWorldBossTiredTimerActive = false;
+		isWorldBossGetTimerActive = false;
+		WorldBossSelectedTeamTiredOnlyDisplay = false;
+	}
+
+	public void OnWorldBossSetButtonClicked()
+	{
+		SurvivorModel survivor = base.Item;
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (survivor == null || worldBossModelManager == null || string.IsNullOrEmpty(survivor.IdForAnalytics))
+		{
+			return;
+		}
+		WorldBossDispatchedTeamView worldBossDispatchedTeamView = worldBossModelManager.GetMyDispatchedTeams().FirstOrDefault((WorldBossDispatchedTeamView team) => team.SurvivorIds != null && team.SurvivorIds.Contains(survivor.IdForAnalytics));
+		if (worldBossDispatchedTeamView == null)
+		{
+			Debug.LogError("SurvivorCard: deployed team not found for survivor " + survivor.IdForAnalytics);
+			return;
+		}
+		WorldBossRetreatConfirmPopup worldBossRetreatConfirmPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.WorldBossRetreatConfirmPopup) as WorldBossRetreatConfirmPopup;
+		if (!(worldBossRetreatConfirmPopup == null))
+		{
+			worldBossRetreatConfirmPopup.SetTeam(worldBossDispatchedTeamView);
+			worldBossRetreatConfirmPopup.Open();
+		}
+	}
+
+	public void OnWorldBossGetButtonClicked()
+	{
+		SurvivorModel survivor = base.Item;
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (survivor == null || worldBossModelManager == null || string.IsNullOrEmpty(survivor.IdForAnalytics) || worldBossModelManager.WorldBossGuildFullSnapshot == null)
+		{
+			return;
+		}
+		WorldBossReturningTeamView worldBossReturningTeamView = (from team in worldBossModelManager.GetMyReturningTeams()
+			where team.SurvivorIds != null && team.SurvivorIds.Contains(survivor.IdForAnalytics)
+			orderby team.RemainingMs descending
+			select team).FirstOrDefault();
+		if (worldBossReturningTeamView == null)
+		{
+			Debug.LogError("SurvivorCard: returning team not found for survivor " + survivor.IdForAnalytics);
+			return;
+		}
+		WorldBossRecallPopup worldBossRecallPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.WorldBossRecallPopup) as WorldBossRecallPopup;
+		if (!(worldBossRecallPopup == null))
+		{
+			worldBossRecallPopup.SetReturningTeam(worldBossReturningTeamView);
+			worldBossRecallPopup.Open();
+		}
 	}
 
 	private void OnUIEvent(string type, object parameter)
@@ -623,12 +731,9 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 			}
 			InitActorHitMessage();
 			SetExtraAttackLabel();
-
-			if (survivalPanel != null)
-			{
-                if (survivalPanel.gameObject.activeSelf) survivalPanel.UpdateUI(base.Item);
-            }
-        }
+			UpdateTeamSelectionWorldBossInfo();
+			if (survivalPanel != null && survivalPanel.gameObject.activeSelf) survivalPanel.UpdateUI(base.Item);
+		}
 		catch (Exception ex)
 		{
 			Debug.LogError("Error happend when updating SurvivorCard: " + ex.ToString());
@@ -771,7 +876,7 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 				}
 			}
 		}
-		
+
 		HelpersUI.SetColor(statsHealthLabel, flag2 ? FeaturedStatsColor : NormalStatsColor);
 		HelpersUI.SetColor(statsDamageLabel, flag2 ? FeaturedStatsColor : NormalStatsColor);
 		HelpersUI.SetContentToLabel(statsDamageLabel, survivor.GetCommonDamage().ToString());
@@ -1361,6 +1466,316 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 		Helpers.GameObjectSetActive(speedupButton, value: false);
 	}
 
+	public void UpdateWorldBossTiredInfo()
+	{
+		SurvivorModel item = base.Item;
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (item == null || worldBossModelManager == null || string.IsNullOrEmpty(item.IdForAnalytics))
+		{
+			isWorldBossTiredTimerActive = false;
+			return;
+		}
+		int heroChargeLimit = worldBossModelManager.GetHeroChargeLimit();
+		int heroCharges = worldBossModelManager.GetHeroCharges(item.IdForAnalytics);
+		long heroNextRecoverRemainingMs = worldBossModelManager.GetHeroNextRecoverRemainingMs(item.IdForAnalytics);
+		if (heroChargeLimit <= 0 || heroCharges >= heroChargeLimit)
+		{
+			Helpers.GameObjectSetActive(worldBossTiredTimeContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossNoTiredContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+			SetWorldBossTiredUpIndicators(3, WorldBossTiredFullColor);
+			isWorldBossTiredTimerActive = false;
+			return;
+		}
+		switch (heroCharges)
+		{
+		case 2:
+			Helpers.GameObjectSetActive(worldBossTiredTimeContainer, value: true);
+			Helpers.GameObjectSetActive(worldBossNoTiredContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+			SetWorldBossTiredUpIndicators(2, WorldBossTiredTwoColor);
+			StartWorldBossTiredTimer(heroNextRecoverRemainingMs, useFullTimeFormat: false);
+			break;
+		case 1:
+			Helpers.GameObjectSetActive(worldBossTiredTimeContainer, value: true);
+			Helpers.GameObjectSetActive(worldBossNoTiredContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+			SetWorldBossTiredUpIndicators(1, WorldBossTiredOneColor);
+			StartWorldBossTiredTimer(heroNextRecoverRemainingMs, useFullTimeFormat: false);
+			break;
+		case 0:
+			Helpers.GameObjectSetActive(worldBossTiredTimeContainer, value: true);
+			Helpers.GameObjectSetActive(worldBossNoTiredContainer, value: true);
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: false);
+			StartWorldBossTiredTimer(heroNextRecoverRemainingMs, useFullTimeFormat: true);
+			break;
+		default:
+			isWorldBossTiredTimerActive = false;
+			break;
+		}
+	}
+
+	private void UpdateWorldBossSelectedTeamTiredDisplay()
+	{
+		SurvivorModel item = base.Item;
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (item == null || worldBossModelManager == null || string.IsNullOrEmpty(item.IdForAnalytics))
+		{
+			isWorldBossTiredTimerActive = false;
+			return;
+		}
+		Helpers.GameObjectSetActive(worldBossTiredTimeContainer, value: false);
+		Helpers.GameObjectSetActive(worldBossNoTiredContainer, value: false);
+		isWorldBossTiredTimerActive = false;
+		SetWorldBossTiredDownVisible(visible: true);
+		Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+		int heroChargeLimit = worldBossModelManager.GetHeroChargeLimit();
+		int heroCharges = worldBossModelManager.GetHeroCharges(item.IdForAnalytics);
+		if (heroChargeLimit <= 0 || heroCharges >= heroChargeLimit)
+		{
+			SetWorldBossTiredUpIndicators(3, WorldBossTiredFullColor);
+			return;
+		}
+		switch (heroCharges)
+		{
+		case 2:
+			SetWorldBossTiredUpIndicators(2, WorldBossTiredTwoColor);
+			break;
+		case 1:
+			SetWorldBossTiredUpIndicators(1, WorldBossTiredOneColor);
+			break;
+		case 0:
+			SetWorldBossTiredUpIndicators(0, WorldBossTiredOneColor);
+			break;
+		}
+	}
+
+	private void StartWorldBossTiredTimer(long remainingMs, bool useFullTimeFormat)
+	{
+		worldBossTiredTimerUseFullTimeFormat = useFullTimeFormat;
+		UpdateWorldBossTiredTimerLabel(remainingMs);
+		isWorldBossTiredTimerActive = remainingMs > 0;
+	}
+
+	private void UpdateWorldBossTiredTimerLabel(long remainingMs)
+	{
+		if (!(worldBossTiredTimer == null))
+		{
+			remainingMs = Math.Max(0L, remainingMs);
+			string text = Helpers.FormatTimeAsHms(remainingMs);
+			worldBossTiredTimer.text = LocalizationManager.GetText("World.Boss.DeployedTeam.RecoverAfterTime", text);
+		}
+	}
+
+	private void SetWorldBossTiredDownVisible(bool visible)
+	{
+		if (!(worldBossTiredContainer == null))
+		{
+			Transform transform = worldBossTiredContainer.transform.Find("Down");
+			if (transform != null)
+			{
+				Helpers.GameObjectSetActive(transform.gameObject, visible);
+			}
+		}
+	}
+
+	private void SetWorldBossTiredUpIndicators(int visibleCount, Color color)
+	{
+		if (worldBossTiredUpContainer == null)
+		{
+			return;
+		}
+		for (int i = 1; i <= 3; i++)
+		{
+			Transform transform = FindWorldBossTiredIndicatorTransform(i);
+			if (transform == null)
+			{
+				continue;
+			}
+			bool flag = i <= visibleCount;
+			Helpers.GameObjectSetActive(transform.gameObject, flag);
+			if (flag)
+			{
+				UISprite component = transform.GetComponent<UISprite>();
+				if (component != null)
+				{
+					component.color = color;
+				}
+			}
+		}
+	}
+
+	private Transform FindWorldBossTiredIndicatorTransform(int index)
+	{
+		if (worldBossTiredUpContainer == null)
+		{
+			return null;
+		}
+		Transform transform = worldBossTiredUpContainer.transform.Find("Tired " + index);
+		if (transform == null)
+		{
+			transform = worldBossTiredUpContainer.transform.Find("Tired" + index);
+		}
+		return transform;
+	}
+
+	private void UpdateWorldBossTiredTimer()
+	{
+		if (WorldBossSelectedTeamTiredOnlyDisplay || !isWorldBossTiredTimerActive || worldBossTiredTimeContainer == null || !worldBossTiredTimeContainer.activeSelf)
+		{
+			return;
+		}
+		SurvivorModel item = base.Item;
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (item == null || worldBossModelManager == null || string.IsNullOrEmpty(item.IdForAnalytics))
+		{
+			isWorldBossTiredTimerActive = false;
+			return;
+		}
+		long heroNextRecoverRemainingMs = worldBossModelManager.GetHeroNextRecoverRemainingMs(item.IdForAnalytics);
+		if (heroNextRecoverRemainingMs <= 0)
+		{
+			isWorldBossTiredTimerActive = false;
+			UpdateWorldBossTiredInfo();
+		}
+		else
+		{
+			UpdateWorldBossTiredTimerLabel(heroNextRecoverRemainingMs);
+		}
+	}
+
+	public void UpdateWorldBossSetInfo()
+	{
+		if (GameManager.Instance.playerModel.WorldBossModelManager.IsHeroDispatched(base.Item.IdForAnalytics))
+		{
+			Helpers.GameObjectSetActive(worldBossSetContainer, value: true);
+			WorldBossSurvivorStatusView survivorStatus = GameManager.Instance.playerModel.WorldBossModelManager.GetSurvivorStatus(base.Item.IdForAnalytics);
+			if (survivorStatus != null)
+			{
+				string dispatchedCapturePoint = survivorStatus.DispatchedCapturePoint;
+				WorldBossModelManager worldBossModelManager = GameManager.Instance.playerModel.WorldBossModelManager;
+				WorldBossBattlegroundDefinition worldBossBattlegroundDefinition = GameManager.Instance.gameEconomyData.FindWorldBossBattlegroundDefinitionByCapturePoint(dispatchedCapturePoint, worldBossModelManager.GetCurrentBattleDifficulty());
+				HelpersUI.SetContentToLabel(worldBossSetNameTxt, (worldBossBattlegroundDefinition != null && !string.IsNullOrEmpty(worldBossBattlegroundDefinition.BuildingName)) ? LocalizationManager.GetText(worldBossBattlegroundDefinition.BuildingName) : dispatchedCapturePoint);
+				UpdateWorldBossSetIcon((worldBossBattlegroundDefinition != null) ? worldBossBattlegroundDefinition.CapturePoint : dispatchedCapturePoint);
+			}
+		}
+		else
+		{
+			Helpers.GameObjectSetActive(worldBossSetContainer, value: false);
+		}
+	}
+
+	private void UpdateWorldBossSetIcon(string capturePoint)
+	{
+		if (worldBossSetContainer == null || string.IsNullOrEmpty(capturePoint))
+		{
+			return;
+		}
+		Transform transform = worldBossSetContainer.transform.Find("Icon");
+		UISprite uISprite = ((transform != null) ? transform.GetComponent<UISprite>() : null);
+		if (!(uISprite == null))
+		{
+			switch (capturePoint)
+			{
+			case "TOWER-A":
+			case "TOWER-B":
+				uISprite.spriteName = "Ui_Icon_Outpost";
+				break;
+			case "DEPOT":
+				uISprite.spriteName = "Ui_Icon_Tents";
+				break;
+			}
+		}
+	}
+
+	public void UpdateWorldBossGetInfo()
+	{
+		if (GameManager.Instance.playerModel.WorldBossModelManager.IsHeroReturning(base.Item.IdForAnalytics))
+		{
+			Helpers.GameObjectSetActive(worldBossGetContainer, value: true);
+			WorldBossSurvivorStatusView survivorStatus = GameManager.Instance.playerModel.WorldBossModelManager.GetSurvivorStatus(base.Item.IdForAnalytics);
+			if (survivorStatus != null)
+			{
+				long returnRemainingMs = survivorStatus.ReturnRemainingMs;
+				isWorldBossGetTimerActive = returnRemainingMs > 0;
+				HelpersUI.SetContentToLabel(worldBossGetTimeTxt, (returnRemainingMs > 0) ? Helpers.FormatTimeAsHms(returnRemainingMs) : "00:00:00");
+			}
+		}
+		else
+		{
+			isWorldBossGetTimerActive = false;
+			Helpers.GameObjectSetActive(worldBossGetContainer, value: false);
+		}
+	}
+
+	private void UpdateWorldBossGetTimer()
+	{
+		if (!isWorldBossGetTimerActive || worldBossGetTimeTxt == null || !worldBossGetTimeTxt.gameObject.activeInHierarchy)
+		{
+			return;
+		}
+		SurvivorModel item = base.Item;
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (item == null || worldBossModelManager == null || string.IsNullOrEmpty(item.IdForAnalytics))
+		{
+			isWorldBossGetTimerActive = false;
+			return;
+		}
+		long survivorReturnRemainingMs = worldBossModelManager.GetSurvivorReturnRemainingMs(item.IdForAnalytics);
+		if (survivorReturnRemainingMs <= 0)
+		{
+			isWorldBossGetTimerActive = false;
+			UpdateWorldBossGetInfo();
+		}
+		else
+		{
+			HelpersUI.SetContentToLabel(worldBossGetTimeTxt, LocalizationManager.GetText("World.Boss.PVP.ReturningNeedTime", Helpers.FormatTimeAsHms(survivorReturnRemainingMs)));
+		}
+	}
+
+	private void UpdateTeamSelectionWorldBossInfo()
+	{
+		bool flag = Type == CardType.TeamSelect && (TeamSelectionSurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || TeamSelectionSurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || TeamSelectionSurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss) && base.Item != null;
+		if (!flag)
+		{
+			WorldBossSelectedTeamTiredOnlyDisplay = false;
+			Helpers.GameObjectSetActive(worldBossTiredContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossSetContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossGetContainer, value: false);
+		}
+		else if (WorldBossSelectedTeamTiredOnlyDisplay)
+		{
+			Helpers.GameObjectSetActive(worldBossTiredContainer, value: true);
+			Helpers.GameObjectSetActive(worldBossSetContainer, value: false);
+			Helpers.GameObjectSetActive(worldBossGetContainer, value: false);
+			isWorldBossGetTimerActive = false;
+			UpdateWorldBossSelectedTeamTiredDisplay();
+		}
+		else
+		{
+			Helpers.GameObjectSetActive(worldBossTiredContainer, flag);
+			Helpers.GameObjectSetActive(worldBossSetContainer, flag);
+			Helpers.GameObjectSetActive(worldBossGetContainer, flag);
+			UpdateWorldBossTiredInfo();
+			UpdateWorldBossSetInfo();
+			UpdateWorldBossGetInfo();
+		}
+	}
+
+	private bool IsWorldBossTeamSelectWithZeroCharges()
+	{
+		if (Type != CardType.TeamSelect || base.Item == null || string.IsNullOrEmpty(base.Item.IdForAnalytics) || (TeamSelectionSurvivorType != SurvivorContainerModel.SurvivorType.WorldBossPVE && TeamSelectionSurvivorType != SurvivorContainerModel.SurvivorType.WorldBossPVP && TeamSelectionSurvivorType != SurvivorContainerModel.SurvivorType.WorldBoss))
+		{
+			return false;
+		}
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (worldBossModelManager == null || worldBossModelManager.GetHeroChargeLimit() <= 0)
+		{
+			return false;
+		}
+		return worldBossModelManager.GetHeroCharges(base.Item.IdForAnalytics) <= 0;
+	}
+
 	public void ShowTrainingGroundsInfo(bool isAcceptingSurvivor)
 	{
 		SurvivorModel item = base.Item;
@@ -1672,6 +2087,8 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 				item2.alpha = num;
 			}
 		}
+		UpdateWorldBossTiredTimer();
+		UpdateWorldBossGetTimer();
 		_ = hasOpendInfoPopup;
 	}
 
@@ -1756,6 +2173,10 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 		{
 			num = UIListCard<SurvivorModel>.GetSortIntFor(SurvivorSortOrder.SurvivorFavourite, 1000);
 		}
+		if (IsWorldBossTeamSelectWithZeroCharges())
+		{
+			num = UIListCard<SurvivorModel>.GetSortIntFor(SurvivorSortOrder.SurvivorSurvivalOutOfAction, 1000);
+		}
 		if (Type == CardType.TeamSelect && base.Item.IsHero)
 		{
 			num += GameManager.Instance.gameEconomyData.ConfigData.MaxRarityLevel;
@@ -1770,6 +2191,10 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 	public int GetSortValueForCombatType(List<SurvivorModel> currentTeam)
 	{
 		int num = GetSortValue();
+		if (IsWorldBossTeamSelectWithZeroCharges())
+		{
+			return num;
+		}
 		int num2 = -UIListCard<SurvivorModel>.GetSortIntFor(SurvivorSortOrder.SurvivorInCurrentTeam, 4000);
 		if (currentTeam != null && currentTeam.Contains(base.Item))
 		{
@@ -1797,12 +2222,19 @@ public class SurvivorCard : UIListCard<SurvivorModel>
 			DebugTWD.LogMycode("if (IsLoadDataManager && IsDisableCardClick) return");
 			if (survivalPanel != null)
 			{
-                survivalPanel.gameObject.SetActive(!survivalPanel.gameObject.activeSelf);
-                if (survivalPanel.gameObject.activeSelf) survivalPanel.UpdateUI(base.Item);
-            }
-            if (IsDisableCardClick) return;
+				survivalPanel.gameObject.SetActive(!survivalPanel.gameObject.activeSelf);
+				if (survivalPanel.gameObject.activeSelf) survivalPanel.UpdateUI(base.Item);
+			}
+			if (IsDisableCardClick) return;
 		}
-
+		if (Type == CardType.TeamSelect && (TeamSelectionSurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || TeamSelectionSurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || TeamSelectionSurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss) && base.Item != null)
+		{
+			WorldBossModelManager worldBossModelManager = GameManager.Instance.playerModel.WorldBossModelManager;
+			if ((worldBossModelManager != null && (worldBossModelManager.IsHeroDispatched(base.Item.IdForAnalytics) || worldBossModelManager.IsHeroReturning(base.Item.IdForAnalytics))) || !worldBossModelManager.CanHeroBattle(base.Item.IdForAnalytics))
+			{
+				return;
+			}
+		}
 		if (!Locked && !SurvivorUnavailable && !IsMissionSurvivor && Type != CardType.EnemyPreview && canClick)
 		{
 			SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("global/survivor_card_click");

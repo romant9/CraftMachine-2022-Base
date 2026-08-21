@@ -62,15 +62,29 @@ namespace TWDModel
 				{
 					if (base.Actor.IsDead || (TargetActor != null && (TargetActor.IsDead || TargetActor.Faction == Faction.Lure)))
 					{
-						base.Actor.SelectedEquipment.RemoveTemporaryTraitsByExpirationType(TraitExpirationType.Activation);
+						GetActivationTraitCleanupEquipment().RemoveTemporaryTraitsByExpirationType(TraitExpirationType.Activation);
 						base.Actor.OverwatchedOnTurn = false;
 						return true;
 					}
-					if (TargetCell != TargetActor.GridCoordinate)
+					if (TargetActor.IsMultiCell)
+					{
+						GridCoordinate closestOccupiedCell = TargetActor.GetClosestOccupiedCell(base.Actor.GridCoordinate);
+						if (TargetCell != closestOccupiedCell)
+						{
+							if (GetOOTValidationAbility().CanAbilityBePerformedOnGridCell(combatModel, base.Actor, base.Actor.GridCoordinate, closestOccupiedCell) != AbilityResult.Success)
+							{
+								GetActivationTraitCleanupEquipment().RemoveTemporaryTraitsByExpirationType(TraitExpirationType.Activation);
+								base.Actor.OverwatchedOnTurn = false;
+								return true;
+							}
+							TargetCell = closestOccupiedCell;
+						}
+					}
+					else if (TargetCell != TargetActor.GridCoordinate)
 					{
 						if (GetOOTValidationAbility().CanAbilityBePerformedOnGridCell(combatModel, base.Actor, base.Actor.GridCoordinate, TargetActor.GridCoordinate) != AbilityResult.Success)
 						{
-							base.Actor.SelectedEquipment.RemoveTemporaryTraitsByExpirationType(TraitExpirationType.Activation);
+							GetActivationTraitCleanupEquipment().RemoveTemporaryTraitsByExpirationType(TraitExpirationType.Activation);
 							base.Actor.OverwatchedOnTurn = false;
 							return true;
 						}
@@ -81,7 +95,7 @@ namespace TWDModel
 				{
 					combatModel.manager.CurrentCommandLogEntry.StartAbilityLog(base.Actor, Ability);
 				}
-				EquipmentItemModel equipmentItemModel = ((OOTType != OOTType.PassByAttack) ? base.Actor.SelectedEquipment : base.Actor.GetWeaponEquipment());
+				EquipmentItemModel equipmentItemModel = ((OOTType != OOTType.PassByAttack && OOTType != OOTType.FightBack) ? base.Actor.SelectedEquipment : base.Actor.GetWeaponEquipment());
 				Dictionary<string, FixedPoint> dictionary = new Dictionary<string, FixedPoint>();
 				List<UpgradeTraitsData> availableTraits = equipmentItemModel.GetAvailableTraits();
 				List<TemporaryTraitsData> temporaryTraitsByExpirationType = equipmentItemModel.GetTemporaryTraitsByExpirationType(TraitExpirationType.Activation);
@@ -218,7 +232,7 @@ namespace TWDModel
 				{
 					TargetActor.EndAction();
 				}
-				if (abilityResult == AbilityResult.Success && OOTType != OOTType.None && OOTType != OOTType.PassByAttack && OOTType != OOTType.Revenge && OOTType != OOTType.PreEmptiveStrike && OOTType != OOTType.ParryRiposteRetaliation && OOTType != OOTType.FreeShooting)
+				if (abilityResult == AbilityResult.Success && OOTType != OOTType.None && OOTType != OOTType.PassByAttack && OOTType != OOTType.Revenge && OOTType != OOTType.PreEmptiveStrike && OOTType != OOTType.ParryRiposteRetaliation && OOTType != OOTType.FreeShooting && OOTType != OOTType.FightBack)
 				{
 					base.Actor.SetOOTPerformed(OOTType);
 					if (OOTType == OOTType.Retaliation)
@@ -239,6 +253,15 @@ namespace TWDModel
 		protected virtual AbilityModel GetOOTValidationAbility()
 		{
 			return base.Actor.SelectedAbility;
+		}
+
+		private EquipmentItemModel GetActivationTraitCleanupEquipment()
+		{
+			if (OOTType != OOTType.FightBack)
+			{
+				return base.Actor.SelectedEquipment;
+			}
+			return base.Actor.GetWeaponEquipment();
 		}
 
 		public override string ToString()

@@ -109,6 +109,7 @@ namespace TWDModel
 				actor.OnRedHealthBar = true;
 				actor.StrugglesLeft--;
 				immuneForThisTurn = true;
+				actor.EndFortifications(interrupted: true);
 			}
 		}
 	}

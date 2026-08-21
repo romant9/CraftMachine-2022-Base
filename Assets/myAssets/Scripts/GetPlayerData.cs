@@ -4,6 +4,7 @@
 using BaseModel;
 using Client.Connectivity;
 using Epic.OnlineServices;
+using Epic.OnlineServices.Auth;
 using PlayEveryWare.EpicOnlineServices;
 using Steamworks;
 using System;
@@ -11,6 +12,7 @@ using System.Collections;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using TwdCustomMod;
 using UnityEngine;
 using static OfflineManager;
@@ -90,6 +92,7 @@ public class GetPlayerData : MonoBehaviour
 		//SourcesList.GetComponent<Collider>().enabled = false;
 		SourcesList.RemoveItem("Steam");
 #endif
+		WaitEosManager();
 	}
 
 	private void OnDisable()
@@ -98,6 +101,31 @@ public class GetPlayerData : MonoBehaviour
 		{
 			DebugTWD.Log("Epic is not null, ShutDown", DebugType.System);
 			//EOSManager.Instance.OnShutdown();
+		}
+	}
+
+	private async void WaitEosManager()
+	{
+		while (EOSManager.Instance == null)
+		{
+			await Task.Yield();
+		}
+		var statusNet = EOSManager.Instance.GetEOSPlatformInterface().GetNetworkStatus();
+
+		if (statusNet != Epic.OnlineServices.Platform.NetworkStatus.Online)
+		{
+			return;
+		}
+		while (EOSLogin.GetAccountUserId() == null)
+		{
+			await Task.Yield();
+		}
+		EpicAccountId playerID = EOSLogin.GetAccountUserId();
+		var statusLogin = EOSManager.Instance.GetEOSAuthInterface().GetLoginStatus(playerID);
+		var token = EOSManager.Instance.GetUserAuthTokenForAccountId(playerID);
+		if (token != null)
+		{
+			var tokenContent = token.Value;
 		}
 	}
 
@@ -266,18 +294,7 @@ public class GetPlayerData : MonoBehaviour
 
 			if (connectSource == ConnectSource.Epic)
 			{
-				EOSLogin.Login(delegate (ProductUserId productUserId)
-				{
-					if (productUserId != null)
-					{
-						DebugTWD.Log("productUserId : " + productUserId.ToString());
-					}
-					else
-					{
-						DebugTWD.Log("productUserId is NULL");
-					}
-					StartCoroutine(MainLogin());
-				});
+				EOSLogin.Login(LoginCallback);
 			}
 			else
 			{
@@ -295,6 +312,20 @@ public class GetPlayerData : MonoBehaviour
 
 			DataManager.ToggleBackupServer();
 		}
+	}
+
+	private void LoginCallback(ProductUserId productUserId)
+	{
+		if (productUserId != null)
+		{
+			DebugTWD.Log("productUserId : " + productUserId.ToString());
+			EOSLogin.SaveEpicToken();
+		}
+		else
+		{
+			DebugTWD.Log("productUserId is NULL");
+		}
+		StartCoroutine(MainLogin());
 	}
 
 	void Update()

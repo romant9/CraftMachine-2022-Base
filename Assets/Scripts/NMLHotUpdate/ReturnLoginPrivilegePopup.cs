@@ -67,6 +67,7 @@ public class ReturnLoginPrivilegePopup : MonoBehaviour
 			_currentTaskCompleted = returnPrivilegeModel.CurrentTaskCompleted;
 			RefreshTaskState(returnPrivilegeModel);
 			RefreshPrivilegeState(returnPrivilegeModel);
+			UpdateTimeLable();
 		}
 	}
 
@@ -81,11 +82,7 @@ public class ReturnLoginPrivilegePopup : MonoBehaviour
 				RefreshPrivilegeState(GetReturnPrivilegeModel());
 			}
 		}
-		if (timeLabel != null)
-		{
-			string text = LocalizationManager.GetText("return.privilege.deadline", FormatTimeLeft(_privilegeTimeLeft));
-			HelpersUI.SetContentToLabel(timeLabel, text);
-		}
+		UpdateTimeLable();
 		if (!_currentTaskCompleted)
 		{
 			return;
@@ -99,6 +96,15 @@ public class ReturnLoginPrivilegePopup : MonoBehaviour
 			}
 		}
 		RefreshTaskState(GetReturnPrivilegeModel());
+	}
+
+	private void UpdateTimeLable()
+	{
+		if (timeLabel != null)
+		{
+			string text = LocalizationManager.GetText("return.privilege.deadline", FormatTimeLeft(_privilegeTimeLeft));
+			HelpersUI.SetContentToLabel(timeLabel, text);
+		}
 	}
 
 	public void Close()

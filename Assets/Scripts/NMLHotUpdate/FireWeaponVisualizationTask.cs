@@ -60,9 +60,9 @@ public class FireWeaponVisualizationTask : ActorVisualizationTask
 		}
 	}
 
-	private ActorView TargetView { get; set; }
+	protected ActorView TargetView { get; set; }
 
-	protected ActorModel TargetActor { get; set; }
+	public ActorModel TargetActor { get; protected set; }
 
 	public AbilityModel WeaponAbility { get; private set; }
 
@@ -146,6 +146,11 @@ public class FireWeaponVisualizationTask : ActorVisualizationTask
 			VisualizationQueue.Instance.AddTaskBlocker();
 		}
 		list.Add(new ActionCameraVisualizationTask(base.Actor, TargetActor));
+		if (base.Actor is TankActorModel)
+		{
+			list.Add(this);
+			return list;
+		}
 		list.Add(new TurnToTargetVisualizationTask(base.Actor, position.ToVector3(), position2.ToVector3()));
 		SurvivorAnimationController survivorAnimationController = base.ActorView.CharacterAnimationController as SurvivorAnimationController;
 		EquipmentItemModel selectedEquipment = base.Actor.SelectedEquipment;
@@ -320,34 +325,9 @@ public class FireWeaponVisualizationTask : ActorVisualizationTask
 
 	protected virtual bool FireWeaponWaitForCamera(float deltaTime)
 	{
-		int num;
-		if (ActionCamera.Instance != null && ActionCamera.Instance.IsActive && !base.Actor.IsDead && TargetActor != null)
-		{
-			if (ActionCamera.Instance.LastInstigatorId != TargetActor.ModelId)
-			{
-				num = 1;
-				goto IL_0078;
-			}
-			if (!ActionCamera.Instance.IsAtTarget)
-			{
-				num = ((ActionCamera.Instance.LastInstigatorId == TargetActor.ModelId) ? 1 : 0);
-				if (num != 0)
-				{
-					goto IL_0078;
-				}
-			}
-			else
-			{
-				num = 0;
-			}
-		}
-		else
-		{
-			num = 0;
-		}
-		goto IL_00b9;
-		IL_0078:
-		if (!waitingForCamera)
+		bool result = true;
+		bool flag = ActionCamera.Instance != null && ActionCamera.Instance.IsActive && !base.Actor.IsDead && TargetActor != null && (ActionCamera.Instance.LastInstigatorId != TargetActor.ModelId || (!ActionCamera.Instance.IsAtTarget && ActionCamera.Instance.LastInstigatorId == TargetActor.ModelId));
+		if (flag && !waitingForCamera)
 		{
 			SurvivorAnimationController survivorAnimationController = CharacterAnimationController as SurvivorAnimationController;
 			if (survivorAnimationController != null)
@@ -357,9 +337,16 @@ public class FireWeaponVisualizationTask : ActorVisualizationTask
 				waitingForCamera = true;
 			}
 		}
-		goto IL_00b9;
-		IL_00b9:
-		if (num == 0)
+		if (base.Actor is TankActorModel && TargetActor != null)
+		{
+			StationaryBossTurretAim component = base.ActorView.GetComponent<StationaryBossTurretAim>();
+			if (component != null && !component.IsAimedAt(TargetActor))
+			{
+				component.AimToward(TargetActor, deltaTime);
+				return result;
+			}
+		}
+		if (!flag)
 		{
 			CharacterAnimationController.OnUseWeapon += OnUseWeapon;
 			CharacterAnimationController.OnTakeQuickHit += OnQuickHit;
@@ -367,7 +354,7 @@ public class FireWeaponVisualizationTask : ActorVisualizationTask
 			CharacterAnimationController.UseWeapon(IsCritical, IsFenceAttack, isChargeAttack);
 			State = FireWeaponState.Attack;
 		}
-		return true;
+		return result;
 	}
 
 	private void OnActionCameraReady()
@@ -399,11 +386,19 @@ public class FireWeaponVisualizationTask : ActorVisualizationTask
 			CharacterAnimationController.OnUseWeapon -= OnUseWeapon;
 			CharacterAnimationController.OnTakeQuickHit -= OnQuickHit;
 			base.ActorView.ResetTargetActorProperties();
+			if (base.Actor is TankActorModel)
+			{
+				(CharacterAnimationController as TankAnimationController)?.OnFireAnimationComplete();
+			}
 			result = false;
 		}
 		else if (base.Actor.IsDead || CharacterAnimationController.IsInDeath || CharacterAnimationController.IsDeathRequested)
 		{
 			base.ActorView.ResetTargetActorProperties();
+			if (base.Actor is TankActorModel)
+			{
+				(CharacterAnimationController as TankAnimationController)?.OnFireAnimationComplete();
+			}
 			result = false;
 		}
 		return result;

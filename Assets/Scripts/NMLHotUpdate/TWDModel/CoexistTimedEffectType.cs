@@ -13,6 +13,7 @@ namespace TWDModel
 		DebuffDamagePerRound = 8,
 		DebuffReduceRecovery = 9,
 		BerserkRage = 10,
-		BloodMark = 11
+		BloodMark = 11,
+		Fortifications = 12
 	}
 }

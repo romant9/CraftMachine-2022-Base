@@ -12,7 +12,7 @@ using UnityEngine;
 
 public class YandexAuthCustomUri
 {
-	private YandexSettings _settings;
+	private CustomAuthSettings _settings;
 	// ВАЖНО: Должно совпадать с Redirect URI в Identity Hub
 	private string RedirectUri = "simple.oauth://oauth2/playid";
 	private string RedirectUriScheme;
@@ -26,10 +26,10 @@ public class YandexAuthCustomUri
 	private TaskCompletionSource<string> _callbackTcs;
 	private bool isInitialized;
 
-	public YandexAuthCustomUri(YandexSettings settings) { Initialize(settings); }
+	public YandexAuthCustomUri(CustomAuthSettings settings) { Initialize(settings); }
 
 	// Подписка на Deep Link происходит в Awake
-	private void Initialize(YandexSettings settings)
+	private void Initialize(CustomAuthSettings settings)
 	{
 		_settings = settings;
 		ClientId = _settings.ClientId;

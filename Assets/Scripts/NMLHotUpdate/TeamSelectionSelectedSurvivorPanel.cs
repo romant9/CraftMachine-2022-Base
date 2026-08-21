@@ -262,6 +262,23 @@ public class TeamSelectionSelectedSurvivorPanel : ListPanel
 		UpdateCards();
 	}
 
+	private bool IsWorldBossTeamSelection()
+	{
+		if (SurvivorType != SurvivorContainerModel.SurvivorType.WorldBossPVE && SurvivorType != SurvivorContainerModel.SurvivorType.WorldBossPVP)
+		{
+			return SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss;
+		}
+		return true;
+	}
+
+	private void ConfigureSelectedSurvivorCardWorldBossDisplay(SurvivorCard card)
+	{
+		if (!(card == null))
+		{
+			card.WorldBossSelectedTeamTiredOnlyDisplay = IsWorldBossTeamSelection();
+		}
+	}
+
 	private void SetSurvivorAtCard(SurvivorModel survivorModel, int cardIndex, bool locked, bool isTeaserSurvivor, bool survivalMode)
 	{
 		SurvivorCard component = GetSlotAt(cardIndex).GetComponent<SurvivorCard>();
@@ -269,8 +286,10 @@ public class TeamSelectionSelectedSurvivorPanel : ListPanel
 		component.Locked = locked;
 		component.IsMissionSurvivor = isTeaserSurvivor;
 		component.IsSurvivalMode = survivalMode;
+		component.TeamSelectionSurvivorType = SurvivorType;
 		component.EnableEquipmentContainers(enable: true);
 		component.Type = SurvivorCard.CardType.TeamSelect;
+		ConfigureSelectedSurvivorCardWorldBossDisplay(component);
 		component.UpdateUI();
 		component.ShowActorHitMessage();
 		component.ShowTeamSelection(LocalizationManager.GetText("Popup.TeamSelection.TapToReplace"));
@@ -280,7 +299,7 @@ public class TeamSelectionSelectedSurvivorPanel : ListPanel
 		{
 			emptySurvivorCards[cardIndex].gameObject.SetActive(survivorModel == null);
 		}
-		if (cardIndex == 0 && (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.Outpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle || SurvivorType == SurvivorContainerModel.SurvivorType.GvGDefenders))
+		if (cardIndex == 0 && (SurvivorType == SurvivorContainerModel.SurvivorType.Combat || SurvivorType == SurvivorContainerModel.SurvivorType.Outpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatOutpost || SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival || SurvivorType == SurvivorContainerModel.SurvivorType.CombatGuildBattle || SurvivorType == SurvivorContainerModel.SurvivorType.GvGDefenders || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVE || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBossPVP || SurvivorType == SurvivorContainerModel.SurvivorType.WorldBoss))
 		{
 			component.SetLeaderTraitVisual(visible: true);
 			if (survivorModel != null)
@@ -309,6 +328,7 @@ public class TeamSelectionSelectedSurvivorPanel : ListPanel
 			SurvivorCard component = GetSlotAt(i).GetComponent<SurvivorCard>();
 			if (component != null)
 			{
+				ConfigureSelectedSurvivorCardWorldBossDisplay(component);
 				component.UpdateUI();
 				component.ShowActorHitMessage();
 				component.UpdateSurvivorUnavailableContainerState();

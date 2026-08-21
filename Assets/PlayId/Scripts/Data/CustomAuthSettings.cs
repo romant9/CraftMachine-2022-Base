@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace PlayId.Scripts.Data
 {
-	[CreateAssetMenu(fileName = "YandexSettings", menuName = "Play ID/Yandex Settings")]
-	public class YandexSettings : ScriptableObject
+	[CreateAssetMenu(fileName = "CustomAuthSettings", menuName = "Play ID/Custom Auth Settings")]
+	public class CustomAuthSettings : ScriptableObject
 	{
 		public string ClientId;
 		public string RedirectUriScheme;

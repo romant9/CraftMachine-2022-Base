@@ -236,10 +236,10 @@ namespace TWDModel
 				FixedPoint successProbability = 0L;
 				if (target.Faction == Faction.Walker || target.Faction == Faction.Raider)
 				{
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(source.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(source.manager);
+					if (challengeDebuffProvider != null)
 					{
-						List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+						List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 						if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.WalkerStateRefBlind) != null)
 						{
 							successProbability = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.WalkerStateRefBlind);
@@ -354,6 +354,12 @@ namespace TWDModel
 					abilityManager.VisitParameter("Equipment_Passive_ShotGun_Param4", ref value26, source);
 				}
 				totalDamageBonus += value26;
+			}
+			if (source != null && target != null && source.HasAnyLevelTrait("Equipment_Active_HealthRealdmg") && combatModel != null && ability != null)
+			{
+				FixedPoint value27 = 0.0;
+				abilityManager.VisitParameter("AbilityModifierHealthRealdmg", ref value27, source);
+				totalDamageBonus += value27;
 			}
 		}
 	}

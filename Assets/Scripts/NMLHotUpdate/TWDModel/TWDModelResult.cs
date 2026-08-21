@@ -48,6 +48,7 @@ namespace TWDModel
 		CustomBundleError = 41,
 		BuyWebshopAndTradefairBundleCommandSuc = 42,
 		SupportTalentNodeNotFound = 60,
-		SupportTalentNodeCanNotUpgrade = 61
+		SupportTalentNodeCanNotUpgrade = 61,
+		WorldBossCellOccupied = 70
 	}
 }

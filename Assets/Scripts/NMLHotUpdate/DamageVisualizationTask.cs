@@ -126,10 +126,24 @@ public class DamageVisualizationTask : ActorVisualizationTask
 		if ((base.Action as DamageAction).OriginalTargetFaction != Faction.Lure)
 		{
 			Done = false;
-			if (DamagerView != null && !DeathVisualizationTriggered && !base.Actor.IsStruggling && base.ActorView.CharacterAnimationController != null)
+			ActorView actorView = base.ActorView;
+			if (actorView == null && base.Actor != null)
 			{
-				Vector3 direction = Vector3.Normalize(base.ActorView.transform.position - DamagerView.transform.position);
-				base.ActorView.CharacterAnimationController.MeleeDamage(IsCritical, direction);
+				actorView = GameManager.Instance.GetViewForModel(base.Actor) as ActorView;
+			}
+			CharacterAnimationController characterAnimationController = ((actorView != null) ? actorView.CharacterAnimationController : null);
+			if (!DeathVisualizationTriggered && !base.Actor.IsStruggling && characterAnimationController != null)
+			{
+				Vector3 direction = Vector3.forward;
+				if (DamagerView != null && actorView != null)
+				{
+					Vector3 vector = actorView.transform.position - DamagerView.transform.position;
+					if (vector.sqrMagnitude > 0.0001f)
+					{
+						direction = vector.normalized;
+					}
+				}
+				characterAnimationController.MeleeDamage(IsCritical, direction);
 			}
 			ShowDamageHandle = ShowDamage();
 			GameManager.Instance.StartCoroutine(ShowDamageHandle);
@@ -184,7 +198,7 @@ public class DamageVisualizationTask : ActorVisualizationTask
 				}
 			}
 		}
-		if (action.Dodged && !action.Critical)
+		if (action.Jumpingshot || (action.Dodged && !action.Critical))
 		{
 			if (DamagerView != null)
 			{
@@ -192,7 +206,14 @@ public class DamageVisualizationTask : ActorVisualizationTask
 			}
 			if (base.ActorView != null)
 			{
-				base.ActorView.AddNotification(new ActorNotificationMessage(SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("ActorNotification.Dodge"), "Ui_Icon_Trait_Dodge"), action.ProbabilityOutcome == PlayerRandomChanceResult.SuccessDueToExtension);
+				if (action.Jumpingshot)
+				{
+					base.ActorView.AddNotification(new ActorNotificationMessage(SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("Traits.Jumpingshot"), "Ui_Icon_Trait_Jumpingshot"), action.ProbabilityOutcome == PlayerRandomChanceResult.SuccessDueToExtension);
+				}
+				else
+				{
+					base.ActorView.AddNotification(new ActorNotificationMessage(SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("ActorNotification.Dodge"), "Ui_Icon_Trait_Dodge"), action.ProbabilityOutcome == PlayerRandomChanceResult.SuccessDueToExtension);
+				}
 			}
 		}
 		else if (base.ActorView != null && action.FinalDamage != 0)
@@ -293,12 +314,12 @@ public class DamageVisualizationTask : ActorVisualizationTask
 		}
 		if (base.ActorView != null)
 		{
-			if (!action.Dodged || (action.Dodged && action.Critical))
+			if (action.ShouldApplyHitEffects)
 			{
 				ActorHitEffects component = base.ActorView.GetComponent<ActorHitEffects>();
 				if (component != null && base.ActorView.CurrentWeapon != null && base.ActorView.CurrentWeapon.Definition.Type != EquipmentType.Grenade)
 				{
-					if (action.FinalDamage > 0 && !action.Dodged)
+					if (action.FinalDamage > 0 && !action.Dodged && !action.Jumpingshot)
 					{
 						component.SpawnHitEffects(action.DamagerActor);
 					}
@@ -310,7 +331,7 @@ public class DamageVisualizationTask : ActorVisualizationTask
 			}
 			if (!action.SavedFromDeath && !action.IgnoreIndicatorUpdate && !action.DealDamagePostAbility && !action.IsPushDamage)
 			{
-				float healthIndicatorValue = (float)action.HealthAfterDamage / (float)base.Actor.MaxHitPoints;
+				float healthIndicatorValue = ((base.Actor == null || base.Actor.MaxHitPoints <= 0 || !base.Actor.UsesScreenTopHealthBar) ? ((float)action.HealthAfterDamage / (float)base.Actor.MaxHitPoints) : ((float)base.Actor.Hitpoints / (float)base.Actor.MaxHitPoints));
 				base.ActorView.SetHealthIndicatorValue(healthIndicatorValue);
 			}
 		}

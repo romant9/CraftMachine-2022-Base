@@ -379,9 +379,11 @@ namespace TWDModel
 
 		private void GiveCbpReward(Rewards rewards)
 		{
-			IReward reward = rewards.RewardsList[0];
-			reward.Give(base.manager);
-			LastRecycleRewards.RewardsList.Add(reward);
+			foreach (IReward rewards2 in rewards.RewardsList)
+			{
+				rewards2.Give(base.manager);
+				LastRecycleRewards.RewardsList.Add(rewards2);
+			}
 		}
 	}
 }

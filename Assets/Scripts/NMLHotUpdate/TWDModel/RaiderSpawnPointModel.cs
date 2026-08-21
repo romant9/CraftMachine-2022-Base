@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace TWDModel
 {
@@ -51,7 +52,9 @@ namespace TWDModel
 				return 0;
 			}
 			MissionGenerationData missionGenerationData = base.gameEconomyData.GetMissionGenerationData(base.manager.Player.SelectedMissionDifficulty);
-			int num = Math.Max(1, base.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel) + base.LevelOffset);
+			int enemyLevel;
+			bool flag = WorldBossMissionModel.TryGetEnemyLevel(base.manager.Player.GetAttackTargetMissionModel(), out enemyLevel);
+			int num = (flag ? enemyLevel : Math.Max(1, base.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel) + base.LevelOffset));
 			SpawnModifierState spawnModifiers = combatModel.SpawnModifiers;
 			if (spawnModifiers != null)
 			{
@@ -110,10 +113,50 @@ namespace TWDModel
 				ActorID = "DefaultWarrior" + factionName;
 				break;
 			}
+			ActorFootprint actorFootprint = null;
+			FacingDirection facing = FacingDirection.North;
+			ActorDefinition actorDefinition = base.gameEconomyData.GetActorDefinition(ActorClassID);
+			if (actorDefinition != null && actorDefinition.FootprintWidth > 0)
+			{
+				actorFootprint = ActorFootprint.CreateFromActorDefinition(actorDefinition);
+				facing = actorDefinition.InitialFacingDirection;
+				if (base.UseSpawnRotationOverride)
+				{
+					facing = FacingDirections.FromRotationY(base.SpawnRotationY);
+				}
+				List<GridCoordinate> occupiedCells = actorFootprint.GetOccupiedCells(base.Location.Coordinate, facing);
+				for (int i = 0; i < occupiedCells.Count; i++)
+				{
+					if (!combatModel.Grid.IsCoordinateValid(occupiedCells[i]) || combatModel.IsBlocked(occupiedCells[i]) || combatModel.GetOccupier(occupiedCells[i]) != null)
+					{
+						return 0;
+					}
+				}
+			}
+			if (flag)
+			{
+				num = enemyLevel;
+			}
 			ActorModel actorModel = CreateActorModel(combatModel, num);
 			actorModel.SetupForCombat(combatModel);
 			actorModel.AIDataModel.Alertness = base.Alertness;
 			actorModel.AIDataModel.Mode = AIMode;
+			if (base.UseSpawnRotationOverride)
+			{
+				actorModel.UseSpawnRotationOverride = true;
+				actorModel.SpawnRotationY = base.SpawnRotationY;
+			}
+			if (actorModel is TankActorModel tankActorModel)
+			{
+				tankActorModel.IsBoss = true;
+				tankActorModel.AIDataModel.Mode = AIMode.Stationary;
+				tankActorModel.AIDataModel.Alertness = AIAlertness.Homing;
+				if (actorFootprint != null)
+				{
+					tankActorModel.SetFootprint(actorFootprint);
+					tankActorModel.Facing = facing;
+				}
+			}
 			combatModel.UpdateOccupiers();
 			return 1;
 		}
@@ -123,25 +166,33 @@ namespace TWDModel
 			if (ReplaceWithSurvivorPlayerIndex > -1)
 			{
 				PlayerModel player = base.manager.Player;
-				GuildBattleMapMissionModel guildBattleMapMissionModel = base.manager.Player.GetAttackTargetMissionModel() as GuildBattleMapMissionModel;
-				SurvivorMockData survivorModel = player.GuildWarModel.CurrentBattle.CurrentMapModel.GetPvpTeamForMission(guildBattleMapMissionModel.Id).Survivors[ReplaceWithSurvivorPlayerIndex];
-				SurvivorModel survivorModel2 = player.SurvivorContainer.CreateSurvivorFromSurvivorMockData(survivorModel, GvGModelHelper.GetPlayerSpecificDifficulty(player));
-				survivorModel2.GridCoordinate = base.Location.Coordinate;
-				survivorModel2.Faction = Faction.Raider;
-				survivorModel2.ChangeFaction(Faction.Raider);
-				survivorModel2.UseModularCharacter = true;
-				survivorModel2.AIController.Enabled = true;
-				survivorModel2.GuildBattlePvPSurvivorIndex = ReplaceWithSurvivorPlayerIndex;
-				if (ReplaceWithSurvivorPlayerIndex == 0 && base.manager.Player.Combat != null && base.manager.Player.Combat.IsGuildBattleMission)
+				WorldBossMissionModel worldBossMissionModel = player.GetAttackTargetMissionModel() as WorldBossMissionModel;
+				GuildBattlePvpTeam guildBattlePvpTeam = ((worldBossMissionModel == null) ? ((player.GetAttackTargetMissionModel() is GuildBattleMapMissionModel guildBattleMapMissionModel) ? player.GuildWarModel.CurrentBattle.CurrentMapModel.GetPvpTeamForMission(guildBattleMapMissionModel.Id) : null) : ((player.WorldBossModelManager != null) ? player.WorldBossModelManager.GetCurrentDefenderTeam() : null));
+				if (guildBattlePvpTeam == null || ReplaceWithSurvivorPlayerIndex >= guildBattlePvpTeam.Survivors.Count)
 				{
-					survivorModel2.RegisterLeaderTraits();
+					ActorModel actorModel = combat.CreateActor(base.Location.Coordinate, Faction.Raider, raiderLevel, base.SpawnTag, WeaponOverrideId, ArmorOverrideId, EquipmentRarityLevel, ActorClassID, ActorID, base.Gender, WalkerVisualization.Normal, RaiderVisualization);
+					actorModel.UseModularCharacter = false;
+					return actorModel;
 				}
-				combat.RegisterActor(survivorModel2);
-				return survivorModel2;
+				SurvivorMockData survivorMockData = guildBattlePvpTeam.Survivors[ReplaceWithSurvivorPlayerIndex];
+				int survivorLevel = ((worldBossMissionModel != null) ? survivorMockData.Level : GvGModelHelper.GetPlayerSpecificDifficulty(player));
+				SurvivorModel survivorModel = player.SurvivorContainer.CreateSurvivorFromSurvivorMockData(survivorMockData, survivorLevel);
+				survivorModel.GridCoordinate = base.Location.Coordinate;
+				survivorModel.Faction = Faction.Raider;
+				survivorModel.ChangeFaction(Faction.Raider);
+				survivorModel.UseModularCharacter = true;
+				survivorModel.AIController.Enabled = true;
+				survivorModel.GuildBattlePvPSurvivorIndex = ReplaceWithSurvivorPlayerIndex;
+				if (ReplaceWithSurvivorPlayerIndex == 0 && base.manager.Player.Combat != null && (base.manager.Player.Combat.IsGuildBattleMission || base.manager.Player.Combat.IsWorldBossMission))
+				{
+					survivorModel.RegisterLeaderTraits();
+				}
+				combat.RegisterActor(survivorModel);
+				return survivorModel;
 			}
-			ActorModel actorModel = combat.CreateActor(base.Location.Coordinate, Faction.Raider, raiderLevel, base.SpawnTag, WeaponOverrideId, ArmorOverrideId, EquipmentRarityLevel, ActorClassID, ActorID, base.Gender, WalkerVisualization.Normal, RaiderVisualization);
-			actorModel.UseModularCharacter = false;
-			return actorModel;
+			ActorModel actorModel2 = combat.CreateActor(base.Location.Coordinate, Faction.Raider, raiderLevel, base.SpawnTag, WeaponOverrideId, ArmorOverrideId, EquipmentRarityLevel, ActorClassID, ActorID, base.Gender, WalkerVisualization.Normal, RaiderVisualization);
+			actorModel2.UseModularCharacter = false;
+			return actorModel2;
 		}
 	}
 }

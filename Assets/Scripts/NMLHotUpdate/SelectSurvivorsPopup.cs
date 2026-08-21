@@ -1,10 +1,11 @@
-using Client.Tweener;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using BaseModel;
+using Client.Tweener;
 using TWDModel;
 using UnityEngine;
+using System.Linq;
 
 public class SelectSurvivorsPopup : HUDElement
 {
@@ -16,9 +17,21 @@ public class SelectSurvivorsPopup : HUDElement
 		HeroToken = 3
 	}
 
+	private class CollectAllTarget
+	{
+		public RadioCallCardBase Card;
+
+		public SelectedRewardType RewardType;
+
+		public CurrencyType TokenCurrency;
+
+		public int TokenAmount;
+	}
+
 	private bool OpenedAfterReroll;
 
 	[Header("Dynamically Loaded Content")]
+	[SerializeField]
 	public Transform ButtonParentTarget;
 
 	[SerializeField]
@@ -66,10 +79,14 @@ public class SelectSurvivorsPopup : HUDElement
 	private Vector3 SidewaysOffset = new Vector3(-130f, 0f, 0f);
 
 	[Header("Internal Panels")]
+	[SerializeField]
 	public PhoneManagePanel ManagePanel;
 
 	[SerializeField]
 	private FakeTrainingGroundsHudButton fakeHudButton;
+
+	[SerializeField]
+	private GameObject skipButton;
 
 	private SelectedRewardType selectedRewardType;
 
@@ -90,6 +107,10 @@ public class SelectSurvivorsPopup : HUDElement
 	private bool closeOnCurrencyAnimationComplete = true;
 
 	private bool returnToSelectSurvivor = true;
+
+	private bool collectAllInProgress;
+
+	private int collectAllFlyingCards;
 
 	public bool SkipClickIntro { get; set; }
 
@@ -156,6 +177,7 @@ public class SelectSurvivorsPopup : HUDElement
 				ManagePanel.SetClickBuySlotsCallback(OnClickBuySlots);
 			}
 			ManagePanel.SetClickRerollCallback(OnClickReroll);
+			ManagePanel.SetClickCollectAllCallback(OnClickCollectAll);
 			UpdateManagePanel();
 		}
 		if (GameManager.Instance.PhoneCallResponseReceived || IsLoadDataManager)
@@ -179,6 +201,8 @@ public class SelectSurvivorsPopup : HUDElement
 
 	public void ReOpenAfterReroll()
 	{
+		collectAllInProgress = false;
+		collectAllFlyingCards = 0;
 		if (!IsLoadDataManager) HideSidePanels();
 		OpenedAfterReroll = true;
 		if (CardsList != null)
@@ -369,6 +393,7 @@ public class SelectSurvivorsPopup : HUDElement
 		}
 		if (flag)
 		{
+			UpdateManagePanel();
 			StartSingleCardCollectAnimation();
 		}
 		else
@@ -435,13 +460,15 @@ public class SelectSurvivorsPopup : HUDElement
 		}
 	}
 
-	private void AcceptHeroTokens(LootEntry entry)
+	private TWDModelResult AcceptHeroTokens(LootEntry entry)
 	{
 		selectedRewardType = SelectedRewardType.HeroToken;
 		CloseWaitTime = ClosePopupWaitTimeHeroToken;
+		TWDModelResult tWDModelResult = TWDModelResult.Error;
 		if (entry != null)
 		{
-			if (Helpers.ExecuteCommand(new AcceptSurvivorTokenCommand(entry)) == TWDModelResult.OK)
+			tWDModelResult = Helpers.ExecuteCommand(new AcceptSurvivorTokenCommand(entry));
+			if (tWDModelResult == TWDModelResult.OK)
 			{
 				string heroId = SurvivorToken.GetHeroId(entry.RewardedCurrency);
 				ActorDefinition actorDefinition = GameManager.Instance.gameEconomyData.GetActorDefinition(heroId);
@@ -457,21 +484,24 @@ public class SelectSurvivorsPopup : HUDElement
 		{
 			Debug.LogError("Cannot accept NULL entry");
 		}
+		return tWDModelResult;
 	}
 
-	private void AcceptClassTokens(SurvivorModel survivorModel)
+	private TWDModelResult AcceptClassTokens(SurvivorModel survivorModel)
 	{
 		selectedRewardType = SelectedRewardType.ClassToken;
 		CloseWaitTime = ClosePopupWaitTimeClassToken;
+		TWDModelResult result = TWDModelResult.Error;
 		if (survivorModel != null)
 		{
-			Helpers.ExecuteCommand(new RejectSurvivorCommand(survivorModel, NewSurvivorSource.Phone));
+			result = Helpers.ExecuteCommand(new RejectSurvivorCommand(survivorModel, NewSurvivorSource.Phone));
 			EventManager.NotifyEvent(EventManager.EventType.RejectSurvivor);
 		}
 		else
 		{
 			Debug.LogError("Cannot accept NULL survivorModel");
 		}
+		return result;
 	}
 
 	private void UpdateSidePanelInfo()
@@ -711,9 +741,13 @@ public class SelectSurvivorsPopup : HUDElement
 			flag = true;
 			flag2 = true;
 		}
-		if (flag && (closeOnCurrencyAnimationComplete || !flag2))
+		if (flag)
 		{
-			StartCoroutine(DelayedClose(CloseWaitTime));
+			UpdateManagePanel();
+			if (closeOnCurrencyAnimationComplete || !flag2)
+			{
+				StartCoroutine(DelayedClose(CloseWaitTime));
+			}
 		}
 	}
 
@@ -806,6 +840,204 @@ public class SelectSurvivorsPopup : HUDElement
 			ReOpenAfterReroll();
 			if (IsLoadDataManager) RerollIndex++;
 		}
+	}
+
+	private void OnClickCollectAll(UIButtonExtended button)
+	{
+		if (collectAllInProgress)
+		{
+			return;
+		}
+		PhoneCallModel phoneCallModel = GameManager.Instance.playerModel?.PhoneCall;
+		ModelList<LootEntry> modelList = phoneCallModel?.LootsList;
+		if (phoneCallModel == null || modelList == null)
+		{
+			return;
+		}
+		if (!phoneCallModel.CanClaimEntireMultiLootsList())
+		{
+			Debug.LogError("OnClickCollectAll called in non multi-loot claim mode.");
+			return;
+		}
+		List<CollectAllTarget> list = new List<CollectAllTarget>();
+		for (int i = 0; i < modelList.Count; i++)
+		{
+			LootEntry lootEntry = modelList[i];
+			if (lootEntry == null || phoneCallModel.IsLootClaimed(i))
+			{
+				continue;
+			}
+			RadioCallCardBase cardByIndex = GetCardByIndex(i);
+			if (cardByIndex == null)
+			{
+				continue;
+			}
+			SelectedRewardType selectedRewardType;
+			if (lootEntry.DropCurrencyType == DropCurrenciesProbabilitiesDefinition.DropCurrency.Survivor)
+			{
+				if (lootEntry.GeneratedSurvivor == null)
+				{
+					continue;
+				}
+				selectedRewardType = SelectedRewardType.ClassToken;
+			}
+			else
+			{
+				if (lootEntry.DropCurrencyType != DropCurrenciesProbabilitiesDefinition.DropCurrency.HeroToken)
+				{
+					continue;
+				}
+				selectedRewardType = SelectedRewardType.HeroToken;
+			}
+			if (((selectedRewardType == SelectedRewardType.ClassToken) ? AcceptClassTokens(lootEntry.GeneratedSurvivor) : AcceptHeroTokens(lootEntry)) == TWDModelResult.OK)
+			{
+				GetLootTokenReward(lootEntry, selectedRewardType, out var currencyType, out var amount);
+				list.Add(new CollectAllTarget
+				{
+					Card = cardByIndex,
+					RewardType = selectedRewardType,
+					TokenCurrency = currencyType,
+					TokenAmount = amount
+				});
+				if (list.Count == 1 && fakeHudButton != null)
+				{
+					fakeHudButton.Init(lootEntry, selectedRewardType);
+				}
+			}
+		}
+		if (list.Count == 0)
+		{
+			return;
+		}
+		collectAllInProgress = true;
+		collectAllFlyingCards = list.Count;
+		UpdateManagePanel();
+		DisableSidePanelsButtons();
+		if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+		{
+			SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("camp/card_move");
+		}
+		for (int j = 0; j < list.Count; j++)
+		{
+			CollectAllTarget target = list[j];
+			target.Card.HideAnimation();
+			target.Card.SetCardLocked(value: true, introAnimationLock: false);
+			if (RevealedCardEffect != null)
+			{
+				Helpers.InstantiateToParentAndLayer(RevealedCardEffect, target.Card.gameObject);
+			}
+			bool leading = j == 0;
+			target.Card.TweenToPosition(target.Card.transform.localPosition, Vector3.one * -1f, 1f, delegate
+			{
+				CollectAllCardTweenComplete(target, leading);
+			});
+		}
+	}
+
+	private void CollectAllCardTweenComplete(CollectAllTarget target, bool leading)
+	{
+		if (leading)
+		{
+			if (fakeHudButton != null)
+			{
+				fakeHudButton.ShowCollect();
+			}
+			if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+			{
+				SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("camp/card_zoom");
+			}
+		}
+		target.Card.CollectCard(delegate
+		{
+			CollectAllCardCollected(target);
+		}, target.RewardType, animate: true, doInPlaceAnimation: true);
+	}
+
+	private void CollectAllCardCollected(CollectAllTarget target)
+	{
+		GameObject gameObject = ((fakeHudButton != null) ? fakeHudButton.GetIconTarget() : null);
+		if (gameObject == null || target.TokenAmount <= 0 || target.TokenCurrency == CurrencyType.None)
+		{
+			CollectAllCardFlyComplete();
+			return;
+		}
+		int b = (PlatformInfo.HasFlag(PlatformFlag.SlowGPU) ? 10 : 20);
+		int num = Mathf.Min(target.TokenAmount, b);
+		if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+		{
+			SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("global/collect_token");
+		}
+		bool reported = false;
+		AnimComplete animComplete = delegate
+		{
+			if (!reported)
+			{
+				reported = true;
+				CollectAllCardFlyComplete();
+			}
+		};
+		for (int num2 = 0; num2 < num; num2++)
+		{
+			CollectAnimation component = Helpers.InstantiateToParentAndLayer(collectAnimationPrefab, base.gameObject).GetComponent<CollectAnimation>();
+			if (!(component == null))
+			{
+				component.FollowTarget(target.Card.gameObject);
+				component.StartAnimation(target.TokenAmount, target.TokenCurrency, gameObject.transform, animComplete, num2 == 0);
+			}
+		}
+	}
+
+	private void CollectAllCardFlyComplete()
+	{
+		collectAllFlyingCards--;
+		if (collectAllFlyingCards <= 0)
+		{
+			collectAllInProgress = false;
+			if (fakeHudButton != null)
+			{
+				fakeHudButton.HideCollect();
+			}
+			if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+			{
+				SingularityMonoBehaviour<AudioManager>.Instance.OnRadioCallDone();
+			}
+			bool enableHeroUnlockInMultiCardCall = GameManager.Instance.gameEconomyData.ConfigData.EnableHeroUnlockInMultiCardCall;
+			if (closeOnCurrencyAnimationComplete || !enableHeroUnlockInMultiCardCall)
+			{
+				StartCoroutine(DelayedClose(CloseWaitTime));
+			}
+		}
+	}
+
+	private void GetLootTokenReward(LootEntry entry, SelectedRewardType rewardType, out CurrencyType currencyType, out int amount)
+	{
+		currencyType = CurrencyType.None;
+		amount = 0;
+		if (entry == null)
+		{
+			return;
+		}
+		switch (rewardType)
+		{
+		case SelectedRewardType.HeroToken:
+			currencyType = entry.RewardedCurrency;
+			amount = entry.RewardedAmount;
+			break;
+		case SelectedRewardType.ClassToken:
+			if (entry.GeneratedSurvivor != null)
+			{
+				currencyType = SurvivorToken.GetClassAsCurrency(entry.GeneratedSurvivor.SurvivorClass);
+				amount = entry.GeneratedSurvivor.GetDemoteCashier().GetTotalCost(currencyType);
+			}
+			break;
+		}
+	}
+
+	public void OnClickSkipButton()
+	{
+		Helpers.GameObjectSetActive(skipButton, value: false);
+		AutoClickDone = true;
+		StartCoroutine(AutoClickEffect(AnimationsDelay));
 	}
 
 	private void OnSurvivorInfoOpen()
@@ -1122,6 +1354,7 @@ public class SelectSurvivorsPopup : HUDElement
 
 	private void PositionCards()
 	{
+		Helpers.GameObjectSetActive(skipButton, value: true);
 		if (CardsList != null && CardsList.Count > 0)
 		{
 			for (int i = 0; i < CardsList.Count; i++)
@@ -1307,6 +1540,7 @@ public class SelectSurvivorsPopup : HUDElement
 			ShowSelectionForAllCards();
 		}
 		DebugTWD.Log("All Cards Clicked", DebugType.Call);
+		Helpers.GameObjectSetActive(skipButton, value: false);
 		EventManager.NotifyClick("SearchOver");
 		if (SingularityMonoBehaviour<AudioManager>.Instance != null)
 		{

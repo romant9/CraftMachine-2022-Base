@@ -104,6 +104,29 @@ public class CombatTurnPanel : HUDElementFollowTarget
 	[Tooltip("Label for the current redact number.")]
 	public UILabel ThreatOverCounter;
 
+	[Tooltip("Container for the guild boss score.")]
+	public GameObject GuildBossScoreContainer;
+
+	[Tooltip("Label for the guild boss timer.")]
+	public UILabel GuildBossTimerLabel;
+
+	[Tooltip("Container for the guild boss score multiplier.")]
+	public UILabel GuildBossScoreMultiplierLabel;
+
+	[Tooltip("Container for the guild boss score.")]
+	public UILabel[] GuildBossScoreLabel;
+
+	[Tooltip("Duration for guild boss score rolling animation.")]
+	public float GuildBossScoreRollDuration = 0.6f;
+
+	private long previousGuildBossTimeInSeconds;
+
+	private int displayedGuildBossScore;
+
+	private WaveNotification guildBossTimerWarningNotification;
+
+	private bool guildBossTimerWarningShown;
+
 	private WaveNotification turnWarningNotification;
 
 	private List<GameObject> waveSizeIndicators = new List<GameObject>();
@@ -127,6 +150,8 @@ public class CombatTurnPanel : HUDElementFollowTarget
 	private bool isRemovingMonsterCloset;
 
 	private float dt;
+
+	public bool HasGuildBossUi => GuildBossTimerLabel != null;
 
 	public int WaveSizeIndicatorSize => waveSizeIndicators.Count;
 
@@ -209,7 +234,7 @@ public class CombatTurnPanel : HUDElementFollowTarget
 
 	public void AddToCloset(int count, int threatLevel)
 	{
-		if (!emptyingCloset)
+		if ((bool)WaveSpawnIndicatorNormal && !emptyingCloset)
 		{
 			if (maxClosetSize - waveSizeIndicators.Count > 0)
 			{
@@ -254,7 +279,7 @@ public class CombatTurnPanel : HUDElementFollowTarget
 
 	public void SetMonsterCloset(int count)
 	{
-		if (!emptyingCloset)
+		if (WaveSpawnIndicatorNormal != null && !emptyingCloset)
 		{
 			ClearWaveSpawnIndicators();
 			count = Math.Min(count, maxClosetSize);
@@ -392,14 +417,34 @@ public class CombatTurnPanel : HUDElementFollowTarget
 
 	public void SetMonsterClosetVisible(bool visible)
 	{
-		if (MonsterClosetContainer != null)
+		if (MonsterClosetContainer == null)
+		{
+			Debug.LogWarning("Couldn't set Monster Closet visibility: Container is NULL!");
+		}
+		else if (HasGuildBossUi)
+		{
+			bool value = (GameManager.Instance?.playerModel?.Combat)?.IsGuildBossPVEMission ?? false;
+			Helpers.GameObjectSetActive(WaveSpawnIndicatorContainer, value);
+		}
+		else
 		{
 			float y = (visible ? 0f : (0f - HiddenMonsterClosetHeight));
 			MonsterClosetContainer.transform.localPosition = new Vector3(0f, y, 0f);
 		}
-		else
+	}
+
+	public void ConfigureGuildBossModeContainers()
+	{
+		CombatModel combatModel = GameManager.Instance?.playerModel?.Combat;
+		if (combatModel != null)
 		{
-			Debug.LogWarning("Couldn't set Monster Closet visibility: Container is NULL!");
+			bool isGuildBossMission = combatModel.IsGuildBossMission;
+			bool isGuildBossPVEMission = combatModel.IsGuildBossPVEMission;
+			if (isGuildBossMission || isGuildBossPVEMission || combatModel.IsGuildBossPVPMission)
+			{
+				Helpers.GameObjectSetActive(GuildBossScoreContainer, isGuildBossMission);
+				Helpers.GameObjectSetActive(WaveSpawnIndicatorContainer, isGuildBossPVEMission);
+			}
 		}
 	}
 
@@ -430,12 +475,18 @@ public class CombatTurnPanel : HUDElementFollowTarget
 
 	private void SetMessage(string turnText, int spawnCount)
 	{
-		TurnCountBgSprite.color = TurnCounterDefaultColor;
+		if (TurnCountBgSprite != null)
+		{
+			TurnCountBgSprite.color = TurnCounterDefaultColor;
+		}
 	}
 
 	private void SetIncomingMessage(string turnText, int spawnCount)
 	{
-		TurnCountBgSprite.color = WaveIncomingWarningColor;
+		if (TurnCountBgSprite != null)
+		{
+			TurnCountBgSprite.color = WaveIncomingWarningColor;
+		}
 	}
 
 	private void SetSurvivorTurnContainer()
@@ -516,6 +567,188 @@ public class CombatTurnPanel : HUDElementFollowTarget
 		if (emptyEffectsPlayed >= waveSizeIndicators.Count)
 		{
 			emptyingCloset = false;
+		}
+	}
+
+	public void InitializeGuildBossUi(long maxTimeSeconds = 0L)
+	{
+		if (HasGuildBossUi)
+		{
+			ConfigureGuildBossModeContainers();
+			previousGuildBossTimeInSeconds = 0L;
+			guildBossTimerWarningShown = false;
+			if (guildBossTimerWarningNotification == null && CombatView.Instance != null)
+			{
+				guildBossTimerWarningNotification = CombatView.Instance.CombatHUD.CreateTimerNotificationIndicator();
+			}
+			SetCombatTimeLeft(maxTimeSeconds);
+			RefreshGuildBossScoreFromModel();
+			RefreshGuildBossScoreMultiplierFromModel();
+		}
+	}
+
+	public void RefreshGuildBossUiFromModel(bool animateScore = true)
+	{
+		if (HasGuildBossUi)
+		{
+			RefreshGuildBossScoreFromModel(animateScore);
+			RefreshGuildBossScoreMultiplierFromModel();
+		}
+	}
+
+	public void RefreshGuildBossScoreFromModel(bool animate = true)
+	{
+		if (HasGuildBossUi)
+		{
+			CombatModel combatModel = GameManager.Instance?.playerModel?.Combat;
+			if (combatModel != null && combatModel.IsGuildBossMission)
+			{
+				SetGuildBossScore((int)Math.Round(combatModel.GuildBossPoint), animate);
+			}
+		}
+	}
+
+	public void RefreshGuildBossScoreMultiplierFromModel()
+	{
+		if (!HasGuildBossUi)
+		{
+			return;
+		}
+		CombatModel combatModel = GameManager.Instance?.playerModel?.Combat;
+		if (combatModel == null || !combatModel.IsGuildBossMission)
+		{
+			UpdateGuildBossScoreMultiplier(null);
+			return;
+		}
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (worldBossModelManager == null)
+		{
+			UpdateGuildBossScoreMultiplier(null);
+			return;
+		}
+		double myTowerBBossScoreMultiplier = worldBossModelManager.GetMyTowerBBossScoreMultiplier();
+		UpdateGuildBossScoreMultiplier(FormatGuildBossScoreMultiplier(myTowerBBossScoreMultiplier));
+	}
+
+	private static string FormatGuildBossScoreMultiplier(double multiplier)
+	{
+		if (multiplier <= 0.0)
+		{
+			return string.Empty;
+		}
+		return "x" + (int)Math.Round(multiplier * 100.0) + "%";
+	}
+
+	public static string FormatGuildBossScoreMultiplierText(double multiplier)
+	{
+		return FormatGuildBossScoreMultiplier(multiplier);
+	}
+
+	public void SetCombatTimeLeft(long timeInSeconds)
+	{
+		if (!HasGuildBossUi)
+		{
+			return;
+		}
+		GuildBossTimerLabel.text = ((timeInSeconds > 0) ? Helpers.FormatTime(timeInSeconds * 1000) : ("0" + LocalizationManager.GetText("Generic.Time.SecondSmall")));
+		if (!guildBossTimerWarningShown && timeInSeconds <= 30)
+		{
+			guildBossTimerWarningShown = true;
+			if (guildBossTimerWarningNotification != null)
+			{
+				guildBossTimerWarningNotification.Reset();
+			}
+			if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+			{
+				SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("combat_ui/timer_warning");
+			}
+		}
+		if (timeInSeconds < previousGuildBossTimeInSeconds && SingularityMonoBehaviour<AudioManager>.Instance != null)
+		{
+			if (timeInSeconds <= 10)
+			{
+				SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("combat_ui/timer_tick");
+			}
+			if (timeInSeconds <= 3)
+			{
+				SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("combat_ui/timer_tick_warning");
+			}
+		}
+		previousGuildBossTimeInSeconds = timeInSeconds;
+	}
+
+	public void ResetGuildBossTimer()
+	{
+		if (HasGuildBossUi)
+		{
+			guildBossTimerWarningShown = false;
+			previousGuildBossTimeInSeconds = 0L;
+			if (SingularityMonoBehaviour<AudioManager>.Instance != null)
+			{
+				SingularityMonoBehaviour<AudioManager>.Instance.StopEvent("combat_ui/timer_warning");
+			}
+		}
+	}
+
+	public void UpdateGuildBossScoreMultiplier(string multiplierText)
+	{
+		if (!(GuildBossScoreMultiplierLabel == null))
+		{
+			GuildBossScoreMultiplierLabel.text = (string.IsNullOrEmpty(multiplierText) ? string.Empty : multiplierText);
+		}
+	}
+
+	public void SetGuildBossScore(int score, bool animate = true)
+	{
+		if (GuildBossScoreLabel == null || GuildBossScoreLabel.Length == 0)
+		{
+			return;
+		}
+		int targetScore = Mathf.Max(0, score);
+		int num = displayedGuildBossScore;
+		if (animate && num != targetScore)
+		{
+			UIRollingNumberUtil.AnimateTo(GuildBossScoreLabel, num, targetScore, GuildBossScoreRollDuration, delegate
+			{
+				displayedGuildBossScore = targetScore;
+			});
+		}
+		else
+		{
+			UIRollingNumberUtil.SetValue(GuildBossScoreLabel, targetScore);
+			displayedGuildBossScore = targetScore;
+		}
+	}
+
+	public void SetGuildBossScoreImmediate(int score)
+	{
+		SetGuildBossScore(score, animate: false);
+	}
+
+	public string GetGuildBossScoreMultiplierText()
+	{
+		if (!(GuildBossScoreMultiplierLabel != null))
+		{
+			return string.Empty;
+		}
+		return GuildBossScoreMultiplierLabel.text;
+	}
+
+	public void ShowGuildBossEndInfoPopup()
+	{
+		GuildBossEndInfoPopup guildBossEndInfoPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.GuildBossEndInfoPopup) as GuildBossEndInfoPopup;
+		if (guildBossEndInfoPopup != null)
+		{
+			guildBossEndInfoPopup.Open();
+		}
+	}
+
+	public void ShowGuildBossScoreInfoPopup()
+	{
+		GuildBossScoreInfoPopup guildBossScoreInfoPopup = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.GuildBossScoreInfoPopup) as GuildBossScoreInfoPopup;
+		if (guildBossScoreInfoPopup != null)
+		{
+			guildBossScoreInfoPopup.Open();
 		}
 	}
 }

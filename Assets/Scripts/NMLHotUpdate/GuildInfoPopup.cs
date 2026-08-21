@@ -128,7 +128,7 @@ public class GuildInfoPopup : HUDElement
 		if (GameManager.Instance.IsWriteData)
 		{
 			GameManager.WriteDataToDisk("guild-" + guildModel.Id, message);
-        }
+		}
 		GuildModelWrapper guildModelWrapper = new GuildModelWrapper(guildModel);
 		GuildInfoPopup obj = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.SocialGuildInfoPopup) as GuildInfoPopup;
 		obj.GuildInfoPopupType = GuildPopupType.GuildSearch;
@@ -139,6 +139,7 @@ public class GuildInfoPopup : HUDElement
 	{
 		base.OpenForModel(model);
 		defaultPopup.GetComponent<UIPanel>().depth = DefaultPopup.GuildInfoPopupDepth;
+		defaultPopup.AllowNormalClosing(active: false);
 		if (IsLoadDataManager)
 		{
 			defaultPopup.transform.localScale = Vector3.one * 1.25f;
@@ -494,7 +495,10 @@ public class GuildInfoPopup : HUDElement
 	{
 		if (GameManager.Instance.GuildManager.CheckCanLeaveGuild())
 		{
-			GameManager.Instance.GuildManager.LeaveGuild();
+			GuildWorldBossMembershipLockUiGuard.ExecuteIfAllowed(delegate
+			{
+				GameManager.Instance.GuildManager.LeaveGuild();
+			});
 		}
 		else
 		{

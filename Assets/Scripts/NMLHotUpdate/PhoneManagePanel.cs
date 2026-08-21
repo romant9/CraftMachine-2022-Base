@@ -45,6 +45,9 @@ public class PhoneManagePanel : MonoBehaviourExtended
 	[Tooltip("The tint color for label when no more slots")]
 	private Color unavailableCurrencyColor = new Color(0.511f, 0.129f, 0.027f, 1f);
 
+	[SerializeField]
+	public UIButtonExtended ButtonCollectAll;
+
 	private Vector2 BgInitSize = Vector2.zero;
 
 	private Tweener BgSizeTweener = new Tweener();
@@ -140,6 +143,9 @@ public class PhoneManagePanel : MonoBehaviourExtended
 			}
 			HelpersUI.SetContentToLabel(RerollCountLabel, content);
 		}
+		PhoneCallModel phoneCallModel = ((GameManager.Instance.playerModel != null) ? GameManager.Instance.playerModel.PhoneCall : null);
+		bool value = RerollsLeft <= 0 && phoneCallModel != null && phoneCallModel.CanClaimEntireMultiLootsList();
+		Helpers.GameObjectSetActive(ButtonCollectAll, value);
 		if (Label != null)
 		{
 			if (SlotsFull)
@@ -206,6 +212,14 @@ public class PhoneManagePanel : MonoBehaviourExtended
 		if (BuySlotsButton != null)
 		{
 			BuySlotsButton.SetClickCallback(callback);
+		}
+	}
+
+	public void SetClickCollectAllCallback(UIButtonExtended.OnClickCallback callback)
+	{
+		if (ButtonCollectAll != null)
+		{
+			ButtonCollectAll.SetClickCallback(callback);
 		}
 	}
 

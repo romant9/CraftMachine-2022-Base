@@ -280,6 +280,8 @@ namespace TWDModel
 
 		public int ChargeAttackWithFreeShootingTriggeredCount { get; set; }
 
+		public int FightBackTimesThisRound { get; set; }
+
 		public bool freeAttackUsed { get; set; }
 
 		public int BetterTogetherMultiplier { get; set; }
@@ -437,6 +439,7 @@ namespace TWDModel
 			PassByAttackedOnMove = actor.PassByAttackedOnMove;
 			GivenAdditionalAttacks = actor.GivenAdditionalAttacks;
 			ChargeAttackWithFreeShootingTriggeredCount = actor.ChargeAttackWithFreeShootingTriggeredCount;
+			FightBackTimesThisRound = actor.FightBackTimesThisRound;
 			freeAttackUsed = actor.freeAttackUsed;
 			BetterTogetherMultiplier = actor.BetterTogetherMultiplier;
 			OneTurnCriticalHit = actor.OneTurnCriticalHit;
@@ -654,6 +657,7 @@ namespace TWDModel
 			Actor.PassByAttackedOnMove = PassByAttackedOnMove;
 			Actor.GivenAdditionalAttacks = GivenAdditionalAttacks;
 			Actor.ChargeAttackWithFreeShootingTriggeredCount = ChargeAttackWithFreeShootingTriggeredCount;
+			Actor.FightBackTimesThisRound = FightBackTimesThisRound;
 			Actor.freeAttackUsed = freeAttackUsed;
 			Actor.BetterTogetherMultiplier = BetterTogetherMultiplier;
 			Actor.OneTurnCriticalHit = OneTurnCriticalHit;
@@ -993,6 +997,14 @@ namespace TWDModel
 				{
 					list.Add(new AbilityRangeTridentSkill(skill12));
 				}
+				if (item is FortificationsSkill skill13)
+				{
+					list.Add(new FortificationsSkill(skill13));
+				}
+				if (item is FortificationsRemoveSkill skill14)
+				{
+					list.Add(new FortificationsRemoveSkill(skill14));
+				}
 			}
 			return list;
 		}
@@ -1096,6 +1108,10 @@ namespace TWDModel
 				if (listEffect is BloodMarkTimedEffect other)
 				{
 					modelList.Add(new BloodMarkTimedEffect(other));
+				}
+				if (listEffect is FortificationsTimedEffect other2)
+				{
+					modelList.Add(new FortificationsTimedEffect(other2));
 				}
 			}
 			return modelList;

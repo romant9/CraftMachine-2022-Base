@@ -510,10 +510,17 @@ public class ActorMoveInputHandler : PlayerInputHandler
 							ActorModel actorModel = list[num];
 							if (actorModel.IsVisibleToSurvivors)
 							{
-								highlightCoordinates.Add(actorModel.GridCoordinate);
-								if (mouseCoordinate == actorModel.GridCoordinate)
+								GridCoordinate item = actorModel.GridCoordinate;
+								bool flag10 = mouseCoordinate == actorModel.GridCoordinate;
+								if (actorModel.IsMultiCell)
 								{
-									highlightColors.Add(Color.red);
+									flag10 = actorModel.GetOccupiedCells()?.Contains(mouseCoordinate) ?? false;
+									item = (flag10 ? mouseCoordinate : ((!(actorModel is TankActorModel tankActorModel)) ? actorModel.GetClosestOccupiedCell(controlledActor.GridCoordinate) : tankActorModel.GetVisualCenterCell()));
+								}
+								highlightCoordinates.Add(item);
+								if (flag10)
+								{
+									highlightColors.Add(actorModel.IsMultiCell ? Color.green : Color.red);
 									highlightIndices.Add(1);
 								}
 								else
@@ -587,10 +594,19 @@ public class ActorMoveInputHandler : PlayerInputHandler
 						}
 						if (selectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.Circle || flag)
 						{
-							float radius3 = (float)selectedAbility.Definition.AbilityTargetAreaRadius * (float)base.Combat.Grid.CellSize.X + (float)base.Combat.Grid.CellSize.X / 2f;
+							float radius3 = (float)base.Combat.AbilityManager.GetDamageAreaBlockEffectiveAreaRadius(selectedAbility, mouseCoordinate, (int)selectedAbility.Definition.AbilityTargetAreaRadius) * (float)base.Combat.Grid.CellSize.X + (float)base.Combat.Grid.CellSize.X / 2f;
 							abilityRangeVisualizer.SetCircle(vector2, radius3);
 							CheckForPointBlankShot(list, vector2, vector, selectedAbility.Definition);
 							CheckForGridAttackTargetHighlight(selectedAbility, mouseCoordinate);
+							ClearMoveActionIndicator();
+						}
+						else if (selectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.Diamond)
+						{
+							int damageAreaBlockEffectiveAreaRadius = base.Combat.AbilityManager.GetDamageAreaBlockEffectiveAreaRadius(selectedAbility, mouseCoordinate, (int)selectedAbility.Definition.AbilityTargetAreaRadius);
+							List<GridCoordinate> diamondCoordinates = base.Combat.GetDiamondCoordinates(mouseCoordinate, damageAreaBlockEffectiveAreaRadius);
+							Color fillColor = ((abilityRangeVisualizer != null) ? abilityRangeVisualizer.GetFillColor() : Color.green);
+							base.GridView.HighlightCoordinatesWithFill(diamondCoordinates, fillColor);
+							CheckForPointBlankShot(list, vector2, vector, selectedAbility.Definition);
 							ClearMoveActionIndicator();
 						}
 						else if (selectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.LineSeparated || selectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.Line)
@@ -598,7 +614,7 @@ public class ActorMoveInputHandler : PlayerInputHandler
 							Vector3 vector3 = vector2 - vector;
 							Vector3 normalized = vector3.normalized;
 							float num2 = vector3.magnitude + (float)base.Combat.Grid.CellSize.X / 2f;
-							Vector3 end = vector + normalized * num2;
+							Vector3 extendedTarget = vector + normalized * num2;
 							FixedPoint value2 = 0.4000000059604645;
 							if (!selectedAbility.IsConsumableAbility)
 							{
@@ -608,9 +624,10 @@ public class ActorMoveInputHandler : PlayerInputHandler
 							{
 								base.Combat.AbilityManager.VisitParameter("AbilityModifierFocusModeAttackWidth", ref value2, controlledActor);
 							}
-							if (!TryDrawTridentSeparatedAttackLines(controlledActor, selectedAbility, vector, vector2, (float)value2))
+							bool canBeBlocked = selectedAbility.Definition.CanBeBlocked;
+							if (!TryDrawTridentSeparatedAttackLines(controlledActor, selectedAbility, vector, vector2, (float)value2, canBeBlocked))
 							{
-								abilityRangeVisualizer.SetLine(vector, end, (float)value2);
+								DrawAbilityAimLine(abilityRangeVisualizer, controlledActor, vector, extendedTarget, (float)value2, canBeBlocked);
 							}
 							CheckForPointBlankShot(list, vector2, vector, selectedAbility.Definition);
 							CheckForDamageFalloff(vector2, vector, selectedAbility);
@@ -636,12 +653,24 @@ public class ActorMoveInputHandler : PlayerInputHandler
 							normalized2.x = x;
 							normalized2.z = z;
 							FixedPoint fixedPoint = range * base.GridView.Model.CellSize.X + base.Combat.Grid.CellSize.X / 2.0;
-							Vector3 end2 = vector + normalized2 * (float)fixedPoint;
-							abilityRangeVisualizer.SetSector(vector, end2, (float)value3 + 25f);
+							Vector3 end = vector + normalized2 * (float)fixedPoint;
+							bool canBeBlocked2 = selectedAbility.Definition.CanBeBlocked;
+							GridCoordinate coordinate = base.Combat.Grid.GetCoordinate(vector.ToFixedVec3());
+							List<Vector3> list2 = new List<Vector3>();
+							CollectAimTrajectoryBlockCenters(controlledActor, coordinate, list, canBeBlocked2, list2);
+							float sectorAngle = (float)value3 + 25f;
+							if (list2.Count > 0)
+							{
+								abilityRangeVisualizer.SetBrokenSector(vector, end, sectorAngle, list2, (float)base.Combat.Grid.CellSize.X * 0.5f);
+							}
+							else
+							{
+								abilityRangeVisualizer.SetSector(vector, end, sectorAngle);
+							}
 						}
 						else
 						{
-							bool canBeBlocked = selectedAbility.Definition.CanBeBlocked;
+							bool canBeBlocked3 = selectedAbility.Definition.CanBeBlocked;
 							Vector3 normalized3 = (vector2 - vector).normalized;
 							FixedPoint range2 = selectedAbility.Definition.AbilityRange;
 							if (!selectedAbility.IsConsumableAbility)
@@ -676,33 +705,19 @@ public class ActorMoveInputHandler : PlayerInputHandler
 								{
 									base.Combat.AbilityManager.VisitParameter("AbilityModifierFocusModeAttackWidth", ref value5, controlledActor);
 								}
-								if (!TryDrawTridentSeparatedAttackLines(controlledActor, selectedAbility, vector, vector2, (float)value5))
+								if (!TryDrawTridentSeparatedAttackLines(controlledActor, selectedAbility, vector, vector2, (float)value5, canBeBlocked3))
 								{
-									GridCoordinate coordinate = base.Combat.Grid.GetCoordinate(vector.ToFixedVec3());
-									GridCoordinate firstNonPenetrableCoordinate = base.Combat.GetFirstNonPenetrableCoordinate(coordinate, base.Combat.Grid.GetCoordinate(vector4.ToFixedVec3()));
-									if (canBeBlocked && firstNonPenetrableCoordinate != GridCoordinate.Invalid)
-									{
-										abilityRangeVisualizer.SetBrokenLine(vector, vector4, base.Combat.Grid.GetPosition(firstNonPenetrableCoordinate).ToVector3(), (float)value5);
-									}
-									else
-									{
-										abilityRangeVisualizer.SetLine(vector, vector4, (float)value5);
-									}
+									DrawAbilityAimLine(abilityRangeVisualizer, controlledActor, vector, vector4, (float)value5, canBeBlocked3);
 								}
 							}
 							else
 							{
-								List<Vector3> list2 = new List<Vector3>();
-								foreach (ActorModel item in list)
+								GridCoordinate coordinate2 = base.Combat.Grid.GetCoordinate(vector.ToFixedVec3());
+								List<Vector3> list3 = new List<Vector3>();
+								CollectAimTrajectoryBlockCenters(controlledActor, coordinate2, list, canBeBlocked3, list3);
+								if (list3.Count > 0)
 								{
-									if (item.GetTraitWithTag("Impenetrable") != null)
-									{
-										list2.Add(base.Combat.Grid.GetPosition(item.GridCoordinate).ToVector3());
-									}
-								}
-								if (canBeBlocked && list2.Count > 0)
-								{
-									abilityRangeVisualizer.SetBrokenSector(vector, vector4, (float)value4, list2, (float)base.Combat.Grid.CellSize.X * 0.5f);
+									abilityRangeVisualizer.SetBrokenSector(vector, vector4, (float)value4, list3, (float)base.Combat.Grid.CellSize.X * 0.5f);
 								}
 								else
 								{
@@ -754,10 +769,10 @@ public class ActorMoveInputHandler : PlayerInputHandler
 				}
 				ClearAbilityAttackRangeVisualizer();
 			}
-			bool flag10 = false;
+			bool flag11 = false;
 			if (path != null && path.IsValid)
 			{
-				flag10 = path.MoveDistance > controlledActor.MoveRange;
+				flag11 = path.MoveDistance > controlledActor.MoveRange;
 			}
 			GridPath gridPath3 = path;
 			if (path == null || !path.IsValid)
@@ -801,7 +816,8 @@ public class ActorMoveInputHandler : PlayerInputHandler
 				else
 				{
 					ActorModel occupier2 = base.Combat.GetOccupier(targetCoordinate);
-					if (occupier2 != null && controlledActor.IsEnemy(occupier2) && base.Combat.IsGridCellVisible(controlledActor.GridCoordinate, targetCoordinate))
+					GridCoordinate to2 = base.Combat.ResolveMultiCellTargetCell(controlledActor.GridCoordinate, targetCoordinate);
+					if (occupier2 != null && controlledActor.IsEnemy(occupier2) && base.Combat.IsGridCellVisible(controlledActor.GridCoordinate, to2))
 					{
 						CheckSurvivorRiotShieldHerdTrait(targetCoordinate);
 						if (controlledActor.SelectedEquipment.Definition.Category == EquipmentCategory.MeleeWeapon)
@@ -851,23 +867,23 @@ public class ActorMoveInputHandler : PlayerInputHandler
 				}
 				if (mouseCoordinate != controlledActor.GridCoordinate)
 				{
-					int apCount = ((!controlledActor.MoveCompleted && !flag10) ? 1 : 0);
-					GridCoordinate coordinate2 = mouseCoordinate;
+					int apCount = ((!controlledActor.MoveCompleted && !flag11) ? 1 : 0);
+					GridCoordinate coordinate3 = mouseCoordinate;
 					if (flag3 && path != null)
 					{
 						_ = path.End;
 						if (path.End.IsValid)
 						{
-							coordinate2 = path.End;
+							coordinate3 = path.End;
 						}
 					}
 					if (base.Combat.GetCoveredDirections(mouseCoordinate) == 0)
 					{
-						CombatView.Instance.CombatHUD.SetActionMoveIndicator(coordinate2, flag10 ? MoveActionType.MoveSprint : MoveActionType.Move, 0, apCount, GridCoordinate.Invalid);
+						CombatView.Instance.CombatHUD.SetActionMoveIndicator(coordinate3, flag11 ? MoveActionType.MoveSprint : MoveActionType.Move, 0, apCount, GridCoordinate.Invalid);
 					}
 					else
 					{
-						CombatView.Instance.CombatHUD.SetActionMoveIndicator(coordinate2, MoveActionType.Cover, 0, apCount, GridCoordinate.Invalid);
+						CombatView.Instance.CombatHUD.SetActionMoveIndicator(coordinate3, MoveActionType.Cover, 0, apCount, GridCoordinate.Invalid);
 					}
 				}
 				else
@@ -875,7 +891,7 @@ public class ActorMoveInputHandler : PlayerInputHandler
 					CombatView.Instance.CombatHUD.HideMoveActionIndicator();
 				}
 			}
-			NotifyDrawnPathChanged(flag10);
+			NotifyDrawnPathChanged(flag11);
 		}
 		if (path != null && path.IsValid)
 		{
@@ -1411,6 +1427,7 @@ public class ActorMoveInputHandler : PlayerInputHandler
 		case AbilityTargetAreaType.Circle:
 		case AbilityTargetAreaType.Line:
 		case AbilityTargetAreaType.LineMax:
+		case AbilityTargetAreaType.Diamond:
 		case AbilityTargetAreaType.LineSeparated:
 			pointBlankShotVisualiser.SetLine(movePosition, end, 0.8f);
 			break;
@@ -1774,7 +1791,7 @@ public class ActorMoveInputHandler : PlayerInputHandler
 		}
 	}
 
-	private bool TryDrawTridentSeparatedAttackLines(ActorModel source, AbilityModel ability, Vector3 movePosition, Vector3 aimWorldPosition, float lineWidth)
+	private bool TryDrawTridentSeparatedAttackLines(ActorModel source, AbilityModel ability, Vector3 movePosition, Vector3 aimWorldPosition, float lineWidth, bool abilityCanBeBlocked)
 	{
 		if (!AbilityRangeTridentSkill.ShouldApplySeparatedAttackLines(source, ability) || abilityRangeVisualizer == null)
 		{
@@ -1804,13 +1821,48 @@ public class ActorMoveInputHandler : PlayerInputHandler
 			return false;
 		}
 		float extra = (float)base.Combat.Grid.CellSize.X / 2f;
-		Vector3 end = ExtendWorldLineEnd(movePosition, middleEnd.ToVector3(), extra);
-		Vector3 end2 = ExtendWorldLineEnd(movePosition, leftEnd.ToVector3(), extra);
-		Vector3 end3 = ExtendWorldLineEnd(movePosition, rightEnd.ToVector3(), extra);
-		abilityRangeVisualizer.SetLine(movePosition, end, lineWidth);
-		tridentLeftLineVisualizer.SetLine(movePosition, end2, lineWidth);
-		tridentRightLineVisualizer.SetLine(movePosition, end3, lineWidth);
+		Vector3 extendedTarget = ExtendWorldLineEnd(movePosition, middleEnd.ToVector3(), extra);
+		Vector3 extendedTarget2 = ExtendWorldLineEnd(movePosition, leftEnd.ToVector3(), extra);
+		Vector3 extendedTarget3 = ExtendWorldLineEnd(movePosition, rightEnd.ToVector3(), extra);
+		DrawAbilityAimLine(abilityRangeVisualizer, source, movePosition, extendedTarget, lineWidth, abilityCanBeBlocked);
+		DrawAbilityAimLine(tridentLeftLineVisualizer, source, movePosition, extendedTarget2, lineWidth, abilityCanBeBlocked);
+		DrawAbilityAimLine(tridentRightLineVisualizer, source, movePosition, extendedTarget3, lineWidth, abilityCanBeBlocked);
 		return true;
+	}
+
+	private void DrawAbilityAimLine(WeaponRangeVisualization visualizer, ActorModel source, Vector3 movePosition, Vector3 extendedTarget, float lineWidth, bool abilityCanBeBlocked)
+	{
+		if (!(visualizer == null))
+		{
+			GridCoordinate coordinate = base.Combat.Grid.GetCoordinate(movePosition.ToFixedVec3());
+			GridCoordinate coordinate2 = base.Combat.Grid.GetCoordinate(extendedTarget.ToFixedVec3());
+			GridCoordinate firstAimTrajectoryBlockCoordinate = base.Combat.GetFirstAimTrajectoryBlockCoordinate(coordinate, coordinate2, abilityCanBeBlocked, source);
+			if (firstAimTrajectoryBlockCoordinate != GridCoordinate.Invalid)
+			{
+				visualizer.SetBrokenLine(movePosition, extendedTarget, base.Combat.Grid.GetPosition(firstAimTrajectoryBlockCoordinate).ToVector3(), lineWidth);
+			}
+			else
+			{
+				visualizer.SetLine(movePosition, extendedTarget, lineWidth);
+			}
+		}
+	}
+
+	private void CollectAimTrajectoryBlockCenters(ActorModel source, GridCoordinate shooterCoordinate, List<ActorModel> actorsAffected, bool abilityCanBeBlocked, List<Vector3> blockedCenters)
+	{
+		if (actorsAffected == null || blockedCenters == null)
+		{
+			return;
+		}
+		for (int i = 0; i < actorsAffected.Count; i++)
+		{
+			ActorModel actorModel = actorsAffected[i];
+			if (actorModel != null && actorModel != source && ((actorModel.HasDamageAreaBlock && actorModel.IsEnemy(source)) || (abilityCanBeBlocked && actorModel.IsImpenetrable)))
+			{
+				GridCoordinate coordinate = (actorModel.IsMultiCell ? actorModel.GetClosestOccupiedCell(shooterCoordinate) : actorModel.GridCoordinate);
+				blockedCenters.Add(base.Combat.Grid.GetPosition(coordinate).ToVector3());
+			}
+		}
 	}
 
 	private static Vector3 ExtendWorldLineEnd(Vector3 start, Vector3 end, float extra)
@@ -1832,13 +1884,11 @@ public class ActorMoveInputHandler : PlayerInputHandler
 		{
 			if (tridentLeftLineVisualizer == null)
 			{
-				tridentLeftLineVisualizer = Object.Instantiate(weaponRangeVisualization.gameObject).GetComponent<WeaponRangeVisualization>();
-				tridentLeftLineVisualizer.gameObject.name = "TridentLeftLineVisualizer";
+				tridentLeftLineVisualizer = CreateTridentSideLineVisualizer(weaponRangeVisualization, "TridentLeftLineVisualizer");
 			}
 			if (tridentRightLineVisualizer == null)
 			{
-				tridentRightLineVisualizer = Object.Instantiate(weaponRangeVisualization.gameObject).GetComponent<WeaponRangeVisualization>();
-				tridentRightLineVisualizer.gameObject.name = "TridentRightLineVisualizer";
+				tridentRightLineVisualizer = CreateTridentSideLineVisualizer(weaponRangeVisualization, "TridentRightLineVisualizer");
 			}
 			tridentLeftLineVisualizer.transform.parent = actorView.transform;
 			tridentLeftLineVisualizer.transform.localPosition = new Vector3(0f, 0f, 0f);
@@ -1847,6 +1897,18 @@ public class ActorMoveInputHandler : PlayerInputHandler
 			tridentRightLineVisualizer.transform.localPosition = new Vector3(0f, 0f, 0f);
 			tridentRightLineVisualizer.SetPointBlankIndicator();
 		}
+	}
+
+	private WeaponRangeVisualization CreateTridentSideLineVisualizer(WeaponRangeVisualization template, string name)
+	{
+		WeaponRangeVisualization component = Object.Instantiate(template.gameObject).GetComponent<WeaponRangeVisualization>();
+		component.gameObject.name = name;
+		component.transform.parent = actorView.transform;
+		component.transform.localPosition = Vector3.zero;
+		component.transform.localScale = Vector3.one;
+		component.transform.rotation = Quaternion.identity;
+		component.Clear();
+		return component;
 	}
 
 	private void CheckSuppressTrait(GridPath path, GridCoordinate mouseCoordinate)

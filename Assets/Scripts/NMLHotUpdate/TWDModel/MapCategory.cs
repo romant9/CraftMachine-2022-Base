@@ -11,6 +11,9 @@ namespace TWDModel
 		Survival = 6,
 		GuildBattle = 7,
 		Endless = 8,
-		ApocalypticChallenge = 9
+		ApocalypticChallenge = 9,
+		GuildBoss = 10,
+		GuildBossPVE = 11,
+		GuildBossPVP = 12
 	}
 }

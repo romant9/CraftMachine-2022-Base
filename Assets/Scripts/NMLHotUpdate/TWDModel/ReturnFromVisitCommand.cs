@@ -52,6 +52,10 @@ namespace TWDModel
 			{
 				tWDModelManager.Player.GvGSeasonModelPlayer.GuildWarModelPlayer.GuildBattleModel.ReturnFromCombat();
 			}
+			if (combat != null && combat.IsWorldBossMission)
+			{
+				tWDModelManager.Player.WorldBossModelManager?.ClearAttackTarget();
+			}
 			if (!OfflineManager.IsLoadDataManager)
 			{
 				if ((combat != null && combat.IsPVPMission) || combat.IsFakePVPMission)

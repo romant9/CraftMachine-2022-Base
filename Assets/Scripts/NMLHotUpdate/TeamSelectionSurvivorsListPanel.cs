@@ -141,6 +141,7 @@ public class TeamSelectionSurvivorsListPanel : SurvivorsListPanel
 				}
 			}
 			component.ShowInTeamIndicator(txt);
+			component.TeamSelectionSurvivorType = SurvivorType;
 			component.IsSurvivalMode = SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival;
 			if (component.IsSurvivalMode)
 			{
@@ -186,6 +187,7 @@ public class TeamSelectionSurvivorsListPanel : SurvivorsListPanel
 		GameObject obj = base.CreateCard(item);
 		SurvivorCard component = obj.GetComponent<SurvivorCard>();
 		component.Type = SurvivorCard.CardType.TeamSelect;
+		component.TeamSelectionSurvivorType = SurvivorType;
 		if (OfflineManager.IsLoadDataManager) component.IsProtector = true;
 		component.IsSurvivalMode = SurvivorType == SurvivorContainerModel.SurvivorType.CombatSurvival;
 		component.IsEndlessModeExpertActor = EndlessModeHelpers.IsSurvivorAvailableForCombat(item, mapMissionModel) && mapMissionModel != null && mapMissionModel.IsEndlessMission;

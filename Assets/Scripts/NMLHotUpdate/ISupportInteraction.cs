@@ -18,4 +18,6 @@ public interface ISupportInteraction
 	SupportTargetsMessage NotExecutableMessage { get; }
 
 	IEnumerable<ActorModel> GetTargets(GridCoordinate target);
+
+	FixedPoint? GetPreviewAreaRadius(GridCoordinate target);
 }

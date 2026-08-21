@@ -137,7 +137,7 @@ namespace TWDModel
 
 		public void AddCharge(int amount)
 		{
-			if (amount != 0)
+			if (IsActive && amount != 0)
 			{
 				int currentCharge = CurrentCharge;
 				CurrentCharge += amount;
@@ -268,6 +268,7 @@ namespace TWDModel
 			case AbilityTargetAreaType.Circle:
 			case AbilityTargetAreaType.ConeLeft:
 			case AbilityTargetAreaType.ConeRight:
+			case AbilityTargetAreaType.Diamond:
 				return false;
 			default:
 				return ability.Definition.AbilityTargetAreaAngle <= 1L;

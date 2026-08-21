@@ -56,9 +56,22 @@ namespace TWDModel.SqEquipmentRemold
 					SPTraitsRemoldDefinitions sPTraitsRemodeDefinition2 = tWDModelManager.Player.gameEconomyData.GetSPTraitsRemodeDefinition(text);
 					if (sPTraitsRemodeDefinition2.PassiveTraits != null && sPTraitsRemodeDefinition2.PassiveTraits.Count > 0)
 					{
-						foreach (string passiveTrait2 in sPTraitsRemodeDefinition2.PassiveTraits)
+						if (sPTraitsRemodeDefinition2?.EquipType != null && sPTraitsRemodeDefinition2.EquipType.Count > 0)
 						{
-							model.ApplyModSkillPassiveTraitToOwner(passiveTrait2);
+							if (sPTraitsRemodeDefinition2.EquipType.Contains(model.Definition.Type.ToString()))
+							{
+								foreach (string passiveTrait2 in sPTraitsRemodeDefinition2.PassiveTraits)
+								{
+									model.ApplyModSkillPassiveTraitToOwner(passiveTrait2);
+								}
+							}
+						}
+						else
+						{
+							foreach (string passiveTrait3 in sPTraitsRemodeDefinition2.PassiveTraits)
+							{
+								model.ApplyModSkillPassiveTraitToOwner(passiveTrait3);
+							}
 						}
 					}
 					return new NGModelCommandRespond(this, TWDModelResult.OK);

@@ -28,5 +28,15 @@ namespace TWDModel
 		public int EndlessExpertHealth;
 
 		public int EndlessExpertDamage;
+
+		public bool SegmentedHP;
+
+		public int HPBarQuantity;
+
+		public int GuildBossHP;
+
+		public int GuildBossDamage;
+
+		public int GuildBossDefense;
 	}
 }

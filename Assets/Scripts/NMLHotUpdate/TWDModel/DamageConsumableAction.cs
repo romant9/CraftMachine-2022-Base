@@ -26,6 +26,7 @@ namespace TWDModel
 		public override void DealDamage(ModelManager manager)
 		{
 			bool isDead = base.TargetActor.IsDead;
+			TWDModelManager tWDModelManager = manager as TWDModelManager;
 			if (base.TargetActor.ShieldHitPoints <= 0)
 			{
 				base.HealthAfterDamage = base.TargetActor.Hitpoints - base.FinalDamage;
@@ -37,17 +38,16 @@ namespace TWDModel
 			base.LowestHpBeforeDmg = base.TargetActor.MinHitpoints;
 			if (!base.SavedFromDeath)
 			{
-				base.TargetActor.DealDamage(base.FinalDamage, base.DamagerActor, base.DamageType);
+				DealDamageAfterPreHPDeduction(manager);
 			}
 			base.LowestHpAfterDmg = base.TargetActor.MinHitpoints;
 			if (isDead)
 			{
 				return;
 			}
-			ComputeChargePoint(manager as TWDModelManager);
-			if ((manager as TWDModelManager).GameEconomyData.GetFeature("ChainsawThreatFix").Enabled && base.DamagerActor != null)
+			ComputeChargePoint(tWDModelManager);
+			if (tWDModelManager.GameEconomyData.GetFeature("ChainsawThreatFix").Enabled && base.DamagerActor != null)
 			{
-				TWDModelManager tWDModelManager = manager as TWDModelManager;
 				CombatModel combatModel = tWDModelManager.CombatModel;
 				if (base.DealDamagePostAbility || base.IsFollowThrough)
 				{
@@ -65,6 +65,7 @@ namespace TWDModel
 					combatModel.NotifyChange("EndlessModeScoreChanged");
 				}
 			}
+			AddGuildBossDamageAndPoint(tWDModelManager);
 		}
 	}
 }

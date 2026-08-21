@@ -311,6 +311,14 @@ namespace TWDModel
 			}
 		}
 
+		public void Jumpingshot(ActorModel source, ActorModel target)
+		{
+			if (CurrentActionLog != null && CurrentActionLog.CurrentAbilityLog != null)
+			{
+				CurrentActionLog.CurrentAbilityLog.Jumpingshot(source, target);
+			}
+		}
+
 		public void SecondChance(ActorModel source, ActorModel target)
 		{
 			if (CurrentActionLog != null && CurrentActionLog.CurrentAbilityLog != null)

@@ -4,7 +4,10 @@ using UnityEngine;
 public class ReturnRewardCard : MonoBehaviour
 {
 	[SerializeField]
-	private UISprite background;
+	private GameObject rewardGo;
+
+	[SerializeField]
+	private UISprite rewardIcon;
 
 	[SerializeField]
 	private UILabel itemNumLabel;
@@ -20,6 +23,12 @@ public class ReturnRewardCard : MonoBehaviour
 
 	[SerializeField]
 	private UIButton button;
+
+	[SerializeField]
+	private EquipmentButton rewardEquip;
+
+	[SerializeField]
+	private ReturnLoginShopRewardModSkillItem rewardModSkill;
 
 	public ReturnLoginDayItemModel Item { get; private set; }
 
@@ -40,10 +49,12 @@ public class ReturnRewardCard : MonoBehaviour
 		{
 			HelpersUI.SetContentToLabel(dayLabel, LocalizationManager.GetText("GvG.Hub.Calendar.SelectedDay{day}", Item.Day));
 			IReward primaryReward = GetPrimaryReward();
+			ReturnLoginShopPanel.Apply(primaryReward, rewardIcon, rewardEquip, rewardModSkill);
+			Helpers.GameObjectSetActive(rewardGo, rewardIcon.gameObject.activeSelf);
 			if (primaryReward != null)
 			{
-				HelpersGfx.GetIconNameForIReward(primaryReward, out var spriteName, null, null, null);
-				HelpersUI.SetSprite(background, spriteName);
+				int numsForIReward = Helpers.GetNumsForIReward(primaryReward);
+				HelpersUI.SetContentToLabel(itemNumLabel, numsForIReward.ToString());
 			}
 			bool haveClaimed = Item.HaveClaimed;
 			bool flag = Item.RewardStatus == ReturnLoginRewardStatus.ReadyToClaim;
@@ -59,7 +70,7 @@ public class ReturnRewardCard : MonoBehaviour
 			SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("global/reward_claim");
 			if (Helpers.ExecuteCommand(new ClaimReturnLoginRewardCommand(Item.Day)) == TWDModelResult.OK)
 			{
-				BuildingsHUD.Get()?.CreateCollectAnim(Item.RewardEntries, base.gameObject);
+				ReturnLoginShopPanel.ShowRewardPopup(Item.RewardEntries);
 				UIEvent.Send("ReturnLoginSevenDayClaimEvent", Item.Day);
 			}
 		}

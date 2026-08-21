@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BaseModel;
 
@@ -46,6 +47,44 @@ namespace TWDModel
 		public bool BodyShot { get; private set; }
 
 		public bool Dodged { get; set; }
+
+		public bool Jumpingshot { get; set; }
+
+		public bool IsFullyAvoided
+		{
+			get
+			{
+				if (!Jumpingshot)
+				{
+					if (Dodged)
+					{
+						return !Critical;
+					}
+					return false;
+				}
+				return true;
+			}
+		}
+
+		public bool ShouldApplyHitEffects
+		{
+			get
+			{
+				if (!Jumpingshot)
+				{
+					if (Dodged)
+					{
+						if (Dodged)
+						{
+							return Critical;
+						}
+						return false;
+					}
+					return true;
+				}
+				return false;
+			}
+		}
 
 		public bool DodgedShot { get; set; }
 
@@ -153,6 +192,23 @@ namespace TWDModel
 			}
 		}
 
+		protected void DealDamageAfterPreHPDeduction(ModelManager manager)
+		{
+			PreHPDeductionAction preHPDeductionAction = new PreHPDeductionAction(TargetActor, DamagerActor, FinalDamage, DamageType);
+			(manager as TWDModelManager)?.ExecuteAction(preHPDeductionAction);
+			if (preHPDeductionAction.Avoided)
+			{
+				FinalDamage = 0;
+				HealthAfterDamage = TargetActor.Hitpoints;
+			}
+			else
+			{
+				FinalDamage = Math.Max(0, preHPDeductionAction.Damage);
+				HealthAfterDamage = ((TargetActor.ShieldHitPoints <= 0) ? (TargetActor.Hitpoints - FinalDamage) : TargetActor.Hitpoints);
+				TargetActor.DealDamage(FinalDamage, DamagerActor, DamageType, OriginalDamageInstigator, preHPDeductionResolved: true);
+			}
+		}
+
 		public virtual void DealDamage(ModelManager manager)
 		{
 			bool isDead = TargetActor.IsDead;
@@ -172,12 +228,7 @@ namespace TWDModel
 			LowestHpBeforeDmg = TargetActor.MinHitpoints;
 			if (!SavedFromDeath)
 			{
-				PreHPDeductionAction preHPDeductionAction = new PreHPDeductionAction(TargetActor, DamagerActor, FinalDamage, DamageType);
-				tWDModelManager?.ExecuteAction(preHPDeductionAction);
-				if (!preHPDeductionAction.Avoided)
-				{
-					TargetActor.DealDamage(FinalDamage, DamagerActor, DamageType, OriginalDamageInstigator);
-				}
+				DealDamageAfterPreHPDeduction(manager);
 			}
 			LowestHpAfterDmg = TargetActor.MinHitpoints;
 			if (isDead)
@@ -219,6 +270,40 @@ namespace TWDModel
 			{
 				DamagerActor.OnChargedAttackCompletedForRage();
 			}
+			AddGuildBossDamageAndPoint(tWDModelManager);
+		}
+
+		protected void AddGuildBossDamageAndPoint(TWDModelManager modelManager)
+		{
+			if (modelManager == null || !(TargetActor is TankActorModel))
+			{
+				return;
+			}
+			modelManager.CombatModel.AddGuildBossDamage(FinalDamage);
+			List<FixedPoint> guildBossPointFunctionValue = modelManager.GameEconomyData.ConfigData.GuildBossPointFunctionValue;
+			if (guildBossPointFunctionValue == null || guildBossPointFunctionValue.Count < 6)
+			{
+				return;
+			}
+			double num = FinalDamage;
+			double num2 = 0.0;
+			double num3 = (double)guildBossPointFunctionValue[0];
+			double num4 = (double)guildBossPointFunctionValue[1];
+			double num5 = (double)guildBossPointFunctionValue[2];
+			double num6 = (double)guildBossPointFunctionValue[3];
+			double num7 = (double)guildBossPointFunctionValue[4];
+			double num8 = (double)guildBossPointFunctionValue[5];
+			double num9 = (double)guildBossPointFunctionValue[6];
+			if (!(num3 <= 0.0) && !(num4 <= num3) && !(num9 <= 0.0) && !(num9 >= 1.0))
+			{
+				num2 = ((num <= 0.0) ? 0.0 : ((num <= num3) ? (num5 + (num6 - num5) * (num / num3)) : ((!(num <= num4)) ? (num8 - (num8 - num7) * Math.Exp((0.0 - num9) * (num - num4) / num4)) : (num6 + (num7 - num6) * (Math.Log(num / num3) / Math.Log(num4 / num3))))));
+				if (modelManager.Player?.GetAttackTargetMissionModel() is WorldBossModelManager worldBossModelManager)
+				{
+					double myTowerBBossScoreMultiplier = worldBossModelManager.GetMyTowerBBossScoreMultiplier();
+					num2 *= 1.0 + myTowerBBossScoreMultiplier / 100.0;
+				}
+				modelManager.CombatModel.AddGuildBossPoint(num2);
+			}
 		}
 
 		public void CalculateFinalDamage()
@@ -230,9 +315,14 @@ namespace TWDModel
 			bool flag = TargetActor.Faction == Faction.Civilian && TargetActor.CivilianCanStruggle;
 			bool flag2 = TargetActor.Faction == Faction.Survivor;
 			bool flag3 = TargetActor.Faction == Faction.Raider;
-			if (!Dodged)
+			bool flag4 = TargetActor is TankActorModel;
+			if (Jumpingshot || DodgedShot)
 			{
-				if (TargetActor.IsHuman && TargetActor.StrugglesLeft > 0 && (flag || flag2 || flag3))
+				FinalDamage = 0;
+			}
+			else if (!Dodged)
+			{
+				if (TargetActor.IsHuman && TargetActor.StrugglesLeft > 0 && !flag4 && (flag || flag2 || flag3))
 				{
 					FinalDamage = ((BaseDamage + AdditionalCriticalDamage >= TargetActor.Hitpoints) ? (TargetActor.Hitpoints - 1) : (BaseDamage + AdditionalCriticalDamage));
 				}
@@ -240,10 +330,11 @@ namespace TWDModel
 				{
 					FinalDamage = BaseDamage + AdditionalCriticalDamage;
 				}
+				FinalDamage += ModifyDamage;
 			}
 			else if (Dodged && Critical)
 			{
-				if (TargetActor.IsHuman && TargetActor.StrugglesLeft > 0 && (flag || flag2 || flag3))
+				if (TargetActor.IsHuman && TargetActor.StrugglesLeft > 0 && !flag4 && (flag || flag2 || flag3))
 				{
 					FinalDamage = ((BaseDamage >= TargetActor.Hitpoints) ? (TargetActor.Hitpoints - 1) : BaseDamage);
 				}
@@ -251,14 +342,11 @@ namespace TWDModel
 				{
 					FinalDamage = BaseDamage;
 				}
-			}
-			if (DodgedShot)
-			{
-				FinalDamage = 0;
+				FinalDamage += ModifyDamage;
 			}
 			else
 			{
-				FinalDamage += ModifyDamage;
+				FinalDamage = 0;
 			}
 		}
 

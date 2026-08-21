@@ -26,6 +26,7 @@ public class CombatEndFlowSurvivorWidget : CombatEndWidget
 		{
 			return;
 		}
+		bool showWorldBossTired = combatModel.IsGuildBossPVEMission || combatModel.IsGuildBossPVPMission || combatModel.IsWorldBossMission;
 		for (int i = 0; i < Cards.Length; i++)
 		{
 			if (Cards[i] != null)
@@ -36,7 +37,7 @@ public class CombatEndFlowSurvivorWidget : CombatEndWidget
 					bool isSurvivalMission = combatModel.IsSurvivalMission;
 					bool isEndlessBattleMission = combatModel.IsEndlessBattleMission;
 					Color injuryColor = (isEndlessBattleMission ? GetEndlessWaveSurvivedColor(missionRoster[i], combatModel.MissionResult) : GetInjuryOrDeadColor(missionRoster[i], isDead, isSurvivalMission));
-					Cards[i].SetSurvivor(missionRoster[i], injuryColor, isDead, isSurvivalMission, isEndlessBattleMission);
+					Cards[i].SetSurvivor(missionRoster[i], injuryColor, isDead, isSurvivalMission, isEndlessBattleMission, showWorldBossTired);
 				}
 				else
 				{

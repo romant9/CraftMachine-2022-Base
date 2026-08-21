@@ -65,6 +65,10 @@ namespace TWDModel
 
 		public const string EquipmentDodge = "Equipment.Dodge";
 
+		public const string Jumpingshot = "Jumpingshot";
+
+		public const string ResistJumpingshot = "ResistJumpingshot";
+
 		public const string HealthBoost = "HealthBoost";
 
 		public const string BoostTotalHealth = "BoostTotalHealth";
@@ -363,6 +367,26 @@ namespace TWDModel
 
 		public const string EquipmentPassiveRemoveNegative = "Equipment.Passive.RemoveNegative";
 
+		public const string EquipmentPassivePreventControl = "Equipment.Passive.PreventControl";
+
+		public const string AbilityModifierEquipmentPassivePreventControlChance = "AbilityModifierEquipmentPassivePreventControlChance";
+
+		public const string EquipmentPassiveMaxGetHitDamage = "Equipment.Passive.MaxGetHitDamage";
+
+		public const string AbilityModifierEquipmentPassiveMaxGetHitDamageNormalCap = "AbilityModifierEquipmentPassiveMaxGetHitDamageNormalCap";
+
+		public const string AbilityModifierEquipmentPassiveMaxGetHitDamageBossCap = "AbilityModifierEquipmentPassiveMaxGetHitDamageBossCap";
+
+		public const string EquipmentPassiveDamageAreaBlock = "Equipment.Passive.DamageAreaBlock";
+
+		public const string AbilityModifierEquipmentPassiveDamageAreaBlockNormalRadiusReduction = "AbilityModifierEquipmentPassiveDamageAreaBlockNormalRadiusReduction";
+
+		public const string AbilityModifierEquipmentPassiveDamageAreaBlockBossRadiusReduction = "AbilityModifierEquipmentPassiveDamageAreaBlockBossRadiusReduction";
+
+		public const string AbilityModifierEquipmentPassiveDamageAreaBlockNormalMinimumRadius = "AbilityModifierEquipmentPassiveDamageAreaBlockNormalMinimumRadius";
+
+		public const string AbilityModifierEquipmentPassiveDamageAreaBlockBossMinimumRadius = "AbilityModifierEquipmentPassiveDamageAreaBlockBossMinimumRadius";
+
 		public const string EquipmentPassiveLineSeparatedPlus = "Equipment.Passive.LineSeparatedPlus";
 
 		public const string AbilityModifierLineSeparatedMiddleRangePlus = "AbilityModifierLineSeparatedMiddleRangePlus";
@@ -432,6 +456,14 @@ namespace TWDModel
 		public const string FreeChargePoint = "FreeChargePoint";
 
 		public const string FreeChargePointNonConsumeChargePointPercentage = "FreeChargePointNonConsumeChargePointPercentage";
+
+		public const string BoostHitRate = "BoostHitRate";
+
+		public const string AbilityModifierBoostHitRatePercentage = "AbilityModifierBoostHitRatePercentage";
+
+		public const string IgnoreDefense = "IgnoreDefense";
+
+		public const string AbilityModifierIgnoreDefensePercentage = "AbilityModifierIgnoreDefensePercentage";
 
 		public const string LeaderBuffNoThreatRangedPercentageIncreaseChargePoint = "LeaderBuffNoThreatRangedPercentageIncreaseChargePoint";
 
@@ -893,6 +925,8 @@ namespace TWDModel
 
 		public const string AbilityModifierPercentageIncreaseTargetDamageNextToAlly = "AbilityModifierPercentageIncreaseTargetDamageNextToAlly";
 
+		public const string AbilityModifierPercentageReduceJumpingshotDamage = "AbilityModifierPercentageReduceJumpingshotDamage";
+
 		public const string AbilityModifierPercentageIncreaseResistanceCriticalDamageFromHumans = "AbilityModifierPercentageIncreaseResistanceCriticalDamageFromHumans";
 
 		public const string AbilityModifierPercentageIncreaseCriticalChance = "AbilityModifierPercentageIncreaseCriticalChance";
@@ -1299,6 +1333,12 @@ namespace TWDModel
 
 		public const string Equipment_Passive_ShotGun_Param4 = "Equipment_Passive_ShotGun_Param4";
 
+		public const string HealthRealdmg = "Equipment_Active_HealthRealdmg";
+
+		public const string AbilityModifierHealthRealdmg = "AbilityModifierHealthRealdmg";
+
+		public const string AbilityModifierHealthRealdmg_Param0 = "AbilityModifierHealthRealdmg_Param0";
+
 		public const string Pursuit = "Pursuit";
 
 		public const string AbilityModifierPursuitAP = "AbilityModifierPursuitAP";
@@ -1330,6 +1370,14 @@ namespace TWDModel
 		public const string AbilityModifierRepulseStaggerChance = "AbilityModifierRepulseStaggerChance";
 
 		public const string AbilityModifierRepulseCriticalHitChance = "AbilityModifierRepulseCriticalHitChance";
+
+		public const string BossHitPointDMG = "Boss.HitPointDMG";
+
+		public const string AbilityModifierBossHitPointDMGAttackCount = "AbilityModifierBossHitPointDMGAttackCount";
+
+		public const string AbilityModifierBossHitPointDMGAddAdditionalDamage = "Boss.AbilityModifierBossHitPointDMGAddAdditionalDamage";
+
+		private static readonly string BossHitPointDMG_ToLower = "Boss.HitPointDMG".ToLower();
 
 		public const string EquipmentActiveAdvance = "Equipment_Active_Advance";
 
@@ -1909,6 +1957,8 @@ namespace TWDModel
 
 		public const string ChargeAttackWithFreeShooting = "ChargeAttackWithFreeShooting";
 
+		public const string EquipmentPassiveFightBack = "Equipment.Passive.FightBack";
+
 		public const string Equipment_Passive_Rage = "Equipment_Passive_Rage";
 
 		public const string Equipment_Passive_RageParam0 = "Equipment_Passive_RageParam0";
@@ -2109,6 +2159,10 @@ namespace TWDModel
 
 		public const string SupportTalent_resistDebuffParm1 = "SupportTalent_resistDebuffParm1";
 
+		public const string ResistNegativeEffects = "ResistNegativeEffects";
+
+		public const string ResistNegativeEffectsParm1 = "ResistNegativeEffectsParm1";
+
 		public const string SupportTalent_DodgeRange = "SupportTalent_DodgeRange";
 
 		public const string SupportTalent_DodgeRangeParm1 = "SupportTalent_DodgeRangeParm1";
@@ -2164,6 +2218,16 @@ namespace TWDModel
 		public const string Equipment_LastStand_HPLowerMultiplier = "Equipment_LastStand_HPLowerMultiplier";
 
 		public const string Equipment_LastStand_DmgMultiplier = "Equipment_LastStand_DmgMultiplier";
+
+		public const string Defense = "Equipment.Defense";
+
+		public const string Equipment_Defense_Melee = "Equipment_DefDefense_Melee";
+
+		public const string Equipment_Defense_Melee_Percent = "Equipment_Defense_Melee_Percent";
+
+		public const string Equipment_Defense_Range = "Equipment_DefDefense_Range";
+
+		public const string Equipment_Defense_Range_Percent = "Equipment_Defense_Range_Percent";
 
 		public const string LeaderBuffCitadel = "LeaderBuffCitadel";
 
@@ -2240,6 +2304,10 @@ namespace TWDModel
 		private static readonly string BaseMeleeDodge_ToLower = "BaseMeleeDodge".ToLower();
 
 		private static readonly string BaseRangedDodge_ToLower = "BaseRangedDodge".ToLower();
+
+		private static readonly string Jumpingshot_ToLower = "Jumpingshot".ToLower();
+
+		private static readonly string ResistJumpingshot_ToLower = "ResistJumpingshot".ToLower();
 
 		private static readonly string Strong_ToLower = "Strong".ToLower();
 
@@ -2370,6 +2438,8 @@ namespace TWDModel
 		private static readonly string SupportTalent_HitrateRange_ToLower = "SupportTalent_HitrateRange".ToLower();
 
 		private static readonly string SupportTalent_HitrateMelee_ToLower = "SupportTalent_HitrateMelee".ToLower();
+
+		private static readonly string ResistNegativeEffects_ToLower = "ResistNegativeEffects".ToLower();
 
 		private static readonly string FollowAttackWithSplashDamage_ToLower = "FollowAttackWithSplashDamage".ToLower();
 
@@ -2521,6 +2591,12 @@ namespace TWDModel
 
 		private static readonly string EquipmentPassiveRemoveNegative_ToLower = "Equipment.Passive.RemoveNegative".ToLower();
 
+		private static readonly string EquipmentPassivePreventControl_ToLower = "Equipment.Passive.PreventControl".ToLower();
+
+		private static readonly string EquipmentPassiveMaxGetHitDamage_ToLower = "Equipment.Passive.MaxGetHitDamage".ToLower();
+
+		private static readonly string EquipmentPassiveDamageAreaBlock_ToLower = "Equipment.Passive.DamageAreaBlock".ToLower();
+
 		private static readonly string EquipmentPassiveLineSeparatedPlus_ToLower = "Equipment.Passive.LineSeparatedPlus".ToLower();
 
 		private static readonly string RangeEquipmentDominance_ToLower = "RangeEquipmentDominance".ToLower();
@@ -2530,6 +2606,10 @@ namespace TWDModel
 		private static readonly string AddDamageChargeAttack_ToLower = "AddDamage.ChargeAttack".ToLower();
 
 		private static readonly string FreeChargePoint_ToLower = "FreeChargePoint".ToLower();
+
+		private static readonly string BoostHitRate_ToLower = "BoostHitRate".ToLower();
+
+		private static readonly string IgnoreDefense_ToLower = "IgnoreDefense".ToLower();
 
 		private static readonly string LeaderBuffGoodEnough_ToLower = "LeaderBuffGoodEnough".ToLower();
 
@@ -2937,6 +3017,8 @@ namespace TWDModel
 
 		private static readonly string ChargeAttackWithFreeShooting_ToLower = "ChargeAttackWithFreeShooting".ToLower();
 
+		private static readonly string EquipmentPassiveFightBack_ToLower = "Equipment.Passive.FightBack".ToLower();
+
 		private static readonly string Equipment_Passive_Rage_ToLower = "Equipment_Passive_Rage".ToLower();
 
 		private static readonly string Equipment_Passive_PassOW_ToLower = "Equipment_Passive_PassOW".ToLower();
@@ -2977,6 +3059,8 @@ namespace TWDModel
 
 		private static readonly string Equipment_LastStand_ToLower = "Equipment.LastStand".ToLower();
 
+		private static readonly string Defense_ToLower = "Equipment.Defense".ToLower();
+
 		private static readonly string StunResistance_ToLower = "StunResistance".ToLower();
 
 		private static readonly string Revenge_ToLower = "Revenge".ToLower();
@@ -2999,6 +3083,8 @@ namespace TWDModel
 
 		private static readonly string Equipment_Passive_ShotGun_ToLower = "Equipment_Passive_ShotGun".ToLower();
 
+		private static readonly string HealthRealdmg_ToLower = "Equipment_Active_HealthRealdmg".ToLower();
+
 		private static readonly string AddDamageNormalAttack_ToLower = "AddDamage.NormalAttack".ToLower();
 
 		private static readonly string EquipmentKaboom_ToLower = "Equipment.Kaboom".ToLower();
@@ -3020,6 +3106,8 @@ namespace TWDModel
 		private Dictionary<string, TraitEntry> traitsByIdentifier = new Dictionary<string, TraitEntry>();
 
 		private Dictionary<string, List<TraitEntry>> traitsByBaseIdentifier = new Dictionary<string, List<TraitEntry>>(StringComparer.OrdinalIgnoreCase);
+
+		private static readonly string[] DefaultResistDebuffRemovableNegatives = new string[7] { "Stun", "Bleeding", "Root", "Cripple", "Burning", "StaggerActive", "ElectricShock" };
 
 		public List<TraitEntry> Traits { get; private set; }
 
@@ -3168,6 +3256,27 @@ namespace TWDModel
 			}
 		}
 
+		private List<string> GetSupportTalentResistDebuffRemoveNegativeList()
+		{
+			GameEconomyData gameEconomyData = ((base.manager != null) ? base.manager.GameEconomyData : null);
+			if (gameEconomyData != null && gameEconomyData.TraitDefinitions != null)
+			{
+				for (int i = 0; i < gameEconomyData.TraitDefinitions.Length; i++)
+				{
+					TraitDefinition traitDefinition = gameEconomyData.TraitDefinitions[i];
+					if (traitDefinition != null && !string.IsNullOrEmpty(traitDefinition.Identifier) && traitDefinition.Identifier.IndexOf("SupportTalent_resistDebuff", StringComparison.OrdinalIgnoreCase) >= 0)
+					{
+						if (traitDefinition.EffectIndex == null || traitDefinition.EffectIndex.Count <= 0)
+						{
+							break;
+						}
+						return new List<string>(traitDefinition.EffectIndex);
+					}
+				}
+			}
+			return new List<string>(DefaultResistDebuffRemovableNegatives);
+		}
+
 		private void CreateAndAddIncrementerModifier(List<ModelModifier> modifiers, FixedPoint[] parameters, string[] parameterNames, string displayName)
 		{
 			for (int i = 0; i < ((parameters != null) ? parameters.Length : 0); i++)
@@ -3251,6 +3360,15 @@ namespace TWDModel
 				AbilityModifierDodge item4 = new AbilityModifierDodge((traitIdentifier == BaseMeleeDodge_ToLower) ? DamageType.Melee : DamageType.Ranged);
 				list.Add(item4);
 			}
+			else if (traitIdentifier.Contains(ResistJumpingshot_ToLower))
+			{
+				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierPercentageReduceJumpingshotDamage" }, traitDefinition.DisplayName);
+			}
+			else if (traitIdentifier.Contains(Jumpingshot_ToLower))
+			{
+				AbilityModifierJumpingshot item5 = new AbilityModifierJumpingshot(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2), traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier);
+				list.Add(item5);
+			}
 			else if (traitIdentifier.Contains(Strong_ToLower) || traitIdentifier == Weak_ToLower)
 			{
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "PercentageIncreaseMeleeDamage" }, traitDefinition.DisplayName);
@@ -3271,8 +3389,8 @@ namespace TWDModel
 					traitDefinition.GetParameter<int>(2),
 					traitDefinition.GetParameter<int>(3)
 				};
-				FortunaMainTrait item5 = new FortunaMainTrait(traitDefinition.GetParameter<int>(0), randomTalentIds);
-				list.Add(item5);
+				FortunaMainTrait item6 = new FortunaMainTrait(traitDefinition.GetParameter<int>(0), randomTalentIds);
+				list.Add(item6);
 			}
 			else if (traitIdentifier.Contains(Equipment_Passive_Fortuna_Spade_ToLower))
 			{
@@ -3555,21 +3673,27 @@ namespace TWDModel
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier }, new string[1] { "SupportTalent_GuardParm1" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "SupportTalent_GuardParm2" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "SupportTalent_GuardParm3" }, traitDefinition.DisplayName);
-				GuardFriendsTrait item6 = new GuardFriendsTrait();
-				list.Add(item6);
+				GuardFriendsTrait item7 = new GuardFriendsTrait();
+				list.Add(item7);
 			}
 			else if (traitIdentifier.Contains(SupportTalent_Cure_ToLower))
 			{
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier }, new string[1] { "SupportTalent_CureParm1" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "SupportTalent_CureParm2" }, traitDefinition.DisplayName);
-				CureTrait item7 = new CureTrait();
-				list.Add(item7);
+				CureTrait item8 = new CureTrait();
+				list.Add(item8);
 			}
 			else if (traitIdentifier.Contains(SupportTalent_resistDebuff_ToLower))
 			{
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "SupportTalent_resistDebuffParm1" }, traitDefinition.DisplayName);
-				ResistDebuffTrait item8 = new ResistDebuffTrait();
-				list.Add(item8);
+				ResistDebuffTrait item9 = new ResistDebuffTrait();
+				list.Add(item9);
+			}
+			else if (traitIdentifier.Contains(ResistNegativeEffects_ToLower))
+			{
+				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "ResistNegativeEffectsParm1" }, traitDefinition.DisplayName);
+				ResistNegativeEffectsTrait item10 = new ResistNegativeEffectsTrait(traitDefinition.EffectIndex);
+				list.Add(item10);
 			}
 			else if (traitIdentifier.Contains(SupportTalent_DodgeRange_ToLower))
 			{
@@ -3593,8 +3717,8 @@ namespace TWDModel
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "FollowAttackWithSplashDamageParam2" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) * constructionParametersMultiplier }, new string[1] { "FollowAttackWithSplashDamageParam3" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(3) * constructionParametersMultiplier }, new string[1] { "FollowAttackWithSplashDamageParam4" }, traitDefinition.DisplayName);
-				FollowAttackWithSplashDamageTrait item9 = new FollowAttackWithSplashDamageTrait();
-				list.Add(item9);
+				FollowAttackWithSplashDamageTrait item11 = new FollowAttackWithSplashDamageTrait();
+				list.Add(item11);
 			}
 			else if (traitIdentifier.Contains(Blind_ToLower) && traitIdentifier != BlindModifierTrait_ToLower)
 			{
@@ -3624,8 +3748,8 @@ namespace TWDModel
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "HelpHandGuardianshipProbability" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) }, new string[1] { "HelpHandNumberOfGuardianGrids" }, traitDefinition.DisplayName);
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "HelpHandGuardianDamageValues" }, traitDefinition.DisplayName);
-				HelpHandTrait item10 = new HelpHandTrait();
-				list.Add(item10);
+				HelpHandTrait item12 = new HelpHandTrait();
+				list.Add(item12);
 			}
 			else if (traitIdentifier.Contains(MeleeResistance_ToLower))
 			{
@@ -3653,8 +3777,8 @@ namespace TWDModel
 					fixedPoint3 = chance.Value;
 				}
 				FixedPoint parameter2 = traitDefinition.GetParameter<FixedPoint>(1);
-				AbilityModifierIncreaseBodyShot item11 = new AbilityModifierIncreaseBodyShot(fixedPoint3 / 100L, parameter2 / 100L);
-				list.Add(item11);
+				AbilityModifierIncreaseBodyShot item13 = new AbilityModifierIncreaseBodyShot(fixedPoint3 / 100L, parameter2 / 100L);
+				list.Add(item13);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveStun_ToLower))
 			{
@@ -3664,39 +3788,39 @@ namespace TWDModel
 				{
 					fixedPoint4 = chance.Value;
 				}
-				StunTrait item12 = new StunTrait(parameter3, (int)(fixedPoint4 * constructionParametersMultiplier));
-				list.Add(item12);
+				StunTrait item14 = new StunTrait(parameter3, (int)(fixedPoint4 * constructionParametersMultiplier));
+				list.Add(item14);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveRiotShieldHerd_ToLower))
 			{
-				RiotShieldHerdTrait item13 = new RiotShieldHerdTrait((int)traitDefinition.GetParameter<FixedPoint>(0));
-				list.Add(item13);
+				RiotShieldHerdTrait item15 = new RiotShieldHerdTrait((int)traitDefinition.GetParameter<FixedPoint>(0));
+				list.Add(item15);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveRiotShieldStun_ToLower))
 			{
-				RiotShieldStunTrait item14 = new RiotShieldStunTrait((int)traitDefinition.GetParameter<FixedPoint>(0));
-				list.Add(item14);
+				RiotShieldStunTrait item16 = new RiotShieldStunTrait((int)traitDefinition.GetParameter<FixedPoint>(0));
+				list.Add(item16);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveEnsnare_ToLower))
 			{
 				int parameter4 = traitDefinition.GetParameter<int>(0);
 				FixedPoint meleePercentage = traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier;
 				FixedPoint rangedPercentage = traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier;
-				EnsnareTrait item15 = new EnsnareTrait(parameter4, meleePercentage, rangedPercentage);
-				list.Add(item15);
+				EnsnareTrait item17 = new EnsnareTrait(parameter4, meleePercentage, rangedPercentage);
+				list.Add(item17);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveFacehurt_ToLower))
 			{
 				int parameter5 = traitDefinition.GetParameter<int>(0);
 				FixedPoint rootChance = traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier;
-				FacehurtTrait item16 = new FacehurtTrait(parameter5, rootChance);
-				list.Add(item16);
+				FacehurtTrait item18 = new FacehurtTrait(parameter5, rootChance);
+				list.Add(item18);
 			}
 			else if (traitIdentifier.Contains(HeirloomsBracelets_ToLower))
 			{
 				CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "BraceletsGainChargePointChanceForAll" }, traitDefinition.DisplayName);
-				BraceletsTrait item17 = new BraceletsTrait(traitDefinition.GetParameter<int>(1));
-				list.Add(item17);
+				BraceletsTrait item19 = new BraceletsTrait(traitDefinition.GetParameter<int>(1));
+				list.Add(item19);
 			}
 			else if (traitIdentifier.Contains(Crippling_ToLower) || traitIdentifier.Contains(LeaderBuffGoodEnoughCrippleBase_ToLower))
 			{
@@ -3707,28 +3831,28 @@ namespace TWDModel
 					chancePercentage = chance.Value;
 				}
 				bool workOnlyOnBodyShots = traitIdentifier.Contains(Crippling_ToLower);
-				CrippleTrait item18 = new CrippleTrait(parameter6, chancePercentage, workOnlyOnBodyShots);
-				list.Add(item18);
+				CrippleTrait item20 = new CrippleTrait(parameter6, chancePercentage, workOnlyOnBodyShots);
+				list.Add(item20);
 			}
 			else if (traitIdentifier.Contains(FistSpike_ToLower))
 			{
-				FistSpikeTrait item19 = new FistSpikeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
-				list.Add(item19);
+				FistSpikeTrait item21 = new FistSpikeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
+				list.Add(item21);
 			}
 			else if (traitIdentifier.Contains(Poison_ToLower) && !traitIdentifier.Contains(PoisonBurst_ToLower))
 			{
-				PoisonTrait item20 = new PoisonTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(3));
-				list.Add(item20);
+				PoisonTrait item22 = new PoisonTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(3));
+				list.Add(item22);
 			}
 			else if (traitIdentifier.Contains(Pestilence_ToLower))
 			{
-				PestilenceTrait item21 = new PestilenceTrait(traitDefinition.GetParameter<FixedPoint>(0), traitDefinition.GetParameter<int>(1));
-				list.Add(item21);
+				PestilenceTrait item23 = new PestilenceTrait(traitDefinition.GetParameter<FixedPoint>(0), traitDefinition.GetParameter<int>(1));
+				list.Add(item23);
 			}
 			else if (traitIdentifier.Contains(PoisonBurst_ToLower))
 			{
-				PoisonBurstTrait item22 = new PoisonBurstTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier);
-				list.Add(item22);
+				PoisonBurstTrait item24 = new PoisonBurstTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier);
+				list.Add(item24);
 			}
 			else if (traitIdentifier.Contains(HealthDmg_ToLower))
 			{
@@ -3741,8 +3865,8 @@ namespace TWDModel
 				{
 					fixedPoint5 = chance.Value;
 				}
-				PerseveranceTrait item23 = new PerseveranceTrait((int)(fixedPoint5 * constructionParametersMultiplier));
-				list.Add(item23);
+				PerseveranceTrait item25 = new PerseveranceTrait((int)(fixedPoint5 * constructionParametersMultiplier));
+				list.Add(item25);
 			}
 			else if (traitIdentifier.Contains(EquipmentPerseverance_ToLower))
 			{
@@ -3751,8 +3875,8 @@ namespace TWDModel
 				{
 					fixedPoint6 = chance.Value;
 				}
-				PerseveranceTrait item24 = new PerseveranceTrait((int)(fixedPoint6 * constructionParametersMultiplier));
-				list.Add(item24);
+				PerseveranceTrait item26 = new PerseveranceTrait((int)(fixedPoint6 * constructionParametersMultiplier));
+				list.Add(item26);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveCripple_ToLower))
 			{
@@ -3762,27 +3886,27 @@ namespace TWDModel
 				{
 					fixedPoint7 = chance.Value;
 				}
-				CrippleTrait item25 = new CrippleTrait(parameter7, (int)(fixedPoint7 * constructionParametersMultiplier), workOnlyOnBodyShots: false);
-				list.Add(item25);
+				CrippleTrait item27 = new CrippleTrait(parameter7, (int)(fixedPoint7 * constructionParametersMultiplier), workOnlyOnBodyShots: false);
+				list.Add(item27);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveOverflow_ToLower))
 			{
 				FixedPoint chance2 = traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier;
 				FixedPoint overflowHealthChance = traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier;
-				AbilityModifierOverflow item26 = new AbilityModifierOverflow(chance2, overflowHealthChance);
-				list.Add(item26);
+				AbilityModifierOverflow item28 = new AbilityModifierOverflow(chance2, overflowHealthChance);
+				list.Add(item28);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveSpecialStun_ToLower))
 			{
 				FixedPoint makeStunPercentage = traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier;
 				FixedPoint makeStunMaxPercentage = traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier;
-				SpecialStunTrait item27 = new SpecialStunTrait(makeStunPercentage, makeStunMaxPercentage);
-				list.Add(item27);
+				SpecialStunTrait item29 = new SpecialStunTrait(makeStunPercentage, makeStunMaxPercentage);
+				list.Add(item29);
 			}
 			else if (traitIdentifier.Contains(EquipmentActiveSpecialStunActiveFlag_ToLower))
 			{
-				SpecialStunActiveTrait item28 = new SpecialStunActiveTrait();
-				list.Add(item28);
+				SpecialStunActiveTrait item30 = new SpecialStunActiveTrait();
+				list.Add(item30);
 			}
 			else if (!traitIdentifier.Contains(SpecialStunTargetActiveFlag_ToLower))
 			{
@@ -3792,8 +3916,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(ArcUpgrade_ToLower))
 				{
-					AbilityModifierArcUpgrade item29 = new AbilityModifierArcUpgrade("AbilityModifierThreatArcUpgrade", traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier);
-					list.Add(item29);
+					AbilityModifierArcUpgrade item31 = new AbilityModifierArcUpgrade("AbilityModifierThreatArcUpgrade", traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier);
+					list.Add(item31);
 				}
 				else if (traitIdentifier.Contains(Accurate_ToLower))
 				{
@@ -3802,13 +3926,13 @@ namespace TWDModel
 					{
 						fixedPoint8 = chance.Value;
 					}
-					AbilityModifierIncreaseCriticalChance item30 = new AbilityModifierIncreaseCriticalChance(fixedPoint8 / 100.0 * constructionParametersMultiplier);
-					list.Add(item30);
+					AbilityModifierIncreaseCriticalChance item32 = new AbilityModifierIncreaseCriticalChance(fixedPoint8 / 100.0 * constructionParametersMultiplier);
+					list.Add(item32);
 				}
 				else if (traitIdentifier.Contains(Destructive_ToLower))
 				{
-					AbilityModifierIncreaseCriticalMultiplier item31 = new AbilityModifierIncreaseCriticalMultiplier(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier);
-					list.Add(item31);
+					AbilityModifierIncreaseCriticalMultiplier item33 = new AbilityModifierIncreaseCriticalMultiplier(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier);
+					list.Add(item33);
 				}
 				else if (traitIdentifier.Contains(WideArc_ToLower) || traitIdentifier.Contains(WideSpread_ToLower))
 				{
@@ -3832,8 +3956,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(TutorialSetDamage_ToLower))
 				{
-					AbilityModifierTutorialSetDamage item32 = new AbilityModifierTutorialSetDamage((int)((constructionParametersMultiplier - 1.0) * 100L));
-					list.Add(item32);
+					AbilityModifierTutorialSetDamage item34 = new AbilityModifierTutorialSetDamage((int)((constructionParametersMultiplier - 1.0) * 100L));
+					list.Add(item34);
 				}
 				else if (traitIdentifier == FollowThrough_ToLower)
 				{
@@ -3866,8 +3990,8 @@ namespace TWDModel
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "StaggerChance" }, traitDefinition.DisplayName);
 					int parameter8 = traitDefinition.GetParameter<int>(0);
 					FixedPoint fixedPoint9 = traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier;
-					StaggerTrait item33 = new StaggerTrait(parameter8, fixedPoint9);
-					list.Add(item33);
+					StaggerTrait item35 = new StaggerTrait(parameter8, fixedPoint9);
+					list.Add(item35);
 					list.Add(new AbilityModifierMultiplier("StaggerActiveChargeChance", fixedPoint9));
 				}
 				else if (traitIdentifier.Contains(EquipmentStagger_ToLower) || traitIdentifier.Contains(EquipmentFollowStatusStagger_ToLower))
@@ -3875,8 +3999,8 @@ namespace TWDModel
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "StaggerChance" }, traitDefinition.DisplayName);
 					int parameter9 = traitDefinition.GetParameter<int>(0);
 					FixedPoint fixedPoint10 = traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier;
-					StaggerTrait item34 = new StaggerTrait(parameter9, fixedPoint10);
-					list.Add(item34);
+					StaggerTrait item36 = new StaggerTrait(parameter9, fixedPoint10);
+					list.Add(item36);
 					list.Add(new AbilityModifierMultiplier("StaggerActiveChargeChance", fixedPoint10));
 				}
 				else if (traitIdentifier == StaggerActive_ToLower)
@@ -3885,23 +4009,23 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(RemoteRepulse_ToLower))
 				{
-					RemoteRepulseTrait item35 = new RemoteRepulseTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(3));
-					list.Add(item35);
+					RemoteRepulseTrait item37 = new RemoteRepulseTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(3));
+					list.Add(item37);
 				}
 				else if (traitIdentifier.Contains(Equipment_Passive_Range_Repulse_1_ToLower))
 				{
-					RangeRepulse1Trait item36 = new RangeRepulse1Trait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
-					list.Add(item36);
+					RangeRepulse1Trait item38 = new RangeRepulse1Trait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
+					list.Add(item38);
 				}
 				else if (traitIdentifier.Contains(Equipment_Passive_Range_Repulse_2_ToLower))
 				{
-					RangeRepulse2Trait item37 = new RangeRepulse2Trait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
-					list.Add(item37);
+					RangeRepulse2Trait item39 = new RangeRepulse2Trait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
+					list.Add(item39);
 				}
 				else if (traitIdentifier.Contains(ElectronCharge_ToLower))
 				{
-					ElectronChargeTrait item38 = new ElectronChargeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<int>(5));
-					list.Add(item38);
+					ElectronChargeTrait item40 = new ElectronChargeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<int>(5));
+					list.Add(item40);
 				}
 				else if (traitIdentifier.Contains(Conductive_ToLower))
 				{
@@ -3909,8 +4033,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(CurrentSurge_ToLower))
 				{
-					CurrentSurgeTrait item39 = new CurrentSurgeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier);
-					list.Add(item39);
+					CurrentSurgeTrait item41 = new CurrentSurgeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier);
+					list.Add(item41);
 				}
 				else if (traitIdentifier.Contains(VoltCharge_ToLower))
 				{
@@ -3918,28 +4042,28 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(VoltShock_ToLower))
 				{
-					VoltShockTrait item40 = new VoltShockTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2));
-					list.Add(item40);
+					VoltShockTrait item42 = new VoltShockTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2));
+					list.Add(item42);
 				}
 				else if (traitIdentifier.Contains(Quantun_ToLower))
 				{
-					QuantunTrait item41 = new QuantunTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<FixedPoint>(5) / 100.0 * constructionParametersMultiplier);
-					list.Add(item41);
+					QuantunTrait item43 = new QuantunTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<FixedPoint>(5) / 100.0 * constructionParametersMultiplier);
+					list.Add(item43);
 				}
 				else if (traitIdentifier.Contains(ResurgenceType1_ToLower))
 				{
-					ResurgenceType1Trait item42 = new ResurgenceType1Trait(traitDefinition.GetParameter<int>(0));
-					list.Add(item42);
+					ResurgenceType1Trait item44 = new ResurgenceType1Trait(traitDefinition.GetParameter<int>(0));
+					list.Add(item44);
 				}
 				else if (traitIdentifier.Contains(ResurgenceType2_ToLower))
 				{
-					ResurgenceType2Trait item43 = new ResurgenceType2Trait(traitDefinition.GetParameter<int>(0));
-					list.Add(item43);
+					ResurgenceType2Trait item45 = new ResurgenceType2Trait(traitDefinition.GetParameter<int>(0));
+					list.Add(item45);
 				}
 				else if (traitIdentifier.Contains(FirstAid_ToLower))
 				{
-					FirstAidTrait item44 = new FirstAidTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
-					list.Add(item44);
+					FirstAidTrait item46 = new FirstAidTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
+					list.Add(item46);
 				}
 				else if (traitIdentifier.Contains(RandomStatus_ToLower) && !traitIdentifier.Contains(Skinned_ToLower) && !traitIdentifier.Contains(Poison_ToLower) && !traitIdentifier.Contains(Stagger_ToLower))
 				{
@@ -3949,13 +4073,13 @@ namespace TWDModel
 						new KeyValuePair<string, FixedPoint>("Equipment.FollowStatus.Stagger", traitDefinition.GetParameter<FixedPoint>(3)),
 						new KeyValuePair<string, FixedPoint>("Equipment.FollowStatus.Poison", traitDefinition.GetParameter<FixedPoint>(4))
 					};
-					RandomStatusTrait item45 = new RandomStatusTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, triggerWeightList);
-					list.Add(item45);
+					RandomStatusTrait item47 = new RandomStatusTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, triggerWeightList);
+					list.Add(item47);
 				}
 				else if (traitIdentifier.Contains(AddDamageNormalAttack_ToLower))
 				{
-					AddDamageNormalAttackTrait item46 = new AddDamageNormalAttackTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier);
-					list.Add(item46);
+					AddDamageNormalAttackTrait item48 = new AddDamageNormalAttackTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier);
+					list.Add(item48);
 				}
 				else if (traitIdentifier.Contains(AddDamageAddAttack_ToLower))
 				{
@@ -3995,6 +4119,28 @@ namespace TWDModel
 				{
 					list.Add(new EquipmentPassiveRemoveNegativeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<int>(5), traitDefinition.GetParameter<FixedPoint>(6) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(7), traitDefinition.GetParameter<int>(8), traitDefinition.EffectIndex));
 				}
+				else if (traitIdentifier.Contains(EquipmentPassivePreventControl_ToLower))
+				{
+					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierEquipmentPassivePreventControlChance" }, traitDefinition.DisplayName);
+					list.Add(new EquipmentPassivePreventControlTrait());
+				}
+				else if (traitIdentifier.Contains(EquipmentPassiveMaxGetHitDamage_ToLower))
+				{
+					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierPercentageIncreaseResistance" }, traitDefinition.DisplayName);
+					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierEquipmentPassiveMaxGetHitDamageNormalCap" }, traitDefinition.DisplayName);
+					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierEquipmentPassiveMaxGetHitDamageBossCap" }, traitDefinition.DisplayName);
+					list.Add(new EquipmentPassiveMaxGetHitDamageTrait());
+				}
+				else if (traitIdentifier.Contains(EquipmentPassiveDamageAreaBlock_ToLower))
+				{
+					CreateAndAddIncrementerModifier(list, new FixedPoint[4]
+					{
+						traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier,
+						traitDefinition.GetParameter<FixedPoint>(1) * constructionParametersMultiplier,
+						traitDefinition.GetParameter<FixedPoint>(2) * constructionParametersMultiplier,
+						traitDefinition.GetParameter<FixedPoint>(3) * constructionParametersMultiplier
+					}, new string[4] { "AbilityModifierEquipmentPassiveDamageAreaBlockNormalRadiusReduction", "AbilityModifierEquipmentPassiveDamageAreaBlockBossRadiusReduction", "AbilityModifierEquipmentPassiveDamageAreaBlockNormalMinimumRadius", "AbilityModifierEquipmentPassiveDamageAreaBlockBossMinimumRadius" }, traitDefinition.DisplayName);
+				}
 				else if (traitIdentifier.Contains(EquipmentPassiveLineSeparatedPlus_ToLower))
 				{
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier }, new string[1] { "AbilityModifierLineSeparatedMiddleRangePlus" }, traitDefinition.DisplayName);
@@ -4021,6 +4167,14 @@ namespace TWDModel
 				{
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "FreeChargePointNonConsumeChargePointPercentage" }, traitDefinition.DisplayName);
 				}
+				else if (traitIdentifier.Contains(BoostHitRate_ToLower))
+				{
+					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierBoostHitRatePercentage" }, traitDefinition.DisplayName);
+				}
+				else if (traitIdentifier.Contains(IgnoreDefense_ToLower))
+				{
+					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierIgnoreDefensePercentage" }, traitDefinition.DisplayName);
+				}
 				else if (traitIdentifier == LeaderBuffGoodEnough_ToLower)
 				{
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { constructionParametersMultiplier }, new string[1] { "LeaderBuffGoodEnough" }, traitDefinition.DisplayName);
@@ -4029,8 +4183,8 @@ namespace TWDModel
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "LeaderBuffGoodEnoughStaggerChargeChance" }, traitDefinition.DisplayName);
 					int parameter10 = traitDefinition.GetParameter<int>(3);
 					FixedPoint addChargeChance = traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier;
-					StaggerTrait item47 = new StaggerTrait(parameter10, addChargeChance);
-					list.Add(item47);
+					StaggerTrait item49 = new StaggerTrait(parameter10, addChargeChance);
+					list.Add(item49);
 				}
 				else if (traitIdentifier.Contains(HealthBoost_ToLower))
 				{
@@ -4044,8 +4198,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(MultiAttacks_ToLower))
 				{
-					MultiAttacksTrait item48 = new MultiAttacksTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<FixedPoint>(3) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(4) * constructionParametersMultiplier);
-					list.Add(item48);
+					MultiAttacksTrait item50 = new MultiAttacksTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<FixedPoint>(3) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(4) * constructionParametersMultiplier);
+					list.Add(item50);
 				}
 				else if (traitIdentifier.Contains(MultiAttackExtraDamageActive_ToLower))
 				{
@@ -4055,13 +4209,13 @@ namespace TWDModel
 				{
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierShieldBreakerStrikeType1Parameter0" }, traitDefinition.DisplayName);
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierShieldBreakerStrikeType1Parameter1" }, traitDefinition.DisplayName);
-					ShieldBreakerStrikeType1Trait item49 = new ShieldBreakerStrikeType1Trait();
-					list.Add(item49);
+					ShieldBreakerStrikeType1Trait item51 = new ShieldBreakerStrikeType1Trait();
+					list.Add(item51);
 				}
 				else if (traitIdentifier.Contains(EquipmentActiveShieldBreakerStrikeType2_ToLower))
 				{
-					ShieldBreakerStrikeTrait item50 = new ShieldBreakerStrikeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
-					list.Add(item50);
+					ShieldBreakerStrikeTrait item52 = new ShieldBreakerStrikeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
+					list.Add(item52);
 				}
 				else if (traitIdentifier.Contains(FreeRun_ToLower))
 				{
@@ -4251,8 +4405,8 @@ namespace TWDModel
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierFocusModeAttackWidth" }, traitDefinition.DisplayName);
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierFocusModeDamageIncrease" }, traitDefinition.DisplayName);
 					FixedPoint focusModeCoolOff = traitDefinition.GetParameter<int>(2) * constructionParametersMultiplier;
-					FocusModeTrait item51 = new FocusModeTrait(traitDefinition.GetParameter<int>(4) * constructionParametersMultiplier, focusModeCoolOff);
-					list.Add(item51);
+					FocusModeTrait item53 = new FocusModeTrait(traitDefinition.GetParameter<int>(4) * constructionParametersMultiplier, focusModeCoolOff);
+					list.Add(item53);
 				}
 				else if (traitIdentifier.Contains(EquipmentActiveBreakthrough_ToLower))
 				{
@@ -4264,8 +4418,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(EquipmentKaboom_ToLower))
 				{
-					EquipmentKaboomTrait item52 = new EquipmentKaboomTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(4) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(5) * constructionParametersMultiplier);
-					list.Add(item52);
+					EquipmentKaboomTrait item54 = new EquipmentKaboomTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(4) * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(5) * constructionParametersMultiplier);
+					list.Add(item54);
 				}
 				else if (traitIdentifier.Contains(EquipmentProtective_ToLower))
 				{
@@ -4335,8 +4489,8 @@ namespace TWDModel
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierCarolCriticalDamage" }, traitDefinition.DisplayName);
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<int>(3) * constructionParametersMultiplier }, new string[1] { "AbilityModifierCarolNoAttackTurn" }, traitDefinition.DisplayName);
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierCarolCannotAttackedChance" }, traitDefinition.DisplayName);
-					FistSpikeRangeTrait item53 = new FistSpikeRangeTrait(traitDefinition.GetParameter<int>(6), traitDefinition.GetParameter<FixedPoint>(5) / 100.0, traitDefinition.GetParameter<int>(7));
-					list.Add(item53);
+					FistSpikeRangeTrait item55 = new FistSpikeRangeTrait(traitDefinition.GetParameter<int>(6), traitDefinition.GetParameter<FixedPoint>(5) / 100.0, traitDefinition.GetParameter<int>(7));
+					list.Add(item55);
 				}
 				else if (traitIdentifier.Contains(LeaderBuffCriticalResistance_ToLower))
 				{
@@ -4370,8 +4524,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier == SecondChance_ToLower)
 				{
-					AbilityModifierSecondChance item54 = new AbilityModifierSecondChance();
-					list.Add(item54);
+					AbilityModifierSecondChance item56 = new AbilityModifierSecondChance();
+					list.Add(item56);
 				}
 				else if (traitIdentifier.Contains(LeaderBuffHealingCharge_ToLower))
 				{
@@ -4381,14 +4535,14 @@ namespace TWDModel
 						fixedPoint11 = chance.Value;
 					}
 					FixedPoint parameter11 = traitDefinition.GetParameter<FixedPoint>(1);
-					AbilityModifierIncreaseHealingAtChargeUsage item55 = new AbilityModifierIncreaseHealingAtChargeUsage(fixedPoint11 / 100L, parameter11 / 100L);
-					list.Add(item55);
+					AbilityModifierIncreaseHealingAtChargeUsage item57 = new AbilityModifierIncreaseHealingAtChargeUsage(fixedPoint11 / 100L, parameter11 / 100L);
+					list.Add(item57);
 				}
 				else if (traitIdentifier.Contains(LeaderBuffSurvivalInstinct_ToLower))
 				{
 					FixedPoint parameter12 = traitDefinition.GetParameter<FixedPoint>(0);
-					AbilityModifierSurvivalInstinct item56 = new AbilityModifierSurvivalInstinct(percentLessDamageTakenIn: traitDefinition.GetParameter<FixedPoint>(1) / 100L, percentMoreDamageDoneIn: parameter12 / 100L);
-					list.Add(item56);
+					AbilityModifierSurvivalInstinct item58 = new AbilityModifierSurvivalInstinct(percentLessDamageTakenIn: traitDefinition.GetParameter<FixedPoint>(1) / 100L, percentMoreDamageDoneIn: parameter12 / 100L);
+					list.Add(item58);
 				}
 				else if (traitIdentifier.Contains(Bulletproof_ToLower))
 				{
@@ -4398,13 +4552,13 @@ namespace TWDModel
 						fixedPoint12 = chance.Value;
 					}
 					FixedPoint parameter13 = traitDefinition.GetParameter<FixedPoint>(1);
-					AbilityModifierIncreaseBodyShot item57 = new AbilityModifierIncreaseBodyShot(fixedPoint12 / 100L, parameter13 / 100L);
-					list.Add(item57);
+					AbilityModifierIncreaseBodyShot item59 = new AbilityModifierIncreaseBodyShot(fixedPoint12 / 100L, parameter13 / 100L);
+					list.Add(item59);
 				}
 				else if (traitIdentifier.Contains(PointBlankShot_ToLower))
 				{
-					AbilityModifierPointBlankShot item58 = new AbilityModifierPointBlankShot(traitDefinition.GetParameter<FixedPoint>(1) / 100L);
-					list.Add(item58);
+					AbilityModifierPointBlankShot item60 = new AbilityModifierPointBlankShot(traitDefinition.GetParameter<FixedPoint>(1) / 100L);
+					list.Add(item60);
 				}
 				else if (traitIdentifier.Contains(BoostTotalHealth_ToLower))
 				{
@@ -4437,8 +4591,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier == BaseRegalAuthority_ToLower)
 				{
-					PreEmptiveStrikeTrait item59 = new PreEmptiveStrikeTrait();
-					list.Add(item59);
+					PreEmptiveStrikeTrait item61 = new PreEmptiveStrikeTrait();
+					list.Add(item61);
 				}
 				else if (traitIdentifier == LeaderBuffMulletTime_ToLower)
 				{
@@ -4522,8 +4676,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(BaseBeatEmUp_ToLower))
 				{
-					BeatEmUpTrait item60 = new BeatEmUpTrait();
-					list.Add(item60);
+					BeatEmUpTrait item62 = new BeatEmUpTrait();
+					list.Add(item62);
 				}
 				else if (traitIdentifier.Contains(LeaderBuffFightingFury_ToLower))
 				{
@@ -4543,8 +4697,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(BaseBetterTogether_ToLower))
 				{
-					BetterTogetherTrait item61 = new BetterTogetherTrait();
-					list.Add(item61);
+					BetterTogetherTrait item63 = new BetterTogetherTrait();
+					list.Add(item63);
 				}
 				else if (traitIdentifier.Contains(LeaderBuffInspire_ToLower))
 				{
@@ -4560,8 +4714,8 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(LeaderBuffMarkEnemy_ToLower))
 				{
-					MarkEnemyTrait item62 = new MarkEnemyTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1));
-					list.Add(item62);
+					MarkEnemyTrait item64 = new MarkEnemyTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1));
+					list.Add(item64);
 				}
 				else if (traitIdentifier.Contains(DebuffMarkEnemy_ToLower))
 				{
@@ -4570,13 +4724,13 @@ namespace TWDModel
 				}
 				else if (traitIdentifier.Contains(DebuffEquipmentKaboom_ToLower))
 				{
-					DebuffEquipmentKaboomTrait item63 = new DebuffEquipmentKaboomTrait(traitDefinition.GetParameter<FixedPoint>(0), traitDefinition.GetParameter<FixedPoint>(1), traitDefinition.GetParameter<FixedPoint>(2), traitDefinition.GetParameter<FixedPoint>(3));
-					list.Add(item63);
+					DebuffEquipmentKaboomTrait item65 = new DebuffEquipmentKaboomTrait(traitDefinition.GetParameter<FixedPoint>(0), traitDefinition.GetParameter<FixedPoint>(1), traitDefinition.GetParameter<FixedPoint>(2), traitDefinition.GetParameter<FixedPoint>(3));
+					list.Add(item65);
 				}
 				else if (traitIdentifier.Contains(EquipmentActiveSkinned_ToLower) || traitIdentifier.Contains(EquipmentFollowStatusSkinned_ToLower))
 				{
-					SkinnedTrait item64 = new SkinnedTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0, traitDefinition.GetParameter<int>(1));
-					list.Add(item64);
+					SkinnedTrait item66 = new SkinnedTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0, traitDefinition.GetParameter<int>(1));
+					list.Add(item66);
 				}
 				else if (traitIdentifier.Contains(Skinned_ToLower))
 				{
@@ -4587,8 +4741,8 @@ namespace TWDModel
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierRippedAdditionalDmgPercent" }, traitDefinition.DisplayName);
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierRippedAdditionalDmgRatio" }, traitDefinition.DisplayName);
 					CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierRippedAdditionalDmgMaxRatio" }, traitDefinition.DisplayName);
-					RippedTrait item65 = new RippedTrait(traitDefinition.GetParameter<FixedPoint>(3) / 100.0, traitDefinition.GetParameter<int>(4));
-					list.Add(item65);
+					RippedTrait item67 = new RippedTrait(traitDefinition.GetParameter<FixedPoint>(3) / 100.0, traitDefinition.GetParameter<int>(4));
+					list.Add(item67);
 				}
 				else if (traitIdentifier.Contains(EquipmentActiveAssistAttack_ToLower))
 				{
@@ -4708,20 +4862,20 @@ namespace TWDModel
 							}
 							else if (traitIdentifier.Contains(AttackChain_ToLower))
 							{
-								AttackChainTrait item66 = new AttackChainTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) * 0.009999999776482582 * constructionParametersMultiplier);
-								list.Add(item66);
+								AttackChainTrait item68 = new AttackChainTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) * 0.009999999776482582 * constructionParametersMultiplier);
+								list.Add(item68);
 							}
 							else if (traitIdentifier.Contains(Asthenia_ToLower))
 							{
 								CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierDamagerActorUpDamagePercentage" }, traitDefinition.DisplayName);
 								CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierDamagerActorDamageReducePercentage" }, traitDefinition.DisplayName);
-								AstheniaTrait item67 = new AstheniaTrait(traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(5));
-								list.Add(item67);
+								AstheniaTrait item69 = new AstheniaTrait(traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(5));
+								list.Add(item69);
 							}
 							else if (traitIdentifier.Contains(GrenadeFragmentDamage_ToLower))
 							{
-								GrenadeFragmentDamageTrait item68 = new GrenadeFragmentDamageTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier);
-								list.Add(item68);
+								GrenadeFragmentDamageTrait item70 = new GrenadeFragmentDamageTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier);
+								list.Add(item70);
 							}
 							else if (traitIdentifier.Contains(InspirePerKillIncreaseDamageModifierTrait_ToLower))
 							{
@@ -4733,8 +4887,8 @@ namespace TWDModel
 							}
 							else if (traitIdentifier == StunResistance_ToLower)
 							{
-								AbilityModifierAvoidStun item69 = new AbilityModifierAvoidStun();
-								list.Add(item69);
+								AbilityModifierAvoidStun item71 = new AbilityModifierAvoidStun();
+								list.Add(item71);
 							}
 							else if (traitIdentifier == Revenge_ToLower)
 							{
@@ -4746,8 +4900,8 @@ namespace TWDModel
 							}
 							else if (traitIdentifier.Contains(ShieldRevenge_ToLower))
 							{
-								ShieldRevengeTrait item70 = new ShieldRevengeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(2));
-								list.Add(item70);
+								ShieldRevengeTrait item72 = new ShieldRevengeTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(2));
+								list.Add(item72);
 							}
 							else if (traitIdentifier == Punish_ToLower)
 							{
@@ -4812,8 +4966,8 @@ namespace TWDModel
 							}
 							else if (traitIdentifier.Contains("TacticalResupply".ToLower()))
 							{
-								TacticalResupplyTrait item71 = new TacticalResupplyTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<int>(4));
-								list.Add(item71);
+								TacticalResupplyTrait item73 = new TacticalResupplyTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<int>(4));
+								list.Add(item73);
 							}
 							else if (traitIdentifier.Contains(EquipmentTactical_ToLower))
 							{
@@ -4857,8 +5011,8 @@ namespace TWDModel
 									{
 										CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierRippedAdditionalPRIncreaseDmg" }, traitDefinition.DisplayName);
 										CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<int>(5) }, new string[1] { "AbilityModifierRippedAdditionalPRMaxStorey" }, traitDefinition.DisplayName);
-										RiposteTrait item72 = new RiposteTrait(traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(5), traitDefinition.GetParameter<FixedPoint>(6) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(7) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(8) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(9), traitDefinition.GetParameter<FixedPoint>(10) / 100.0 * constructionParametersMultiplier);
-										list.Add(item72);
+										RiposteTrait item74 = new RiposteTrait(traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(5), traitDefinition.GetParameter<FixedPoint>(6) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(7) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(8) / 100.0 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(9), traitDefinition.GetParameter<FixedPoint>(10) / 100.0 * constructionParametersMultiplier);
+										list.Add(item74);
 									}
 									else if (traitIdentifier.Contains(CommonwealthArmorExtraChargeChance_ToLower))
 									{
@@ -4924,8 +5078,8 @@ namespace TWDModel
 														traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier,
 														traitDefinition.GetParameter<FixedPoint>(1) * 0.009999999776482582 * constructionParametersMultiplier
 													}, new string[2] { "Equipment_Passive_TornDamageMultiplier", "Equipment_Passive_TornExtraDamageMultiplier" }, traitDefinition.DisplayName);
-													TornApartTrait item73 = new TornApartTrait(traitDefinition.GetParameter<int>(2));
-													list.Add(item73);
+													TornApartTrait item75 = new TornApartTrait(traitDefinition.GetParameter<int>(2));
+													list.Add(item75);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_FreeOW_ToLower))
 												{
@@ -4954,10 +5108,15 @@ namespace TWDModel
 														traitDefinition.GetParameter<FixedPoint>(4) * 0.009999999776482582 * constructionParametersMultiplier
 													}, new string[5] { "Equipment_Passive_ShotGun_Param0", "Equipment_Passive_ShotGun_Param1", "Equipment_Passive_ShotGun_Param2", "Equipment_Passive_ShotGun_Param3", "Equipment_Passive_ShotGun_Param4" }, traitDefinition.DisplayName);
 												}
+												else if (traitIdentifier.Contains(HealthRealdmg_ToLower))
+												{
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { (traitDefinition.GetParameter<FixedPoint>(0) / 100.0 - 1.0) * constructionParametersMultiplier }, new string[1] { "AbilityModifierHealthRealdmg" }, traitDefinition.DisplayName);
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierHealthRealdmg_Param0" }, traitDefinition.DisplayName);
+												}
 												else if (traitIdentifier.Contains(BaseKnockKnock_ToLower))
 												{
-													KnockKnockTrait item74 = new KnockKnockTrait();
-													list.Add(item74);
+													KnockKnockTrait item76 = new KnockKnockTrait();
+													list.Add(item76);
 												}
 												else if (traitIdentifier.Contains(LeaderBuffRedact_ToLower))
 												{
@@ -4970,8 +5129,8 @@ namespace TWDModel
 														traitDefinition.GetParameter<FixedPoint>(4) * 0.009999999776482582 * constructionParametersMultiplier,
 														traitDefinition.GetParameter<FixedPoint>(5)
 													}, new string[6] { "LeaderBuffRedactStunChance", "LeaderBuffRedactChance", "LeaderBuffRedactMaxLayers", "LeaderBuffRedactIncreaseHumanDamage", "LeaderBuffRedactReduceWalkerHpChance", "LeaderBuffRedactReduceWalkerHpRatio" }, traitDefinition.DisplayName);
-													RedactTrait item75 = new RedactTrait();
-													list.Add(item75);
+													RedactTrait item77 = new RedactTrait();
+													list.Add(item77);
 												}
 												else if (traitIdentifier.Contains(LeaderBuffProtect_ToLower))
 												{
@@ -4983,8 +5142,8 @@ namespace TWDModel
 													int parameter16 = traitDefinition.GetParameter<int>(3);
 													int parameter17 = traitDefinition.GetParameter<int>(5);
 													int parameter18 = traitDefinition.GetParameter<int>(7);
-													TauntTrait item76 = new TauntTrait(parameter15, parameter16, parameter17, parameter18);
-													list.Add(item76);
+													TauntTrait item78 = new TauntTrait(parameter15, parameter16, parameter17, parameter18);
+													list.Add(item78);
 												}
 												else if (traitIdentifier.Contains(LeaderBuffClosingTime_ToLower))
 												{
@@ -5020,8 +5179,13 @@ namespace TWDModel
 													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) / 100.0 * constructionParametersMultiplier }, new string[1] { "AbilityModifierRepulseStaggerChance" }, traitDefinition.DisplayName);
 													int parameter19 = traitDefinition.GetParameter<int>(3);
 													FixedPoint addChargeChance2 = traitDefinition.GetParameter<FixedPoint>(4) / 100.0 * constructionParametersMultiplier;
-													StaggerTrait item77 = new StaggerTrait(parameter19, addChargeChance2);
-													list.Add(item77);
+													StaggerTrait item79 = new StaggerTrait(parameter19, addChargeChance2);
+													list.Add(item79);
+												}
+												else if (traitIdentifier.Contains(BossHitPointDMG_ToLower))
+												{
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) * constructionParametersMultiplier }, new string[1] { "AbilityModifierBossHitPointDMGAttackCount" }, traitDefinition.DisplayName);
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "Boss.AbilityModifierBossHitPointDMGAddAdditionalDamage" }, traitDefinition.DisplayName);
 												}
 												else if (traitIdentifier.Contains(NegativeFatal_ToLower))
 												{
@@ -5035,8 +5199,8 @@ namespace TWDModel
 														}
 														list2.Add(fixedPoint14);
 													}
-													NegativeFatalTrait item78 = new NegativeFatalTrait(list2, traitDefinition.EffectIndex);
-													list.Add(item78);
+													NegativeFatalTrait item80 = new NegativeFatalTrait(list2, traitDefinition.EffectIndex);
+													list.Add(item80);
 												}
 												else if (traitIdentifier.Contains(EquipmentActiveDisoriented_ToLower))
 												{
@@ -5048,8 +5212,8 @@ namespace TWDModel
 													{
 														fixedPoint15 = chance.Value;
 													}
-													DisorientTrait item79 = new DisorientTrait(parameter20, (int)(fixedPoint15 * constructionParametersMultiplier));
-													list.Add(item79);
+													DisorientTrait item81 = new DisorientTrait(parameter20, (int)(fixedPoint15 * constructionParametersMultiplier));
+													list.Add(item81);
 												}
 												else if (traitIdentifier.Contains(EquipmentActiveRecoil_ToLower))
 												{
@@ -5067,8 +5231,8 @@ namespace TWDModel
 												}
 												else if (traitIdentifier.Contains(BaseABTester_ToLower))
 												{
-													BaseABTester item80 = new BaseABTester();
-													list.Add(item80);
+													BaseABTester item82 = new BaseABTester();
+													list.Add(item82);
 												}
 												else if (traitIdentifier.Contains(BounsPhonePortrait_ToLower))
 												{
@@ -5198,13 +5362,13 @@ namespace TWDModel
 														traitDefinition.GetParameter<FixedPoint>(1) * constructionParametersMultiplier,
 														traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier
 													}, new string[3] { "StrengthenDefenseFunc3Param1", "StrengthenDefenseFunc3Param2", "StrengthenDefenseFunc3Param3" }, traitDefinition.DisplayName);
-													StrengthenDefenseFunc3Trait item81 = new StrengthenDefenseFunc3Trait();
-													list.Add(item81);
+													StrengthenDefenseFunc3Trait item83 = new StrengthenDefenseFunc3Trait();
+													list.Add(item83);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_Flame_ToLower))
 												{
-													FlameTrait item82 = new FlameTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier);
-													list.Add(item82);
+													FlameTrait item84 = new FlameTrait(traitDefinition.GetParameter<FixedPoint>(0) / 100.0 * constructionParametersMultiplier);
+													list.Add(item84);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_DefendingHeart_ToLower))
 												{
@@ -5218,23 +5382,27 @@ namespace TWDModel
 												else if (traitIdentifier.Contains(GodWarBless_ToLower))
 												{
 													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier }, new string[1] { "GodWarBless_DmgPercentage" }, traitDefinition.DisplayName);
-													GodWarTrait item83 = new GodWarTrait(traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier);
-													list.Add(item83);
+													GodWarTrait item85 = new GodWarTrait(traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier);
+													list.Add(item85);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_Dash_ToLower))
 												{
-													DashTrait item84 = new DashTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1));
-													list.Add(item84);
+													DashTrait item86 = new DashTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1));
+													list.Add(item86);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_Backstep_ToLower))
 												{
-													BackstepTrait item85 = new BackstepTrait(traitDefinition.GetParameter<int>(0));
-													list.Add(item85);
+													BackstepTrait item87 = new BackstepTrait(traitDefinition.GetParameter<int>(0));
+													list.Add(item87);
 												}
 												else if (traitIdentifier.Contains(ChargeAttackWithFreeShooting_ToLower))
 												{
-													ChargeAttackWithFreeShootingTrait item86 = new ChargeAttackWithFreeShootingTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
-													list.Add(item86);
+													ChargeAttackWithFreeShootingTrait item88 = new ChargeAttackWithFreeShootingTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(1));
+													list.Add(item88);
+												}
+												else if (traitIdentifier.Contains(EquipmentPassiveFightBack_ToLower))
+												{
+													list.Add(new EquipmentPassiveFightBackTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(2)));
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_Rage_ToLower))
 												{
@@ -5261,8 +5429,8 @@ namespace TWDModel
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_PassOW_ToLower))
 												{
-													PassOWTrait item87 = new PassOWTrait();
-													list.Add(item87);
+													PassOWTrait item89 = new PassOWTrait();
+													list.Add(item89);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_ScoutDMGBoost_ToLower))
 												{
@@ -5290,18 +5458,18 @@ namespace TWDModel
 												}
 												else if (traitIdentifier.Contains(AttackWithTriggerDot_ToLower))
 												{
-													AttackWithTriggerDotTrait item88 = new AttackWithTriggerDotTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier);
-													list.Add(item88);
+													AttackWithTriggerDotTrait item90 = new AttackWithTriggerDotTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<FixedPoint>(2) * 0.009999999776482582 * constructionParametersMultiplier);
+													list.Add(item90);
 												}
 												else if (traitIdentifier.Contains("Cadence".ToLower()))
 												{
-													CadenceTrait item89 = new CadenceTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<FixedPoint>(4) * 0.009999999776482582 * constructionParametersMultiplier);
-													list.Add(item89);
+													CadenceTrait item91 = new CadenceTrait(traitDefinition.GetParameter<int>(0), traitDefinition.GetParameter<int>(1), traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<FixedPoint>(4) * 0.009999999776482582 * constructionParametersMultiplier);
+													list.Add(item91);
 												}
 												else if (traitIdentifier.Contains("FireSpread".ToLower()))
 												{
-													FireSpreadTrait item90 = new FireSpreadTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<int>(5));
-													list.Add(item90);
+													FireSpreadTrait item92 = new FireSpreadTrait(traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<FixedPoint>(1) * 0.009999999776482582 * constructionParametersMultiplier, traitDefinition.GetParameter<int>(2), traitDefinition.GetParameter<int>(3), traitDefinition.GetParameter<int>(4), traitDefinition.GetParameter<int>(5));
+													list.Add(item92);
 												}
 												else if (traitIdentifier.Contains(Equipment_Passive_HPPercentDmg_ToLower))
 												{
@@ -5422,6 +5590,13 @@ namespace TWDModel
 														traitDefinition.GetParameter<FixedPoint>(0) * 0.009999999776482582 * constructionParametersMultiplier,
 														traitDefinition.GetParameter<FixedPoint>(1) * 0.009999999776482582 * constructionParametersMultiplier
 													}, new string[2] { "Equipment_LastStand_HPLowerMultiplier", "Equipment_LastStand_DmgMultiplier" }, traitDefinition.DisplayName);
+												}
+												else if (traitIdentifier.Contains(Defense_ToLower))
+												{
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(0) }, new string[1] { "Equipment_DefDefense_Melee" }, traitDefinition.DisplayName);
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(1) / 100.0 * constructionParametersMultiplier }, new string[1] { "Equipment_Defense_Melee_Percent" }, traitDefinition.DisplayName);
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(2) }, new string[1] { "Equipment_DefDefense_Range" }, traitDefinition.DisplayName);
+													CreateAndAddIncrementerModifier(list, new FixedPoint[1] { traitDefinition.GetParameter<FixedPoint>(3) / 100.0 * constructionParametersMultiplier }, new string[1] { "Equipment_Defense_Range_Percent" }, traitDefinition.DisplayName);
 												}
 												else if (traitIdentifier.Contains("LeaderBuffCitadel".ToLower()))
 												{

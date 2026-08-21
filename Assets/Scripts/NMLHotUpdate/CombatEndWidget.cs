@@ -27,7 +27,11 @@ public class CombatEndWidget : ListWidgetBase
 		EndlessModeBanner = 20,
 		EndlessModeExpertModeMissionScore = 21,
 		BCGained = 22,
-		WeeklyChallengeActivity = 23
+		WeeklyChallengeActivity = 23,
+		CombatOverBanner = 24,
+		GuildBossScoreMultiplierBanner = 25,
+		GuildBossScoreBanner = 26,
+		BattleCompleteBanner = 27
 	}
 
 	protected UIWidget widget;

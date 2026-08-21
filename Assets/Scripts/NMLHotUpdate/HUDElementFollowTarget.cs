@@ -45,4 +45,26 @@ public class HUDElementFollowTarget : MonoBehaviour
 	{
 		return target != null;
 	}
+
+	public void PinToHudAnchor(GameObject hudAnchor, int left = 0, int bottom = 0, int right = 0, int top = 0)
+	{
+		UIWidget component = GetComponent<UIWidget>();
+		if (component == null)
+		{
+			Debug.LogError("No UIWidget on " + base.name + ". Cannot pin to " + hudAnchor.name);
+			return;
+		}
+		if (hudAnchor == null)
+		{
+			Debug.LogError("HUD anchor of " + base.name + " is null, cannot pin.");
+			return;
+		}
+		target = hudAnchor;
+		this.left = left;
+		this.bottom = bottom;
+		this.right = right;
+		this.top = top;
+		component.SetAnchor(hudAnchor, left, bottom, right, top);
+		component.updateAnchors = UIRect.AnchorUpdate.OnStart;
+	}
 }

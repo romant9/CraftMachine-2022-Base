@@ -264,6 +264,12 @@ namespace Client.Framework.Audio
 			public const string doorMetalLargeOpen = "combat_level/door_metal_large_open";
 
 			public const string doorWoodLargeOpen = "combat_level/door_wood_large_open";
+
+			public const string tankShoot = "combat_level/tank_shoot";
+
+			public const string tankEngine = "combat_level/tank_engine";
+
+			public const string tankDamaged = "combat_level/tank_damaged";
 		}
 
 		public static class CombatWeapon

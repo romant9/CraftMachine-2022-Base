@@ -120,6 +120,7 @@ namespace TWDModel
 			{
 				return false;
 			}
+			ReturnerAnalytics.SendLogin(base.manager, returnLoginDayItemModel.RewardDefinitionId);
 			NotifyChange("ReturnLoginChanged");
 			return true;
 		}

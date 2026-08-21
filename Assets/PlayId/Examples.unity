@@ -3596,7 +3596,6 @@ GameObject:
   - component: {fileID: 818526086}
   - component: {fileID: 818526087}
   - component: {fileID: 818526090}
-  - component: {fileID: 818526089}
   m_Layer: 0
   m_Name: UnityAuthentication
   m_TagString: Untagged
@@ -3633,21 +3632,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Output: {fileID: 1032910473}
   webViewAuthHandler: {fileID: 818526090}
---- !u!114 &818526089
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 818526085}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a87e5a05cb03b64cbb46b3dec57b9d9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  issuerUrl: https://auth.yandex.cloud
-  clientId: aje0klo54cjknb5366dk
-  redirectUri: simple.oauth://oauth2/playid
 --- !u!114 &818526090
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3660,7 +3644,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5eb888b73f0df54f9698964919e573a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokenExchange: {fileID: 818526089}
+  _AuthSettingsType: 0
   altUrl: https://www.google.com/
 --- !u!1 &828142356
 GameObject:

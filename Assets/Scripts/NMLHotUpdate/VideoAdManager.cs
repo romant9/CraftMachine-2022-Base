@@ -176,6 +176,14 @@ public class VideoAdManager : SingularityMonoBehaviour<VideoAdManager>
 		adsAvailable = false;
 	}
 
+	public void ReloadAdsAfterConsentChange()
+	{
+		if (initialized && !(SingularityMonoBehaviour<VideoAdController>.Instance == null))
+		{
+			StartCoroutine(AdsInitialized());
+		}
+	}
+
 	public bool GetAdAvailabilityWithoutCaps(AdUsage usage)
 	{
 		if (!initialized)

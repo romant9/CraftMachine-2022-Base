@@ -1,9 +1,10 @@
-using System;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
 using Epic.OnlineServices.Connect;
 using Epic.OnlineServices.UserInfo;
 using PlayEveryWare.EpicOnlineServices;
+using System;
+using CopyIdTokenOptions = Epic.OnlineServices.Auth.CopyIdTokenOptions;
 
 public class EOSLogin
 {
@@ -21,7 +22,20 @@ public class EOSLogin
 
 	private static UserInfoData _UserInfo;
 
+	private static AuthInterface _AuthInterface;
+
+	private const string EpicIdTokenKey = "EpicIdToken";
+
 	private static NotifyEventHandle s_notifyConnectAuthExpirationCallbackHandle = null;
+
+	public static AuthInterface GetAuthInterface()
+	{
+		if (_AuthInterface == null)
+		{
+			_AuthInterface = EOSManager.Instance.GetEOSPlatformInterface().GetAuthInterface();
+		}
+		return _AuthInterface;
+	}
 
 	public static string GetAccessToken()
 	{
@@ -73,21 +87,28 @@ public class EOSLogin
 					break;
 				}
 			}
-
 			if (!string.IsNullOrEmpty(token))
 			{
-				EOSManager.Instance.StartLoginWithLoginTypeAndToken(LoginCredentialType.ExchangeCode, null, token, delegate (Epic.OnlineServices.Auth.LoginCallbackInfo callbackInfo)
+				var savedToken = TWDPlayerPrefs.GetString(EpicIdTokenKey);
+				if (!string.IsNullOrEmpty(token))
 				{
-					DebugTWD.Log("ResultCode: " + callbackInfo.ResultCode);
-					if (callbackInfo.ResultCode != Result.Success)
+					EOSManager.Instance.StartLoginWithLoginTypeAndToken(LoginCredentialType.ExchangeCode, null, token, delegate (Epic.OnlineServices.Auth.LoginCallbackInfo callbackInfo)
 					{
-						LoginWithPersistentMode();
-					}
-					else
-					{
-						StartConnectLoginWithLoginCallbackInfo(callbackInfo);
-					}
-				});
+						DebugTWD.Log("ResultCode: " + callbackInfo.ResultCode);
+						if (callbackInfo.ResultCode != Result.Success)
+						{
+							LoginWithPersistentMode();
+						}
+						else
+						{
+							StartConnectLoginWithLoginCallbackInfo(callbackInfo);
+						}
+					});
+				}
+				else
+				{
+					LoginWithPersistentMode();
+				}				
 			}
 			else
 			{
@@ -161,63 +182,54 @@ public class EOSLogin
 		_AccountUserId = loginCallbackInfo.LocalUserId;
 		EOSManager.Instance.StartConnectLoginWithEpicAccount(loginCallbackInfo.LocalUserId, delegate(Epic.OnlineServices.Connect.LoginCallbackInfo connectLoginCallbackInfo)
 		{
-			if (OfflineManager.IsCustomLogin)
+			if (connectLoginCallbackInfo.ResultCode == Result.Success)
 			{
-				DebugTWD.LogMycode("if (OfflineManager.IsCustomLogin)");
 				SetupAccessTokenAndRefreshToken(_AccountUserId);
+				SetupTokenExpirationListener();
+				_ProductUserId = connectLoginCallbackInfo.LocalUserId;
 				QueryUserInfoById(_AccountUserId);
+			}
+			else if (connectLoginCallbackInfo.ResultCode == Result.InvalidUser)
+			{
+				EOSManager.Instance.CreateConnectUserWithContinuanceToken(connectLoginCallbackInfo.ContinuanceToken, delegate (CreateUserCallbackInfo createUserCallbackInfo)
+				{
+					if (createUserCallbackInfo.ResultCode == Result.Success)
+					{
+						EOSManager.Instance.StartConnectLoginWithEpicAccount(loginCallbackInfo.LocalUserId, delegate (Epic.OnlineServices.Connect.LoginCallbackInfo retryConnectLoginCallbackInfo)
+						{
+							if (retryConnectLoginCallbackInfo.ResultCode == Result.Success)
+							{
+								SetupAccessTokenAndRefreshToken(_AccountUserId);
+								SetupTokenExpirationListener();
+								_ProductUserId = retryConnectLoginCallbackInfo.LocalUserId;
+								QueryUserInfoById(_AccountUserId);
+							}
+							else
+							{
+								Debug.LogError("Connect Login Retry Failed");
+								if (_EpicLoginCallback != null)
+								{
+									_EpicLoginCallback(null);
+								}
+							}
+						});
+					}
+					else
+					{
+						Debug.LogError("Create Connect User Failed");
+						if (_EpicLoginCallback != null)
+						{
+							_EpicLoginCallback(null);
+						}
+					}
+				});
 			}
 			else
 			{
-				if (connectLoginCallbackInfo.ResultCode == Result.Success)
+				Debug.LogError("Connect Login Failed");
+				if (_EpicLoginCallback != null)
 				{
-					SetupAccessTokenAndRefreshToken(_AccountUserId);
-					SetupTokenExpirationListener();
-					_ProductUserId = connectLoginCallbackInfo.LocalUserId;
-					QueryUserInfoById(_AccountUserId);
-				}
-				else if (connectLoginCallbackInfo.ResultCode == Result.InvalidUser)
-				{
-					EOSManager.Instance.CreateConnectUserWithContinuanceToken(connectLoginCallbackInfo.ContinuanceToken, delegate (CreateUserCallbackInfo createUserCallbackInfo)
-					{
-						if (createUserCallbackInfo.ResultCode == Result.Success)
-						{
-							EOSManager.Instance.StartConnectLoginWithEpicAccount(loginCallbackInfo.LocalUserId, delegate (Epic.OnlineServices.Connect.LoginCallbackInfo retryConnectLoginCallbackInfo)
-							{
-								if (retryConnectLoginCallbackInfo.ResultCode == Result.Success)
-								{
-									SetupAccessTokenAndRefreshToken(_AccountUserId);
-									SetupTokenExpirationListener();
-									_ProductUserId = retryConnectLoginCallbackInfo.LocalUserId;
-									QueryUserInfoById(_AccountUserId);
-								}
-								else
-								{
-									Debug.LogError("Connect Login Retry Failed");
-									if (_EpicLoginCallback != null)
-									{
-										_EpicLoginCallback(null);
-									}
-								}
-							});
-						}
-						else
-						{
-							Debug.LogError("Create Connect User Failed");
-							if (_EpicLoginCallback != null)
-							{
-								_EpicLoginCallback(null);
-							}
-						}
-					});
-				}
-				else
-				{
-					Debug.LogError("Connect Login Failed");
-					if (_EpicLoginCallback != null)
-					{
-						_EpicLoginCallback(null);
-					}
+					_EpicLoginCallback(null);
 				}
 			}
 		});
@@ -225,9 +237,10 @@ public class EOSLogin
 
 	private static void SetupAccessTokenAndRefreshToken(EpicAccountId accountId)
 	{
-		AuthInterface authInterface = EOSManager.Instance.GetEOSPlatformInterface().GetAuthInterface();
-		CopyUserAuthTokenOptions options = default(CopyUserAuthTokenOptions);
-		authInterface.CopyUserAuthToken(ref options, accountId, out var outUserAuthToken);
+		_AccountUserId = accountId;
+		_AuthInterface = EOSManager.Instance.GetEOSPlatformInterface().GetAuthInterface();
+		CopyUserAuthTokenOptions options = default;
+		_AuthInterface.CopyUserAuthToken(ref options, accountId, out var outUserAuthToken);
 		_AccessToken = outUserAuthToken.Value.AccessToken;
 		_RefreshToken = outUserAuthToken.Value.RefreshToken;
 	}
@@ -337,6 +350,51 @@ public class EOSLogin
 			{
 				_EpicLoginCallback(_ProductUserId);
 			}
+		}
+	}
+
+	public static void SaveEpicToken()
+	{
+		string idToken = GetIdToken();
+		if (idToken != null)
+		{
+			HttpHelper.ParsePayload(idToken);
+			TWDPlayerPrefs.SetString(EpicIdTokenKey, idToken);
+			TWDPlayerPrefs.Save();
+		}
+	}
+
+	public static string GetIdToken()
+	{
+		if (_AuthInterface == null)
+		{
+			Debug.LogError("[EOS] Auth not initialized. Call InitializeAuth first.");
+			return null;
+		}
+
+		var options = new CopyIdTokenOptions
+		{
+			AccountId = _AccountUserId
+		};
+
+		var tokenResult = _AuthInterface.CopyIdToken(ref options, out var idToken);
+		if (tokenResult == Result.Success)
+		{
+			if (idToken.HasValue && !string.IsNullOrEmpty(idToken.Value.JsonWebToken))
+			{
+				Debug.Log($"[EOS] IdToken retrieved");
+				return idToken.Value.JsonWebToken;
+			}
+			else
+			{
+				Debug.LogWarning("[EOS] CopyIdToken succeeded but token is empty.");
+				return null;
+			}
+		}
+		else
+		{
+			Debug.LogError("[EOS] CopyIdToken failed.");
+			return null;
 		}
 	}
 }

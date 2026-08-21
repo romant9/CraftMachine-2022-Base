@@ -106,7 +106,7 @@ public class ActorVisualizationTask : VisualizationTask
 				}
 				if (characterAnimationController != null)
 				{
-					characterAnimationController.SetIdleStance(IdleStance.Stand);
+					characterAnimationController.SetIdleStance(key.IsInFortifications ? IdleStance.HalfCover : IdleStance.Stand);
 				}
 				break;
 			case CoverIconState.HalfCover:
@@ -118,7 +118,7 @@ public class ActorVisualizationTask : VisualizationTask
 			case CoverIconState.None:
 				if (characterAnimationController != null)
 				{
-					characterAnimationController.SetIdleStance(IdleStance.Stand);
+					characterAnimationController.SetIdleStance(key.IsInFortifications ? IdleStance.HalfCover : IdleStance.Stand);
 				}
 				break;
 			}

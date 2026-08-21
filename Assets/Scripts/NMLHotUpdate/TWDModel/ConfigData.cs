@@ -1031,6 +1031,10 @@ namespace TWDModel
 
 		public string BananaEnterButtonGoTo;
 
+		public bool WorldBoss;
+
+		public List<FixedPoint> GuildBossPointFunctionValue;
+
 		[JsonIgnore]
 		public long BananaStartTime
 		{

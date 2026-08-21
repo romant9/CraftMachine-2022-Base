@@ -68,6 +68,24 @@ namespace TWDModel
 						tWDModelManager.GvGLog("RegisterForGuildBattleGroupCommand: matchmaking stored with matchmaking time:" + guildModel.GuildWarModel.GetLockDownTimeForBattleSlot(item.Key) + " " + SenderId, guildModel);
 					}
 				}
+				WorldBossModelManager worldBossModelManager = tWDModelManager.Player.WorldBossModelManager;
+				int num = worldBossModelManager?.GetCurrentSeasonId() ?? 0;
+				int num2 = worldBossModelManager?.GetCurrentCycleId() ?? 0;
+				if (num > 0 && num2 > 0)
+				{
+					WorldBossOperationResult worldBossOperationResult = tWDModelManager.ServerService.WorldBossUpdateGuildName(new WorldBossUpdateGuildNameOperationRequest
+					{
+						GroupId = GroupId,
+						PlayerHashedId = SenderId,
+						SeasonId = num,
+						CycleId = num2,
+						GuildName = Name
+					});
+					if (worldBossOperationResult == null || !worldBossOperationResult.Success)
+					{
+						manager.Debug.LogError($"ChangeGuildNameGroupCommand: WorldBossUpdateGuildName failed. GroupId:{GroupId} SeasonId:{num} CycleId:{num2} Message:{worldBossOperationResult?.Message}");
+					}
+				}
 			}
 			guildModel.NotifyChange("GuildNameChanged");
 			return true;

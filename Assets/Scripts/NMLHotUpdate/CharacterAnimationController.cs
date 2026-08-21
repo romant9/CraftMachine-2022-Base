@@ -237,7 +237,7 @@ public class CharacterAnimationController : MonoBehaviour
 		}
 	}
 
-	public bool IsIdle
+	public virtual bool IsIdle
 	{
 		get
 		{
@@ -342,7 +342,7 @@ public class CharacterAnimationController : MonoBehaviour
 		this.OnMove?.Invoke(moving);
 	}
 
-	public void QuickHit(string direction, EquipmentType equipmentType, Vector3 attackerPosition, DamageAction action, string subCategory = null)
+	public virtual void QuickHit(string direction, EquipmentType equipmentType, Vector3 attackerPosition, DamageAction action, string subCategory = null)
 	{
 		float num = 0f;
 		if (direction.ToLower() == "right")
@@ -386,7 +386,7 @@ public class CharacterAnimationController : MonoBehaviour
 		{
 			SpawnQuickHitEffect(quickHitProfile.effectPrefabResource.GetPrefab(), impactDirection, quickHitProfile);
 		}
-		if (quickHitProfile != null && quickHitProfile.ricochetPrefabResource != null && ActorView != null && ActorView.Model.HasTrait("Impenetrable"))
+		if (quickHitProfile != null && quickHitProfile.ricochetPrefabResource != null && ActorView != null && ActorView.Model.IsImpenetrable)
 		{
 			SpawnQuickHitEffect(quickHitProfile.ricochetPrefabResource.GetPrefab(), impactDirection, quickHitProfile);
 		}
@@ -789,7 +789,7 @@ public class CharacterAnimationController : MonoBehaviour
 		UseWeaponNotified = false;
 	}
 
-	public void MeleeDamage(bool criticalDamage, Vector3 direction)
+	public virtual void MeleeDamage(bool criticalDamage, Vector3 direction)
 	{
 		if (IsIdle || IsReloading)
 		{

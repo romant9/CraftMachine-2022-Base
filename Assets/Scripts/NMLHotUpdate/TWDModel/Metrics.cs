@@ -466,6 +466,41 @@ namespace TWDModel
 							.AddProperty("change_num", flag ? item.Value.Amount : (-item.Value.Amount))
 							.AddProperty("change_after", currency.Value + ResourceChangeTmpDiamondSubtract)
 							.Send();
+						bool flag2 = ResourceChangeCurrencies.Contains(item.Key);
+						string value2 = ((!flag2) ? (flag ? ResourceChangeObtainReason : ResourceChangeUsedReason) : (flag ? ((item.Key != CurrencyType.Fairmoney && item.Key != CurrencyType.HillTopCoin) ? ResourceChangeObtainReason : ((!string.IsNullOrEmpty(ResourceChangeObtainReason)) ? ResourceChangeObtainReason : "buy_bundle")) : ((item.Key != CurrencyType.Fairmoney && item.Key != CurrencyType.HillTopCoin) ? ResourceChangeUsedReason : "redeem_bundle")));
+						Dictionary<string, string> dictionary2 = new Dictionary<string, string>
+						{
+							{
+								"resource_id",
+								item.Key.ToString()
+							},
+							{
+								"resource_name",
+								item.Key.ToString()
+							},
+							{
+								"change_type",
+								(flag ? 1 : 0).ToString()
+							},
+							{
+								"change_before",
+								(currency.Value - ResourceChangeTmpDiamondSubtract - item.Value.Amount).ToString()
+							},
+							{
+								"change_num",
+								(flag ? item.Value.Amount : (-item.Value.Amount)).ToString()
+							},
+							{
+								"change_after",
+								(currency.Value + ResourceChangeTmpDiamondSubtract).ToString()
+							},
+							{ "change_reason", value2 }
+						};
+						if (flag)
+						{
+							dictionary2["is_by_recharging"] = ResourceChangeIsByCharging;
+						}
+						manager.SendMetricsEvent(flag2 ? "resource_change" : "item_change", dictionary2);
 					}
 					if (item.Value.Overflow != 0)
 					{
@@ -1658,7 +1693,7 @@ namespace TWDModel
 			AddProperty("Challenge_Round_Difficulty_Level", manager.Player.WeeklyChallenge.CurrentRequiredSurvivorLevel.ToString());
 			AddProperty("PTS_Start", manager.Player.WeeklyChallenge.PTSAtChallengeStart.ToString());
 			AddProperty("PTS_Current", manager.Player.WeeklyChallenge.CurrentPotentialTeamStrength.ToString());
-			AddProperty("Star_Hero_Bonus", manager.Player.MapContainerModel.AttackTargetMissionModel != null && manager.Player.MapContainerModel.AttackTargetMissionModel.Stars.FeaturedHeroExtraChallengeStar);
+			AddProperty("Star_Hero_Bonus", manager.Player.MapContainerModel.AttackTargetMissionModel?.Stars?.FeaturedHeroExtraChallengeStar == true);
 			return this;
 		}
 
@@ -1694,7 +1729,7 @@ namespace TWDModel
 			AddProperty("Apocalyptic_Round_Difficulty_Level", manager.Player.WeeklyChallenge.CurrentRequiredSurvivorLevel.ToString());
 			AddProperty("PTS_Start", manager.Player.WeeklyChallenge.PTSAtChallengeStart.ToString());
 			AddProperty("PTS_Current", manager.Player.WeeklyChallenge.CurrentPotentialTeamStrength.ToString());
-			AddProperty("Star_Hero_Bonus", manager.Player.MapContainerModel.AttackTargetMissionModel != null && manager.Player.MapContainerModel.AttackTargetMissionModel.Stars.FeaturedHeroExtraChallengeStar);
+			AddProperty("Star_Hero_Bonus", manager.Player.MapContainerModel.AttackTargetMissionModel?.Stars?.FeaturedHeroExtraChallengeStar == true);
 			return this;
 		}
 
@@ -2944,6 +2979,12 @@ namespace TWDModel
 					return "distance";
 				case MapCategory.Endless:
 					return "endless";
+				case MapCategory.GuildBoss:
+					return "guild_boss";
+				case MapCategory.GuildBossPVE:
+					return "guild_boss_pve";
+				case MapCategory.GuildBossPVP:
+					return "guild_boss_pvp";
 				case MapCategory.None:
 					return "none";
 				}
@@ -2969,28 +3010,28 @@ namespace TWDModel
 				{
 				case MapCategory.ApocalypticChallenge:
 				{
-					MapMissionGroupModel missionGroupModelThatContains3 = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
-					if (missionGroupModelThatContains3 != null && missionGroupModelThatContains3.MissionSpawnPointGroup != null)
+					MapMissionGroupModel missionGroupModelThatContains4 = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains4 != null && missionGroupModelThatContains4.MissionSpawnPointGroup != null)
 					{
-						result = $"A_{missionGroupModelThatContains3.MissionSpawnPointGroup.DisplayName}_M_{combatModel.MissionNameEnglish}";
+						result = $"A_{missionGroupModelThatContains4.MissionSpawnPointGroup.DisplayName}_M_{combatModel.MissionNameEnglish}";
 					}
 					break;
 				}
 				case MapCategory.Challenge:
 				{
-					MapMissionGroupModel missionGroupModelThatContains2 = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
-					if (missionGroupModelThatContains2 != null && missionGroupModelThatContains2.MissionSpawnPointGroup != null)
+					MapMissionGroupModel missionGroupModelThatContains3 = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains3 != null && missionGroupModelThatContains3.MissionSpawnPointGroup != null)
 					{
-						result = $"C_{missionGroupModelThatContains2.MissionSpawnPointGroup.DisplayName}_M_{combatModel.MissionNameEnglish}";
+						result = $"C_{missionGroupModelThatContains3.MissionSpawnPointGroup.DisplayName}_M_{combatModel.MissionNameEnglish}";
 					}
 					break;
 				}
 				case MapCategory.Survival:
 				{
-					MapMissionGroupModel missionGroupModelThatContains = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
-					if (missionGroupModelThatContains != null && missionGroupModelThatContains.MissionSpawnPointGroup != null)
+					MapMissionGroupModel missionGroupModelThatContains2 = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains2 != null && missionGroupModelThatContains2.MissionSpawnPointGroup != null)
 					{
-						result = $"S_{missionGroupModelThatContains.MissionSpawnPointGroup.DisplayName}_M_{combatModel.MissionNameEnglish}";
+						result = $"S_{missionGroupModelThatContains2.MissionSpawnPointGroup.DisplayName}_M_{combatModel.MissionNameEnglish}";
 					}
 					break;
 				}
@@ -3003,6 +3044,22 @@ namespace TWDModel
 				case MapCategory.Season:
 					result = "SEASON";
 					break;
+				case MapCategory.GuildBoss:
+				case MapCategory.GuildBossPVE:
+				case MapCategory.GuildBossPVP:
+				{
+					MapMissionGroupModel missionGroupModelThatContains = manager.Player.MapContainerModel.GetMissionGroupModelThatContains(attackTargetMissionModel);
+					if (missionGroupModelThatContains != null && missionGroupModelThatContains.MissionSpawnPointGroup != null)
+					{
+						result = string.Format("{0}_{1}_M_{2}", category switch
+						{
+							MapCategory.GuildBossPVP => "GB_PVP",
+							MapCategory.GuildBossPVE => "GB_PVE",
+							_ => "GB",
+						}, missionGroupModelThatContains.MissionSpawnPointGroup.DisplayName, combatModel.MissionNameEnglish);
+					}
+					break;
+				}
 				default:
 					result = "unknown_mission_kind";
 					break;
@@ -3393,6 +3450,55 @@ namespace TWDModel
 			AddTdProperty("GvGBattle", "GvGBattle_GvG_Battle_Id", battleId);
 			AddTdProperty("GvGBattle", "GvGBattle_Battle_Timeslot", battleTimeSlot);
 			AddTdProperty("GvGBattle", "GvGBattle_Battle_Is_Fake", isFake);
+			return this;
+		}
+
+		public Metrics AddWorldBoss(WorldBossBattlegroundDefinition battlegroundDefinition, WorldBossCycleDefinition cycleDefinition, int battleDifficulty)
+		{
+			AddEventType("WorldBoss");
+			AddAndResetOneTdPropertyType("WorldBoss");
+			if (battlegroundDefinition == null || cycleDefinition == null)
+			{
+				return this;
+			}
+			AddProperty("WorldBoss_Battle_Type", battlegroundDefinition.CapturePointType);
+			AddProperty("WorldBoss_Battle_Bg", battlegroundDefinition.CapturePoint);
+			AddProperty("WorldBoss_Battle_Cycle", cycleDefinition.ID);
+			AddProperty("WorldBoss_Battle_Difficulty", battleDifficulty);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_Type", battlegroundDefinition.CapturePointType);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_Bg", battlegroundDefinition.CapturePoint);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_Cycle", cycleDefinition.ID);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_Difficulty", battleDifficulty);
+			return this;
+		}
+
+		public Metrics AddWorldBossBattleResult(int scoreChange, string heroWeaponUse, int cycleDefinitionId, int battleDifficulty)
+		{
+			AddEventType("WorldBoss");
+			AddProperty("WorldBoss_Battle_ScoreChange", scoreChange);
+			AddProperty("WorldBoss_Battle_HeroWeaponUse", heroWeaponUse ?? string.Empty);
+			AddProperty("WorldBoss_Battle_Cycle", cycleDefinitionId);
+			AddProperty("WorldBoss_Battle_Difficulty", battleDifficulty);
+			AddAndResetOneTdPropertyType("WorldBoss");
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_ScoreChange", scoreChange);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_HeroWeaponUse", heroWeaponUse ?? string.Empty);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_Cycle", cycleDefinitionId);
+			AddTdProperty("WorldBoss", "WorldBoss_Battle_Difficulty", battleDifficulty);
+			return this;
+		}
+
+		public Metrics AddGuildBoss(string bossName, int round, int difficulty, long points)
+		{
+			AddEventType("GuildBoss");
+			AddProperty("GuildBoss_Name", bossName);
+			AddProperty("GuildBoss_Round", round);
+			AddProperty("GuildBoss_Difficulty", difficulty);
+			AddProperty("GuildBoss_Points", points);
+			AddAndResetOneTdPropertyType("GuildBoss");
+			AddTdProperty("GuildBoss", "GuildBoss_Name", bossName);
+			AddTdProperty("GuildBoss", "GuildBoss_Round", round);
+			AddTdProperty("GuildBoss", "GuildBoss_Difficulty", difficulty);
+			AddTdProperty("GuildBoss", "GuildBoss_Points", points);
 			return this;
 		}
 

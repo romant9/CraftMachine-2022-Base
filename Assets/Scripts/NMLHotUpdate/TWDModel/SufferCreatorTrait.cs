@@ -8,6 +8,10 @@ namespace TWDModel
 		{
 			if (action is AbilityAction abilityAction && abilityAction.Actor == actor && actor.IsMeleeClass && abilityAction.Ability.IsChargeAttack && !abilityAction.Ability.IsConsumableAbility)
 			{
+				if (ResistNegativeEffectsTrait.TryResist(abilityAction.TargetActor, "SufferActive"))
+				{
+					return ActionListClearFlag.Keep;
+				}
 				CreateEmitterArea(actor, abilityAction.TargetCell);
 			}
 			return ActionListClearFlag.Keep;

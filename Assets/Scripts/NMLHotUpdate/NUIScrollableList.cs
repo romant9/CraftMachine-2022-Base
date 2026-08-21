@@ -578,6 +578,25 @@ public class NUIScrollableList : MonoBehaviourExtended
 		ReturnToSavedScrollPosition();
 	}
 
+	public Vector3 GetCurrentScrollPanelLocalPosition()
+	{
+		if (uiScrollView != null && uiScrollView.panel != null)
+		{
+			return uiScrollView.panel.transform.localPosition;
+		}
+		return Vector3.zero;
+	}
+
+	public void RestoreScrollPanelLocalPosition(Vector3 localPosition)
+	{
+		if (!(uiScrollView == null) && !(uiScrollView.panel == null))
+		{
+			uiScrollView.panel.transform.localPosition = localPosition;
+			uiScrollView.InvalidateBounds();
+			uiScrollView.RestrictWithinBounds(instant: true);
+		}
+	}
+
 	public NUIListItemBase GetItemAtIndex(int index)
 	{
 		if (currentItemsList != null)

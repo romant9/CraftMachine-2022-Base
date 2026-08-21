@@ -28,10 +28,10 @@ namespace TWDModel
 				FixedPoint fixedPoint = 0L;
 				if (postDamageAction.TargetActor.Faction == Faction.Walker || postDamageAction.TargetActor.Faction == Faction.Raider)
 				{
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+					if (challengeDebuffProvider != null)
 					{
-						List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+						List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 						if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.WalkerStateRefDodgedShotInjurerFlag) != null)
 						{
 							fixedPoint = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.WalkerStateRefDodgedShotInjurerFlag);
@@ -40,6 +40,10 @@ namespace TWDModel
 					}
 				}
 				FixedPoint value = 0.0;
+				if (ResistNegativeEffectsTrait.TryResist(postDamageAction.TargetActor, "DodgedShotInjurerFlag"))
+				{
+					return ActionListClearFlag.Keep;
+				}
 				if (DodgeShotChance - fixedPoint > 0.0)
 				{
 					base.manager.CombatModel.AbilityManager.VisitParameter("ExtendProbability", ref value, actor);
@@ -54,6 +58,10 @@ namespace TWDModel
 				}
 				if (playerRandomChanceResult != PlayerRandomChanceResult.Failed)
 				{
+					if (EquipmentPassivePreventControlTrait.TryResistEffect(postDamageAction.TargetActor, "DodgedShotInjurerFlag", RollDiceType.Dodge))
+					{
+						return ActionListClearFlag.Keep;
+					}
 					postDamageAction.TargetActor.DodgeShotTimes = (int)DamageTimes;
 					postDamageAction.TargetActor.DodgeShotTurns = (int)Turns;
 					postDamageAction.TargetActor.NotifyChange("AbilityVisited", new object[2] { "DodgeShot", false });

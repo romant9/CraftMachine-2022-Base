@@ -180,6 +180,7 @@ public class CombatFleeScreen : HUDElement
 			titleLabel.text = LocalizationManager.GetText("Popup.FleeConfirmation.Title");
 			subtitleLabel.text = LocalizationManager.GetText("Popup.FleeConfirmation.Subtitle");
 		}
+		Helpers.GameObjectSetActive(subtitleLabel, combat == null || !combat.HasGuildBossRules);
 		UnityUtils.AlignItemsInsideContainerLine(survivorCards, casualtiesContainerGrid, survivorCardContainerOffset, addToContainer: true, 1f);
 		UIEvent.OnUIEvent += OnUIEvent;
 		TweenManager.RemoveCallback(base.gameObject, 10, Close);

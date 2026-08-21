@@ -14,7 +14,10 @@ public class SurvivorContainerModel : TWDModelObject
 		Outpost = 2,
 		CombatSurvival = 3,
 		CombatGuildBattle = 4,
-		GvGDefenders = 5
+		GvGDefenders = 5,
+		WorldBossPVE = 6,
+		WorldBossPVP = 7,
+		WorldBoss = 8
 	}
 
 	public const string AddSurvivorEvent = "addSurvivor";
@@ -623,6 +626,9 @@ public class SurvivorContainerModel : TWDModelObject
 		{
 		case SurvivorType.Combat:
 		case SurvivorType.CombatGuildBattle:
+		case SurvivorType.WorldBossPVE:
+		case SurvivorType.WorldBossPVP:
+		case SurvivorType.WorldBoss:
 			SavedCombatTeam.Clear();
 			SavedCombatTeam.AddRange(CombatSurvivors);
 			break;
@@ -642,6 +648,9 @@ public class SurvivorContainerModel : TWDModelObject
 		{
 		case SurvivorType.Combat:
 		case SurvivorType.CombatGuildBattle:
+		case SurvivorType.WorldBossPVE:
+		case SurvivorType.WorldBossPVP:
+		case SurvivorType.WorldBoss:
 			return SavedCombatTeam;
 		case SurvivorType.CombatSurvival:
 			return SavedSurvivalModeCombatTeam;
@@ -1115,7 +1124,7 @@ public class SurvivorContainerModel : TWDModelObject
 		return TWDModelResult.Error;
 	}
 
-	public SurvivorModel CreateRandomSurvivor(int rarityPreference = 0, int minLevel = 1, int maxLevel = 1, int targetRarity = -1, SurvivorClass requestedClass = SurvivorClass.None, string characterAssetName = null, int equipmentLevel = 1, int equipmentRarity = 0, List<SurvivorClass> excludeClasses = null, bool includeGachaOnly = true, ModelRandom random = null, SurvivorClass forceSurvivorProbabilityClass = SurvivorClass.None, int forceSurvivorProbabilityPercentageIncrease = 0, bool allowLockedClasses = false, bool isMock = false)
+	public SurvivorModel CreateRandomSurvivor(int rarityPreference = 0, int minLevel = 1, int maxLevel = 1, int targetRarity = -1, SurvivorClass requestedClass = SurvivorClass.None, string characterAssetName = null, int equipmentLevel = 1, int equipmentRarity = 0, List<SurvivorClass> excludeClasses = null, bool includeGachaOnly = true, ModelRandom random = null, SurvivorClass forceSurvivorProbabilityClass = SurvivorClass.None, int forceSurvivorProbabilityPercentageIncrease = 0, bool allowLockedClasses = false)
 	{
 		if (random == null)
 		{
@@ -1180,7 +1189,7 @@ public class SurvivorContainerModel : TWDModelObject
 			actualRarity = targetRarity;
 		}
 		int survivorsMaxUpgradeLevel = obj.GetSurvivorsMaxUpgradeLevel(survivorClass);
-		return CreateSurvivorAndInitializeTraitsAndRandomizeItems(minLevel, maxLevel, characterAssetName, equipmentLevel, equipmentRarity, actorDefinition, actualRarity, survivorsMaxUpgradeLevel, random, isMock);
+		return CreateSurvivorAndInitializeTraitsAndRandomizeItems(minLevel, maxLevel, characterAssetName, equipmentLevel, equipmentRarity, actorDefinition, actualRarity, survivorsMaxUpgradeLevel, random);
 	}
 
 	private SurvivorModel CreateSurvivorAndInitializeTraitsAndRandomizeItems(int minLevel, int maxLevel, string characterAssetName, int equipmentLevel, int equipmentRarity, ActorDefinition actorDefinition, int actualRarity, int levelCap, ModelRandom random, bool isMock = false)

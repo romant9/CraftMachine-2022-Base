@@ -52,6 +52,38 @@ namespace TWDModel
 			return guildBattleParticipantInfo;
 		}
 
+		public static GuildBattleParticipantInfo CreateParticipantFromSurvivorIds(PlayerModel playerModel, GameEconomyData gameEconomyData, List<string> survivorAnalyticsIds)
+		{
+			if (survivorAnalyticsIds == null || survivorAnalyticsIds.Count == 0)
+			{
+				return null;
+			}
+			List<SurvivorMockData> list = new List<SurvivorMockData>();
+			for (int i = 0; i < survivorAnalyticsIds.Count; i++)
+			{
+				string analyticsId = survivorAnalyticsIds[i];
+				SurvivorModel survivorModel = playerModel.SurvivorContainer.Survivors.FirstOrDefault((SurvivorModel x) => x.IdForAnalytics == analyticsId);
+				if (survivorModel == null)
+				{
+					return null;
+				}
+				SurvivorMockData survivorMockData = survivorModel.CreateMockData();
+				survivorMockData.AdjustedLevel = (int)GetAdjustedLevelForSurvivor(survivorModel, gameEconomyData);
+				survivorMockData.TotalDamage = survivorModel.GetHitpoints();
+				survivorMockData.OwnerHashedPlayerId = playerModel.HashedId;
+				survivorMockData.MockWeapon = survivorModel.GetWeaponEquipment().CreateMockData();
+				survivorMockData.MockArmor = survivorModel.GetEquipmentOfCategory(EquipmentCategory.Armor).CreateMockData();
+				list.Add(survivorMockData);
+			}
+			return new GuildBattleParticipantInfo
+			{
+				HashedPlayerId = playerModel.HashedId,
+				Name = playerModel.Name,
+				PlayerEmblem = playerModel.PlayerEmblem,
+				SelectedSurvivors = list
+			};
+		}
+
 		public static List<Tuple<int, FixedPoint, SurvivorModel>> CalculateAndSortPlayerAdjustedLevelForSurvivors(PlayerModel playerModel, GameEconomyData gameEconomyData)
 		{
 			List<EquipmentItemModel> allEquipments = playerModel.Equipment.GetAllEquipments();

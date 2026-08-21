@@ -31,9 +31,9 @@ namespace UnityAuth
 			Initialize();
 		}
 
-		private async void Initialize()
+		public async void Initialize()
 		{
-			// 1. Обязательно инициализируем сервисы при старте сцены
+			if (OfflineManager.UseSupabase) return;
 			try
 			{
 				await UnityServices.InitializeAsync();

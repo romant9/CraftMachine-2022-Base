@@ -142,6 +142,14 @@ namespace TWDModel
 
 		public event ActionExecutedEventHandler PreActionExecution;
 
+		public override void SetWorldBossGuildFullSnapshot(WorldBossGuildFullSnapshot snapshot)
+		{
+			if (Player?.WorldBossModelManager != null)
+			{
+				Player.WorldBossModelManager.WorldBossGuildFullSnapshot = snapshot;
+			}
+		}
+
 		public override IMessageSerializer GetMessageSerializer()
 		{
 			return jsonSerializer;
@@ -507,7 +515,11 @@ namespace TWDModel
 			}
 			List<ModelAction> additionalActions = new List<ModelAction>();
 			Player.AbilityManager.VisitActions(action, null, additionalActions);
-			MapMissionDebuffHelper.CanUseDebuffMission(this)?.VisitActions(action, null, additionalActions);
+			IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(this);
+			if (challengeDebuffProvider != null)
+			{
+				MapMissionDebuffHelper.VisitChallengeDebuffActions(challengeDebuffProvider, this, action, null, additionalActions);
+			}
 			try
 			{
 				this.PreActionExecution?.Invoke(action);

@@ -61,7 +61,7 @@ public class CombatVictoryScreen : HUDElement
 			combatEndFlowRescuedSurvivor.VictoryScreen = this;
 			steps.Add(new FlowScreenState(FlowScreenState.FlowState.DisplayingRescuedSurvivors, combatEndFlowRescuedSurvivor));
 		}
-		else if (GameManager.Instance.playerModel.Combat.MissionType != MissionType.Rescue && !hasPvPRules && !isSurvivalMission && !isGuildBattleMission)
+		else if (GameManager.Instance.playerModel.Combat.MissionType != MissionType.Rescue && !hasPvPRules && !isSurvivalMission && !isGuildBattleMission && !GameManager.Instance.playerModel.Combat.IsWorldBossMission)
 		{
 			List<LootEntry> openedRewardBoxes = RewardScreenHandler.Instance.GetOpenedRewardBoxes();
 			if (openedRewardBoxes != null && openedRewardBoxes.Count > 0)

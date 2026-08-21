@@ -25,11 +25,24 @@ public class SurvivorCardEndFlow : MonoBehaviour
 	[SerializeField]
 	private GameObject deadlyParent;
 
+	[Header("WorldBoss fatigue")]
+	[SerializeField]
+	private GameObject worldBossTiredParent;
+
+	[SerializeField]
+	private GameObject worldBossTiredUpContainer;
+
+	private static readonly Color WorldBossTiredFullColor = new Color(32f / 51f, 67f / 85f, 0.18431373f, 1f);
+
+	private static readonly Color WorldBossTiredTwoColor = new Color(0.96862745f, 0.7607843f, 0.14509805f, 1f);
+
+	private static readonly Color WorldBossTiredOneColor = new Color(0.99215686f, 0.20784314f, 0.20784314f, 1f);
+
 	private bool portraitRender;
 
 	private ActorModel ExpectingPortraitForActor;
 
-	public void SetSurvivor(SurvivorModel survivor, Color injuryColor, bool isDead, bool isSurvival, bool isEndless)
+	public void SetSurvivor(SurvivorModel survivor, Color injuryColor, bool isDead, bool isSurvival, bool isEndless, bool showWorldBossTired = false)
 	{
 		if (survivor != null)
 		{
@@ -66,12 +79,92 @@ public class SurvivorCardEndFlow : MonoBehaviour
 			}
 			SetPortrait(survivor, portraitTexture);
 			SetInjuryAudio(survivor.PreviousCombatInjuryType, isDead);
+			UpdateWorldBossTiredInfo(survivor, showWorldBossTired);
 			base.gameObject.SetActive(value: true);
 		}
 		else
 		{
+			Helpers.GameObjectSetActive(worldBossTiredParent, value: false);
 			base.gameObject.SetActive(value: false);
 		}
+	}
+
+	private void UpdateWorldBossTiredInfo(SurvivorModel survivor, bool showWorldBossTired)
+	{
+		Helpers.GameObjectSetActive(worldBossTiredParent, showWorldBossTired);
+		if (!showWorldBossTired || survivor == null)
+		{
+			return;
+		}
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (worldBossModelManager == null || string.IsNullOrEmpty(survivor.IdForAnalytics))
+		{
+			Helpers.GameObjectSetActive(worldBossTiredParent, value: false);
+			return;
+		}
+		int heroChargeLimit = worldBossModelManager.GetHeroChargeLimit();
+		int heroCharges = worldBossModelManager.GetHeroCharges(survivor.IdForAnalytics);
+		if (heroChargeLimit <= 0 || heroCharges >= heroChargeLimit)
+		{
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+			SetWorldBossTiredUpIndicators(3, WorldBossTiredFullColor);
+			return;
+		}
+		switch (heroCharges)
+		{
+		case 2:
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+			SetWorldBossTiredUpIndicators(2, WorldBossTiredTwoColor);
+			break;
+		case 1:
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: true);
+			SetWorldBossTiredUpIndicators(1, WorldBossTiredOneColor);
+			break;
+		default:
+			SetWorldBossTiredUpIndicators(0, WorldBossTiredOneColor);
+			Helpers.GameObjectSetActive(worldBossTiredUpContainer, value: false);
+			break;
+		}
+	}
+
+	private void SetWorldBossTiredUpIndicators(int visibleCount, Color color)
+	{
+		if (worldBossTiredUpContainer == null)
+		{
+			return;
+		}
+		for (int i = 1; i <= 3; i++)
+		{
+			Transform transform = FindWorldBossTiredIndicatorTransform(i);
+			if (transform == null)
+			{
+				continue;
+			}
+			bool flag = i <= visibleCount;
+			Helpers.GameObjectSetActive(transform.gameObject, flag);
+			if (flag)
+			{
+				UISprite component = transform.GetComponent<UISprite>();
+				if (component != null)
+				{
+					component.color = color;
+				}
+			}
+		}
+	}
+
+	private Transform FindWorldBossTiredIndicatorTransform(int index)
+	{
+		if (worldBossTiredUpContainer == null)
+		{
+			return null;
+		}
+		Transform transform = worldBossTiredUpContainer.transform.Find("Tired " + index);
+		if (transform == null)
+		{
+			transform = worldBossTiredUpContainer.transform.Find("Tired" + index);
+		}
+		return transform;
 	}
 
 	private void SetPortrait(ActorModel survivor, UITexture portrait)

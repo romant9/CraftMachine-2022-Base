@@ -56,11 +56,13 @@ public class OfflineManager : MonoBehaviour
 	public static bool IsOfflineMode { get; set; } = false;
 	public static bool IsDodge { get; set; } = false;
 	public static bool IsUsePortraitManager { get; set; } = true;
-	public static bool UseSupabase = false;
+	[SerializeField]
+	private bool useSupabase;
+	public static bool UseSupabase => Instance.useSupabase;
 
-	public static string MainSceneName = "myTest_66";
-	public static string ClientVersion = "7.20.0.100";
-	public static string ShortVersion = "7.20.0";
+	public static string MainSceneName = "myTest_74";
+	public static string ClientVersion = "7.21.0.100";
+	public static string ShortVersion = "7.21.0";
 
 	public string EosAccountID_Custom { get; set; } //"1c6b97e...";
 	public string SessionToken = "";

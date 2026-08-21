@@ -32,6 +32,28 @@ namespace BaseModel
 
 		bool GvgHasJoinedBattle(string groupId, long matchmakingEpochMsec);
 
+		WorldBossOperationResult WorldBossSignUpCycle(WorldBossSignUpCycleOperationRequest request);
+
+		WorldBossOperationResult WorldBossSelectDifficulty(WorldBossSelectDifficultyOperationRequest request);
+
+		WorldBossOperationResult WorldBossAttackBoss(WorldBossAttackBossOperationRequest request);
+
+		WorldBossOperationResult WorldBossSettleBoss(WorldBossSettleBossOperationRequest request);
+
+		WorldBossOperationResult WorldBossAttackCell(WorldBossAttackCellOperationRequest request);
+
+		WorldBossOperationResult WorldBossOccupyEmptyCell(WorldBossOccupyEmptyCellOperationRequest request);
+
+		WorldBossOperationResult WorldBossSettleCell(WorldBossSettleCellOperationRequest request);
+
+		WorldBossOperationResult WorldBossWithdrawCell(WorldBossWithdrawCellOperationRequest request);
+
+		WorldBossOperationResult WorldBossInstantReturn(WorldBossInstantReturnOperationRequest request);
+
+		WorldBossClaimSettlementResult WorldBossClaimSettlementReward(WorldBossClaimSettlementRewardOperationRequest request);
+
+		WorldBossOperationResult WorldBossUpdateGuildName(WorldBossUpdateGuildNameOperationRequest request);
+
 		LeaderboardPosition GetLeaderboardPosition(string leaderboard, string entryId);
 
 		void DebugGvgMatch(long matchmakingEpochMsec);

@@ -107,6 +107,10 @@ namespace BaseModel
 			return true;
 		}
 
+		public virtual void SetWorldBossGuildFullSnapshot(WorldBossGuildFullSnapshot snapshot)
+		{
+		}
+
 		public abstract string GetVersion();
 
 		public abstract string GetDebugInfo(string debugInfoKey);

@@ -880,17 +880,19 @@ namespace TWDModel
 		public static void ApplyOpponentLevel(CombatModel combat)
 		{
 			MissionGenerationData missionGenerationData = combat.manager.Player.gameEconomyData.GetMissionGenerationData(combat.manager.Player.SelectedMissionDifficulty);
+			int enemyLevel;
+			bool flag = WorldBossMissionModel.TryGetEnemyLevel(combat.manager.Player.GetAttackTargetMissionModel(), out enemyLevel);
 			List<ActorModel> allActors = combat.GetAllActors();
 			for (int i = 0; i < allActors.Count; i++)
 			{
 				ActorModel actorModel = allActors[i];
 				if (actorModel is RaiderModel && actorModel.Faction == Faction.Raider)
 				{
-					actorModel.Level = combat.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel);
+					actorModel.Level = (flag ? enemyLevel : combat.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel));
 				}
 				if (actorModel is WalkerModel && (actorModel.Faction == Faction.Walker || actorModel.Faction == Faction.Environmental))
 				{
-					actorModel.Level = combat.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel);
+					actorModel.Level = (flag ? enemyLevel : combat.manager.Player.PlayerRandom.GetRandomInRange(missionGenerationData.MinWalkerLevel, missionGenerationData.MaxWalkerLevel));
 				}
 			}
 		}

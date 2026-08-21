@@ -124,6 +124,26 @@ public class LoadingScreenCombat : MonoBehaviour
 		}
 	}
 
+	private void SetupWorldBossPVPDefenders()
+	{
+		PlayerModel playerModel = GameManager.Instance.playerModel;
+		if (!(playerModel.GetAttackTargetMissionModel() is WorldBossMissionModel { WorldBossMissionType: WorldBossMissionType.PVP }) || survivorPositions == null || survivorPositions.Length <= 5 || survivorUIPositions == null || survivorUIPositions.Length <= 5)
+		{
+			return;
+		}
+		GuildBattlePvpTeam guildBattlePvpTeam = ((playerModel.WorldBossModelManager != null) ? playerModel.WorldBossModelManager.GetCurrentDefenderTeam() : null);
+		if (guildBattlePvpTeam?.Survivors != null && guildBattlePvpTeam.Survivors.Count != 0)
+		{
+			int num = Mathf.Min(3, guildBattlePvpTeam.Survivors.Count);
+			for (int i = 0; i < num; i++)
+			{
+				SurvivorMockData survivorMockData = guildBattlePvpTeam.Survivors[i];
+				SurvivorModel combatSurvivor = playerModel.SurvivorContainer.CreateSurvivorFromSurvivorMockData(survivorMockData, survivorMockData.Level, preview: true);
+				DrawSurvivor(combatSurvivor, survivorPositions[i + 3].gameObject, survivorUIPositions[i + 3].position, i, isTransient: true);
+			}
+		}
+	}
+
 	private void Start()
 	{
 		exiting = false;
@@ -148,6 +168,7 @@ public class LoadingScreenCombat : MonoBehaviour
 		else
 		{
 			SetupMissionSurvivors();
+			SetupWorldBossPVPDefenders();
 		}
 		loadingScreenCombatUi = uiContainer.AddChild(loadingScreenUIPrefab).GetComponent<LoadingScreenCombatUI>();
 		if (loadingScreenCombatUi != null && loadingScreenCombatUi.GetComponent<UIWidget>() != null)

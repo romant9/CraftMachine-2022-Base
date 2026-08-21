@@ -50,10 +50,6 @@ public class ReturnLoginSevenDayPopup : MonoBehaviour
 	public void Open()
 	{
 		Helpers.GameObjectSetActive(base.gameObject, value: true);
-		if (GetReturnLoginModel() != null)
-		{
-			Helpers.ExecuteCommand(new MarkReturnLoginPopupShownCommand());
-		}
 		Refresh();
 	}
 

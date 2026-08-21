@@ -39,17 +39,17 @@ public class AbilityTargetActorsInputHandler : AbilityInputHandler
 		}
 		List<GridCoordinate> availableTargetPositions = currentSelectedAbility.GetAvailableTargetPositions(base.Combat, selectedSurvivor, selectedSurvivor.GridCoordinate);
 		Color color = Color.red;
-		Color value = Color.red;
-		Color value2 = new Color(1f, 0.33f, 0f);
+		Color color2 = Color.red;
+		Color value = new Color(1f, 0.33f, 0f);
 		if (currentSelectedAbility.Definition.TargetType == AbilityTargetType.Friendly)
 		{
 			color = new Color(0f, 0.4f, 1f);
-			value = color;
-			value2 = Color.blue;
+			color2 = color;
+			value = Color.blue;
 		}
 		int item = 0;
+		int value2 = 1;
 		int value3 = 1;
-		int value4 = 1;
 		List<int> list = new List<int>();
 		List<Color> list2 = new List<Color>();
 		for (int i = 0; i < availableTargetPositions.Count; i++)
@@ -69,26 +69,29 @@ public class AbilityTargetActorsInputHandler : AbilityInputHandler
 				}
 			}
 			List<ActorModel> list3 = base.Combat.AbilityManager.GetListOfActorsToBeTargetted(currentSelectedAbility, base.Combat.ActiveActor, sourceCell, targetPosition);
-			FixedPoint value5 = 0.0;
-			base.Combat.AbilityManager.VisitParameter(AbilityModifierIncreaseSecondaryHitsChance.SecondaryHitsChance, ref value5, selectedSurvivor);
-			if (currentSelectedAbility.Definition.SecondaryTargetsHitChance * (1.0 + value5) < 1L)
+			FixedPoint value4 = 0.0;
+			base.Combat.AbilityManager.VisitParameter(AbilityModifierIncreaseSecondaryHitsChance.SecondaryHitsChance, ref value4, selectedSurvivor);
+			if (currentSelectedAbility.Definition.SecondaryTargetsHitChance * (1.0 + value4) < 1L)
 			{
 				list3 = list3.GetRange(0, 1);
 			}
 			for (int j = 0; j < availableTargetPositions.Count; j++)
 			{
-				if (availableTargetPositions[j] == targetPosition)
+				ActorModel occupier = base.Combat.GetOccupier(availableTargetPositions[j]);
+				ActorModel occupier2 = base.Combat.GetOccupier(targetPosition);
+				bool flag = occupier2 != null && occupier2.IsMultiCell && occupier == occupier2;
+				if (availableTargetPositions[j] == targetPosition || flag)
 				{
-					list2[j] = value;
-					list[j] = value3;
+					list2[j] = (flag ? Color.green : color2);
+					list[j] = value2;
 					continue;
 				}
 				foreach (ActorModel item2 in list3)
 				{
-					if (availableTargetPositions[j] == item2.GridCoordinate)
+					if (availableTargetPositions[j] == item2.GridCoordinate || (item2.IsMultiCell && occupier == item2))
 					{
-						list2[j] = value2;
-						list[j] = value4;
+						list2[j] = value;
+						list[j] = value3;
 					}
 				}
 			}
@@ -127,6 +130,19 @@ public class AbilityTargetActorsInputHandler : AbilityInputHandler
 				}
 				Vector3 position = selectedSurvivorView.transform.position;
 				Vector3 vector = base.GridView.GetPosition(targetPosition).ToVector3();
+				if (currentSelectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.Diamond)
+				{
+					int damageAreaBlockEffectiveAreaRadius = base.Combat.AbilityManager.GetDamageAreaBlockEffectiveAreaRadius(currentSelectedAbility, targetPosition, (int)currentSelectedAbility.Definition.AbilityTargetAreaRadius);
+					List<GridCoordinate> diamondCoordinates = base.Combat.GetDiamondCoordinates(targetPosition, damageAreaBlockEffectiveAreaRadius);
+					base.GridView.HighlightCoordinatesWithFill(diamondCoordinates, base.abilityRangeVisualizer.GetFillColor());
+					return;
+				}
+				if (currentSelectedAbility.Definition.AbilityTargetArea == AbilityTargetAreaType.Circle)
+				{
+					float radius = (float)base.Combat.AbilityManager.GetDamageAreaBlockEffectiveAreaRadius(currentSelectedAbility, targetPosition, (int)currentSelectedAbility.Definition.AbilityTargetAreaRadius) * (float)base.Combat.Grid.CellSize.X + (float)base.Combat.Grid.CellSize.X / 2f;
+					base.abilityRangeVisualizer.SetCircle(vector, radius);
+					return;
+				}
 				if (currentSelectedAbility.Definition.MaxAffectedTargetsCount == 1)
 				{
 					base.abilityRangeVisualizer.SetPoint(vector);

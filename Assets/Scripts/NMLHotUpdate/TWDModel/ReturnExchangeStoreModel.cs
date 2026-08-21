@@ -188,6 +188,7 @@ namespace TWDModel
 			}
 			activeExchangeDefinition.RewardEntries?.Give(base.manager);
 			ExchangeBoughtCounts[exchangeId] = GetBoughtCount(exchangeId) + 1;
+			ReturnerAnalytics.SendExchange(base.manager, activeExchangeDefinition);
 			NotifyChange("ReturnExchangeStoreChanged");
 			return TWDModelResult.OK;
 		}

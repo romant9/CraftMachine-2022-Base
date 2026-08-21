@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,24 +141,28 @@ public class PopupCombatEnd : HUDElement
 		bool flag2 = mapMissionModel != null && (mapMissionModel.IsInWeeklyChallenge || mapMissionModel.IsInApocalyptiWeeklyChallenge);
 		bool flag3 = mapMissionModel?.IsInApocalyptiWeeklyChallenge ?? false;
 		bool isEndlessBattleMission = EndlessModeHelpers.IsEndlessBattleMission;
-		bool flag4 = GuildWarHelper.IsGuildBattleMapMission();
-		bool IsOngoing = IsLoadDataManager || GameManager.Instance.playerModel.GuildWarModel.CurrentBattle.IsOngoing(GameManager.Instance.playerModel.UtcTimeStamp + 5000);
-		bool flag5 = flag4 && combatModel.MissionResult != ECombatResult.Successful && GameManager.Instance.playerModel.GuildBattlePlayer.IsCurrentGuildBattle() && IsOngoing;
+		bool isGuildBossMission = combatModel.IsGuildBossMission;
+		bool isGuildBossPVEMission = combatModel.IsGuildBossPVEMission;
+		bool isGuildBossPVPMission = combatModel.IsGuildBossPVPMission;
+		bool flag4 = isGuildBossPVEMission || isGuildBossPVPMission;
+		bool flag5 = GuildWarHelper.IsGuildBattleMapMission();
+		bool IsOngoing = OfflineManager.IsLoadDataManager || GameManager.Instance.playerModel.GuildWarModel.CurrentBattle.IsOngoing(GameManager.Instance.playerModel.UtcTimeStamp + 5000);
+		bool flag6 = flag5 && combatModel.MissionResult != ECombatResult.Successful && GameManager.Instance.playerModel.GuildBattlePlayer.IsCurrentGuildBattle() && IsOngoing;
 		bool hasPvPRules = combatModel.HasPvPRules;
-		bool flag6 = false;
 		bool flag7 = false;
+		bool flag8 = false;
 		int value = 0;
 		if (GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity != null && GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.LastBattleRewards != null && GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.CurrentDefinition != null)
 		{
 			CurrencyType starCurrencyType = GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.CurrentDefinition.StarCurrencyType;
-			flag6 = GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.LastBattleRewards.TryGetValue(starCurrencyType, out value);
-			flag7 = GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.IsActive;
+			flag7 = GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.LastBattleRewards.TryGetValue(starCurrencyType, out value);
+			flag8 = GameManager.Instance.playerModel.WeeklyChallengeClassTeamActivity.IsActive;
 		}
-		Helpers.GameObjectSetActive(defaultButtonContainer, !flag5);
-		Helpers.GameObjectSetActive(gvgButtonContainer, flag5);
-		bool flag8 = combatModel.StaticRewardSuppliesGranted > 0;
-		bool flag9 = combatModel.StaticRewardSurvivalPointsGranted > 0;
-		int	num = (GameManager.Instance.playerModel.AchievementManager != null || (IsLoadDataManager && !OfflineManager.IsUseServices)) ? GameManager.Instance.playerModel.AchievementManager.GetQuestChallengeBonusStars() : 0;
+		Helpers.GameObjectSetActive(defaultButtonContainer, !flag6);
+		Helpers.GameObjectSetActive(gvgButtonContainer, flag6);
+		bool flag9 = combatModel.StaticRewardSuppliesGranted > 0;
+		bool flag10 = combatModel.StaticRewardSurvivalPointsGranted > 0;
+		int num = (GameManager.Instance.playerModel.AchievementManager != null || (OfflineManager.IsLoadDataManager && !OfflineManager.IsUseServices)) ? GameManager.Instance.playerModel.AchievementManager.GetQuestChallengeBonusStars() : 0;
 		int num2 = ((mapMissionModel != null && mapMissionModel.Stars != null && mapMissionModel.Stars.FeaturedHeroExtraChallengeStar) ? 1 : 0);
 		int collectedSupplies = combatModel.MissionStatistics.CollectedSupplies;
 		int bonusSp = combatModel.MissionStatistics.BonusSp;
@@ -171,6 +176,14 @@ public class PopupCombatEnd : HUDElement
 		CombatEndOutpostWidget combatEndOutpostWidget = null;
 		CombatEndFlowStatsWidget combatEndFlowStatsWidget6 = null;
 		CreateTopBannerWidget();
+		if (isGuildBossMission)
+		{
+			CreateGuildBossScoreWidgets();
+		}
+		else if (flag4)
+		{
+			CreateGuildBossCellScoreWidgets();
+		}
 		if (combatModel.MissionResult == ECombatResult.Successful)
 		{
 			if (flag2)
@@ -180,25 +193,25 @@ public class PopupCombatEnd : HUDElement
 				{
 					combatEndFlowBonusStarWidget = CreateWidget(CombatEndWidget.Types.BonusStar) as CombatEndFlowBonusStarWidget;
 				}
-				if (flag3 && flag7 && flag6 && value > 0)
+				if (flag3 && flag8 && flag7 && value > 0)
 				{
 					CreateWidget(CombatEndWidget.Types.WeeklyChallengeActivity);
 				}
 			}
 			else if (flag)
 			{
-				if (flag9)
+				if (flag10)
 				{
 					combatEndFlowStatsWidget4 = CreateWidget(CombatEndWidget.Types.MissionReward) as CombatEndFlowStatsWidget;
 					combatEndFlowStatsWidget4.SetInfo(LocalizationManager.GetText("Popup.Victory.StaticRewards"));
 				}
-				if (flag8)
+				if (flag9)
 				{
 					combatEndFlowStatsWidget5 = CreateWidget(CombatEndWidget.Types.MissionReward) as CombatEndFlowStatsWidget;
 					combatEndFlowStatsWidget5.SetInfo(LocalizationManager.GetText("Popup.Victory.StaticRewards"));
 				}
 			}
-			else if (flag4)
+			else if (flag5)
 			{
 				GuildBattleModel currentBattle = GuildWarHelper.GetCurrentBattle();
 				bool isPvPCombat = GuildWarHelper.GetGuildWarPlayer().GuildBattleModel.AttackTargetMission.IsPvPCombat;
@@ -215,7 +228,7 @@ public class PopupCombatEnd : HUDElement
 					num3 = currentBattle.GetGuildBattleMissionVictoryPoints(guildBattleMapMissionModel.SectorIdOwner, isPvPCombat, guildBattleMapMissionModel.AreaIndex);
 					if (combatModel.RetryMission && !HelpersModel.IsUnlockAllSectors)
 					{
-						DebugTWD.LogMycode("if (combatModel.RetryMission && !IsLoadDataManager)");
+						DebugTWD.LogMycode("if (combatModel.RetryMission && !HelpersModel.IsUnlockAllSectors)");
 						DebugTWD.Log("Ignore RetryMissionPenalty!", DebugType.Wars);
 						int num4 = (int)FixedPoint.Round(num3 * (GameManager.Instance.gameEconomyData.GuildWarConfig.RetryMissionPenalty + 0.0001));
 						num3 -= num4;
@@ -252,7 +265,7 @@ public class PopupCombatEnd : HUDElement
 						obj4.SetCurrencyData(rewardCurrency.CurrencyType, rewardCurrency.Amount.ToString());
 					}
 				}
-				if (combatModel.StaticRewardStoryMissionEquipment != null && !IsLoadDataManager)
+				if (combatModel.StaticRewardStoryMissionEquipment != null && !OfflineManager.IsLoadDataManager)
 				{
 					DebugTWD.LogMycode("if (combatModel.StaticRewardStoryMissionEquipment != null && !IsLoadDataManager)");
 					DebugTWD.Log("Ignore StaticRewardStoryMissionEquipment!", DebugType.Wars);
@@ -301,7 +314,7 @@ public class PopupCombatEnd : HUDElement
 		{
 			CreateEndlessModeMissionScoreWidget();
 		}
-		if (flag5)
+		if (flag6)
 		{
 			GuildWarHelper.GetCurrentBattle();
 			GuildBattleModelPlayer guildBattleModel = GuildWarHelper.GetGuildWarPlayer().GuildBattleModel;
@@ -312,35 +325,31 @@ public class PopupCombatEnd : HUDElement
 			gvgAttacksMeter.SetCurrencyType(CurrencyType.GvGMissionKey);
 			gvgAttacksMeter.SetValue(GameManager.Instance.playerModel.GetCurrencyAmount(CurrencyType.GvGMissionKey));
 			Cashier retryGvGMissionCashier = obj5.GetRetryGvGMissionCashier(GameManager.Instance.modelManager);
-            bool flag10 = retryGvGMissionCashier.CanAfford() && guildBattleModel.CanRetryMission();
-            int num6 = GameManager.Instance.gameEconomyData.GuildWarConfig.MaxAmountOfRetries - guildBattleModel.CurrentMissionRetriedAttempts;
-            if (!IsLoadDataManager)
+			int num6 = GameManager.Instance.gameEconomyData.GuildWarConfig.MaxAmountOfRetries - guildBattleModel.CurrentMissionRetriedAttempts;
+			bool flag11 = retryGvGMissionCashier.CanAfford() && guildBattleModel.CanRetryMission();
+			if (!OfflineManager.IsLoadDataManager && !flag11)
 			{
-				flag10 = retryGvGMissionCashier.CanAfford() && guildBattleModel.CanRetryMission();
-				if (!flag10)
+				HelpersUI.SetColor(retryLabel, retryUnavailableColor);
+				if (!retryGvGMissionCashier.CanAfford())
 				{
-					HelpersUI.SetColor(retryLabel, retryUnavailableColor);
-					if (!retryGvGMissionCashier.CanAfford())
-					{
-						HelpersUI.SetColor(gvgRetryCostLabel, retryUnavailableColor);
-					}
-					if (num6 == 0)
-					{
-						HelpersUI.SetColor(retryAmountLabel, retryUnavailableColor);
-					}
+					HelpersUI.SetColor(gvgRetryCostLabel, retryUnavailableColor);
+				}
+				if (num6 == 0)
+				{
+					HelpersUI.SetColor(retryAmountLabel, retryUnavailableColor);
 				}
 			}
 			else
 			{
-                DebugTWD.LogMycode("if (!IsLoadDataManager)");
-            }
+				DebugTWD.LogMycode("if (!IsLoadDataManager)");
+			}
 
-            Helpers.GameObjectSetActive(retryUnavailableGameObject, !flag10 && num6 > 0);
-			HelpersUI.SetButtonState(retryMissionButton, (!flag10) ? UIButtonColor.State.Disabled : UIButtonColor.State.Normal);
+			Helpers.GameObjectSetActive(retryUnavailableGameObject, !flag11 && num6 > 0);
+			HelpersUI.SetButtonState(retryMissionButton, (!flag11) ? UIButtonColor.State.Disabled : UIButtonColor.State.Normal);
 			HelpersUI.SetContentToLabel(gvgRetryCostLabel, HelpersModel.IsUnlockAllSectors ? "0" :  retryGvGMissionCashier.GetTotalCost(CurrencyType.GvGGas).ToString());
 			HelpersUI.SetContentToLabel(retryAmountLabel, SingularityMonoBehaviour<LocalizationManager>.Instance.GetLocalizedText("Popup.Defeat.RetriesLeft{Amount}", num6));
 		}
-		if (flag4 && combatModel.MissionResult != ECombatResult.Successful)
+		if (flag5 && combatModel.MissionResult != ECombatResult.Successful)
 		{
 			Helpers.ExecuteCommand(new SendMetricCommand(SendMetricCommand.MetricType.GvGRetryScreenViewed));
 		}
@@ -370,7 +379,16 @@ public class PopupCombatEnd : HUDElement
 				combatEndFlowStatsWidget3.SetCurrencyData(CurrencyType.SurvivalPoints, bonusSp.ToString());
 			}
 		}
-		combatEndFlowStatsWidget = CreateWidget(CombatEndWidget.Types.WalkersDispatched) as CombatEndFlowStatsWidget;
+		if (!flag4 && !isGuildBossMission)
+		{
+			combatEndFlowStatsWidget = CreateWidget(CombatEndWidget.Types.WalkersDispatched) as CombatEndFlowStatsWidget;
+		}
+		if (combatModel.IsGuildBossPVEMission || combatModel.IsGuildBossPVPMission)
+		{
+			CombatEndFlowStatsWidget obj6 = CreateWidget(CombatEndWidget.Types.BattleCompleteBanner) as CombatEndFlowStatsWidget;
+			obj6.SetInfo(LocalizationManager.GetText("Battle_GuildBoss_EndsPanleInfo"));
+			obj6.SetVictoryContainer(combatModel.MissionResult == ECombatResult.Successful);
+		}
 		combatEndFlowSurvivorWidget = CreateWidget(CombatEndWidget.Types.TeamStatus) as CombatEndFlowSurvivorWidget;
 		if (combatEndFlowStatsWidget != null && combatModel.MissionStatistics != null)
 		{
@@ -399,15 +417,16 @@ public class PopupCombatEnd : HUDElement
 			combatEndFlowSurvivorWidget.SetSurvivors(combatModel);
 		}
 		BattlePassModel battlePass = combatModel.manager.Player.BattlePass;
-		if (battlePass != null && battlePass.IsSeasonActive)
+		bool flag12 = isGuildBossMission || flag4;
+		if (battlePass.IsSeasonActive && !flag12)
 		{
 			combatEndFlowStatsWidget6 = CreateWidget(CombatEndWidget.Types.BCGained) as CombatEndFlowStatsWidget;
 			if (combatEndFlowStatsWidget6 != null && combatModel.MissionStatistics != null)
 			{
 				int battlePassCurrencyEarned = combatModel.MissionStatistics.BattlePassCurrencyEarned;
-				bool flag11 = battlePass.EarnedFromKillsThisCycle >= battlePass.MaxDailyBCFromKills && battlePassCurrencyEarned <= 0;
+				bool flag13 = battlePass.EarnedFromKillsThisCycle >= battlePass.MaxDailyBCFromKills && battlePassCurrencyEarned <= 0;
 				combatEndFlowStatsWidget6.SetInfo(LocalizationManager.GetText("Popup.Combatend.BattleCurrency"));
-				combatEndFlowStatsWidget6.SetCurrencyData(CurrencyType.BattlePassPoints, flag11 ? LocalizationManager.GetText("Popup.Combatend.BattleCurrency.DailyMax") : battlePassCurrencyEarned.ToString());
+				combatEndFlowStatsWidget6.SetCurrencyData(CurrencyType.BattlePassPoints, flag13 ? LocalizationManager.GetText("Popup.Combatend.BattleCurrency.DailyMax") : battlePassCurrencyEarned.ToString());
 				combatEndFlowStatsWidget6.CreateCurrencyAnimation(CurrencyType.BattlePassPoints, battlePassCurrencyEarned);
 			}
 		}
@@ -487,6 +506,10 @@ public class PopupCombatEnd : HUDElement
 				combatEndWidget.SetContent(text);
 			}
 		}
+		else if (combatModel.IsGuildBossMission)
+		{
+			CreateWidget(CombatEndWidget.Types.CombatOverBanner);
+		}
 		else if (combatModel.MissionResult == ECombatResult.Successful)
 		{
 			CreateWidget(CombatEndWidget.Types.VictoryBanner);
@@ -518,6 +541,112 @@ public class PopupCombatEnd : HUDElement
 
 	private void onDragStarted()
 	{
+	}
+
+	private void CreateGuildBossCellScoreWidgets()
+	{
+		if (combatModel != null && combatModel.MissionResult == ECombatResult.Successful)
+		{
+			CombatEndFlowStatsWidget combatEndFlowStatsWidget = CreateWidget(CombatEndWidget.Types.TextMessage) as CombatEndFlowStatsWidget;
+			if (combatEndFlowStatsWidget != null)
+			{
+				combatEndFlowStatsWidget.SetInfo(LocalizationManager.GetText("MissionObjective.KillAllEnemies"));
+			}
+		}
+		CombatEndFlowGuildBossScoreWidget combatEndFlowGuildBossScoreWidget = CreateWidget(CombatEndWidget.Types.GuildBossScoreBanner) as CombatEndFlowGuildBossScoreWidget;
+		if (combatEndFlowGuildBossScoreWidget != null)
+		{
+			combatEndFlowGuildBossScoreWidget.SetScore(GetGuildBossCellMissionScore());
+		}
+	}
+
+	private int GetGuildBossCellMissionScore()
+	{
+		if (combatModel == null)
+		{
+			return 0;
+		}
+		WorldBossConfig worldBossConfig = GameManager.Instance?.gameEconomyData?.WorldBossConfig;
+		if (worldBossConfig == null)
+		{
+			return 0;
+		}
+		bool flag = combatModel.MissionResult == ECombatResult.Successful;
+		long num = 0L;
+		if (combatModel.IsGuildBossPVEMission)
+		{
+			num = (flag ? (worldBossConfig.PlayerScorePVE * 2) : worldBossConfig.PlayerScorePVE);
+		}
+		else if (combatModel.IsGuildBossPVPMission)
+		{
+			num = (flag ? (worldBossConfig.PlayerScorePVP + worldBossConfig.PlayerScorePVPSuccess) : worldBossConfig.PlayerScorePVP);
+		}
+		if (num < 0)
+		{
+			num = 0L;
+		}
+		if (num <= int.MaxValue)
+		{
+			return (int)num;
+		}
+		return int.MaxValue;
+	}
+
+	private void CreateGuildBossScoreWidgets()
+	{
+		CombatEndFlowStatsWidget combatEndFlowStatsWidget = CreateWidget(CombatEndWidget.Types.GuildBossScoreMultiplierBanner) as CombatEndFlowStatsWidget;
+		if (combatEndFlowStatsWidget != null)
+		{
+			string guildBossScoreMultiplierText = GetGuildBossScoreMultiplierText();
+			if (!string.IsNullOrEmpty(guildBossScoreMultiplierText))
+			{
+				combatEndFlowStatsWidget.SetSecondAmount(guildBossScoreMultiplierText);
+			}
+		}
+		CombatEndFlowGuildBossScoreWidget combatEndFlowGuildBossScoreWidget = CreateWidget(CombatEndWidget.Types.GuildBossScoreBanner) as CombatEndFlowGuildBossScoreWidget;
+		if (combatEndFlowGuildBossScoreWidget != null)
+		{
+			combatEndFlowGuildBossScoreWidget.SetScore(GetGuildBossScore());
+		}
+	}
+
+	private int GetGuildBossScore()
+	{
+		CombatModel combatModel = GameManager.Instance?.playerModel?.Combat;
+		WorldBossConfig worldBossConfig = GameManager.Instance?.gameEconomyData?.WorldBossConfig;
+		if (worldBossConfig == null)
+		{
+			return 0;
+		}
+		if (combatModel != null && combatModel.IsGuildBossMission)
+		{
+			return (int)Math.Round(combatModel.GuildBossPoint + (double)worldBossConfig.PlayerScoreBossBattle);
+		}
+		return 0;
+	}
+
+	private string GetGuildBossScoreMultiplierText()
+	{
+		CombatModel combatModel = GameManager.Instance?.playerModel?.Combat;
+		if (combatModel == null || !combatModel.IsGuildBossMission)
+		{
+			return string.Empty;
+		}
+		WorldBossModelManager worldBossModelManager = GameManager.Instance?.playerModel?.WorldBossModelManager;
+		if (worldBossModelManager != null)
+		{
+			string text = CombatTurnPanel.FormatGuildBossScoreMultiplierText(worldBossModelManager.GetMyTowerBBossScoreMultiplier());
+			if (!string.IsNullOrEmpty(text))
+			{
+				return text;
+			}
+		}
+		CombatTurnPanel combatTurnPanel = ((CombatView.Instance != null) ? CombatView.Instance.TurnPanel : null);
+		if (combatTurnPanel != null && combatTurnPanel.HasGuildBossUi)
+		{
+			return combatTurnPanel.GetGuildBossScoreMultiplierText();
+		}
+		return string.Empty;
 	}
 
 	private void CreateEndlessModeMissionScoreWidget()
@@ -647,10 +776,4 @@ public class PopupCombatEnd : HUDElement
 		Helpers.GameObjectSetActive(gvgButtonContainer, value: false);
 		base.Close();
 	}
-
-
-
-	#region myparams
-	private bool IsLoadDataManager => OfflineManager.IsLoadDataManager;
-	#endregion
 }

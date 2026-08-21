@@ -324,16 +324,16 @@ namespace TWDModel
 		{
 			GameEconomyData gameEconomyData = base.manager.GameEconomyData;
 			MissionSpawnPoint missionSpawnPoint;
-            try
+			try
 			{
-                missionSpawnPoint = gameEconomyData.MissionSpawnPointData.FindFirstSpawnPointByMissionId(gameEconomyData.ConfigData.OutpostTutorialMissionId);            
-            }
+				missionSpawnPoint = gameEconomyData.MissionSpawnPointData.FindFirstSpawnPointByMissionId(gameEconomyData.ConfigData.OutpostTutorialMissionId);
+			}
 			catch { return; }
-            if (missionSpawnPoint == null)
-            {
-                return;
-            }
-            MapMissionModel missionModelForSpawnPoint = GetMissionModelForSpawnPoint(missionSpawnPoint);
+			if (missionSpawnPoint == null)
+			{
+				return;
+			}
+			MapMissionModel missionModelForSpawnPoint = GetMissionModelForSpawnPoint(missionSpawnPoint);
 			if (missionModelForSpawnPoint != null)
 			{
 				return;
@@ -390,7 +390,7 @@ namespace TWDModel
 		private void CheckForModifications(MissionSpawnPointGroup group)
 		{
 			MapMissionGroupModel missionGroupModelForSpawnPointGroup = GetMissionGroupModelForSpawnPointGroup(group);
-			if (missionGroupModelForSpawnPointGroup == null || missionGroupModelForSpawnPointGroup.IsLocked || missionGroupModelForSpawnPointGroup.IsDisabledOnGED || group.Category == MapCategory.Grind || group.Category == MapCategory.GuildBattle)
+			if (missionGroupModelForSpawnPointGroup == null || missionGroupModelForSpawnPointGroup.IsLocked || missionGroupModelForSpawnPointGroup.IsDisabledOnGED || group.Category == MapCategory.Grind || group.Category == MapCategory.GuildBattle || group.Category == MapCategory.GuildBoss || group.Category == MapCategory.GuildBossPVE || group.Category == MapCategory.GuildBossPVP)
 			{
 				return;
 			}

@@ -55,7 +55,7 @@ public class MoveActionIndicator : HUDElementFollowTarget
 					float value = (float)occupier.Hitpoints / (float)occupier.MaxHitPoints;
 					healthIndicator.HealthBar.value = value;
 					healthIndicator.ActorClass.spriteName = HelpersGfx.GetHealthbarClassIconName(occupier);
-					if (actorView != null)
+					if (actorView != null && actorView.HealthIndicator != null && actorView.HealthIndicator.ActorClass != null)
 					{
 						healthIndicator.ActorClass.color = actorView.HealthIndicator.ActorClass.color;
 						healthIndicator.HealthBar.foregroundWidget.color = actorView.HealthIndicator.HealthBar.foregroundWidget.color;
@@ -79,7 +79,7 @@ public class MoveActionIndicator : HUDElementFollowTarget
 					float value2 = (float)occupier.Hitpoints / (float)occupier.MaxHitPoints;
 					healthIndicator.HealthBar.value = value2;
 					healthIndicator.ActorClass.spriteName = HelpersGfx.GetHealthbarClassIconName(occupier);
-					if (actorView != null)
+					if (actorView != null && actorView.HealthIndicator != null && actorView.HealthIndicator.ActorClass != null)
 					{
 						healthIndicator.ActorClass.color = actorView.HealthIndicator.ActorClass.color;
 						healthIndicator.HealthBar.foregroundWidget.color = actorView.HealthIndicator.HealthBar.foregroundWidget.color;

@@ -21,10 +21,10 @@ namespace TWDModel
 				FixedPoint fixedPoint = 0L;
 				if (postDamageAction.TargetActor.Faction == Faction.Walker || postDamageAction.TargetActor.Faction == Faction.Raider)
 				{
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+					if (challengeDebuffProvider != null)
 					{
-						List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+						List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 						if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.WalkerStateRefFistSpike) != null)
 						{
 							fixedPoint = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.WalkerStateRefFistSpike);
@@ -32,10 +32,19 @@ namespace TWDModel
 						}
 					}
 				}
-				FixedPoint value = 0.0;
-				base.manager.CombatModel.AbilityManager.VisitParameter("ExtendProbability", ref value, actor);
-				if (base.manager.Player.RollDice(RollDiceType.FistSpike, Percentage - fixedPoint, value) != PlayerRandomChanceResult.Failed)
+				FixedPoint fixedPoint2 = 0.0;
+				if (ResistNegativeEffectsTrait.TryResist(postDamageAction.TargetActor, "FistSpike"))
 				{
+					return ActionListClearFlag.Keep;
+				}
+				fixedPoint2 = 0.0;
+				base.manager.CombatModel.AbilityManager.VisitParameter("ExtendProbability", ref fixedPoint2, actor);
+				if (base.manager.Player.RollDice(RollDiceType.FistSpike, Percentage - fixedPoint, fixedPoint2) != PlayerRandomChanceResult.Failed)
+				{
+					if (EquipmentPassivePreventControlTrait.TryResistFistSpike(postDamageAction.TargetActor))
+					{
+						return ActionListClearFlag.Keep;
+					}
 					postDamageAction.TargetActor.FistSpikeTurns = Turns;
 					postDamageAction.TargetActor.NotifyChange("AbilityVisited", new object[2] { "FistSpike", false });
 					postDamageAction.TargetActor.NotifyChange("RefreshFistSpikeTurns");

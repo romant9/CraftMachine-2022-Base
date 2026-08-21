@@ -27,53 +27,61 @@ namespace TWDModel
 		public void Check()
 		{
 			bool flag = false;
-			switch (ObjectiveType)
+			CombatModel combat = base.manager.Player.Combat;
+			if (combat.IsWorldBossMission && !combat.IsUsingSurvivalMissionConfig)
 			{
-			case CheckedObjectiveType.Unspecified:
-				flag = !base.manager.Player.Combat.IsUsingSurvivalMissionConfig;
-				break;
-			case CheckedObjectiveType.SurvGoToExit:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
+				flag = base.manager.Player.GetAttackTargetMissionModel() is WorldBossMissionModel worldBossMissionModel && WorldBossCombatHelper.IsObjectiveType(worldBossMissionModel.WorldBossMissionType, ObjectiveType);
+			}
+			else
+			{
+				switch (ObjectiveType)
 				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.GoToExit;
+				case CheckedObjectiveType.Unspecified:
+					flag = !combat.IsUsingSurvivalMissionConfig;
+					break;
+				case CheckedObjectiveType.SurvGoToExit:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.GoToExit;
+					}
+					break;
+				case CheckedObjectiveType.SurvKillAllWalkers:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillAllWalkers;
+					}
+					break;
+				case CheckedObjectiveType.SurvKillAllRaiders:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillAllRaiders;
+					}
+					break;
+				case CheckedObjectiveType.SurvKillAmountAndExit:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillAmountAndExit;
+					}
+					break;
+				case CheckedObjectiveType.SurvKillBossAndExit:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillBossAndExit;
+					}
+					break;
+				case CheckedObjectiveType.SurvFindLoot:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.FindLoot;
+					}
+					break;
+				case CheckedObjectiveType.SurvSurviveTurnAmountAndExit:
+					if (combat.IsUsingSurvivalMissionConfig)
+					{
+						flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(combat) == SurvivalMissionConfig.SurvivalObjectiveType.SurviveTurnAmountAndExit;
+					}
+					break;
 				}
-				break;
-			case CheckedObjectiveType.SurvKillAllWalkers:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
-				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillAllWalkers;
-				}
-				break;
-			case CheckedObjectiveType.SurvKillAllRaiders:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
-				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillAllRaiders;
-				}
-				break;
-			case CheckedObjectiveType.SurvKillAmountAndExit:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
-				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillAmountAndExit;
-				}
-				break;
-			case CheckedObjectiveType.SurvKillBossAndExit:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
-				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.KillBossAndExit;
-				}
-				break;
-			case CheckedObjectiveType.SurvFindLoot:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
-				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.FindLoot;
-				}
-				break;
-			case CheckedObjectiveType.SurvSurviveTurnAmountAndExit:
-				if (base.manager.Player.Combat.IsUsingSurvivalMissionConfig)
-				{
-					flag = SurvivalCombatHelper.GetSurvivalMissionObjectiveType(base.manager.Player.Combat) == SurvivalMissionConfig.SurvivalObjectiveType.SurviveTurnAmountAndExit;
-				}
-				break;
 			}
 			if (flag)
 			{

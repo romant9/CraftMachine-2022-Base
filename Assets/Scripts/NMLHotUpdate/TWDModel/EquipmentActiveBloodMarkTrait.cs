@@ -44,7 +44,7 @@ namespace TWDModel
 		private void ApplyBloodMark(ActorModel source, ActorModel target)
 		{
 			EquipmentPassiveBloodMarkTrait equipmentPassiveBloodMarkTrait = EquipmentPassiveBloodMarkTrait.FindOnActor(source);
-			if (equipmentPassiveBloodMarkTrait != null)
+			if (equipmentPassiveBloodMarkTrait != null && !EquipmentPassivePreventControlTrait.TryResistEffect(target, "BloodMark"))
 			{
 				FixedPoint healthPercentageForTarget = equipmentPassiveBloodMarkTrait.GetHealthPercentageForTarget(target);
 				int num = Math.Max(1, durationTurns);

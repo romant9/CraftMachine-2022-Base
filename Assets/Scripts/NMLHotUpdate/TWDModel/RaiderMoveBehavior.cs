@@ -12,7 +12,11 @@ namespace TWDModel
 
 		public override int GetPriority()
 		{
-			if (base.Actor.MoveCompleted || base.Actor.IsRooted || base.Actor.IsPitfalled || base.AIDataModel.Alertness == AIAlertness.Idle)
+			if (base.AIDataModel.Mode == AIMode.Stationary || base.Actor.IsBossClass || base.Actor is TankActorModel)
+			{
+				return 0;
+			}
+			if (base.Actor.MoveCompleted || base.Actor.IsRooted || base.Actor.IsPitfalled || base.Actor.IsInFortifications || base.AIDataModel.Alertness == AIAlertness.Idle)
 			{
 				return 0;
 			}

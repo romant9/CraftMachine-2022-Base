@@ -83,6 +83,12 @@ namespace TWDModel
 			case CommandSkillType.CommandSkillAbilityRangeTrident:
 				baseCommandSkill = new AbilityRangeTridentSkill(skillDefinition.GetParameter<int>(0), skillDefinition.GetParameter<int>(1), skillDefinition.GetParameter<int>(2), skillDefinition.GetParameter<int>(3), skillDefinition.GetParameter<int>(4), skillDefinition.GetParameter<int>(5), skillDefinition.GetParameter<int>(6));
 				break;
+			case CommandSkillType.CommandSkillFortifications:
+				baseCommandSkill = new FortificationsSkill(skillDefinition.GetParameter<int>(0));
+				break;
+			case CommandSkillType.CommandSkillFortificationsRemove:
+				baseCommandSkill = new FortificationsRemoveSkill(skillDefinition.GetParameter<int>(0), skillDefinition.GetParameter<FixedPoint>(1) / 100.0);
+				break;
 			}
 			if (baseCommandSkill != null)
 			{

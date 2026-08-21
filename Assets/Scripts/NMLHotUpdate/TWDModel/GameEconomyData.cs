@@ -359,9 +359,10 @@ namespace TWDModel
 		[GEDSheet("ConditionBundleDefinitions")]
 		public ConditionBundleDefinition[] ConditionBundleDefinitions;
 
-		[GEDSheet("ThreeDayDefinition")]
+		[GEDSheet("ReturnThreeDayDefinition")]
 		public ReturnThreeDayDefinition[] ReturnThreeDayDefinitions;
 
+		[GEDSheet("ThreeDayDefinition")]
 		public ThreeDayDefinition[] ThreeDayDefinitions;
 
 		[GEDSheet("NewbieSevenQuest")]
@@ -775,6 +776,24 @@ namespace TWDModel
 		[GEDSheet("SPTraitsSkillKitTokenSet")]
 		public SPTraitsSkillKitTokenSet[] SPTraitsSkillKitTokenSets;
 
+		[GEDSheet("WorldBossConfig")]
+		public WorldBossConfig WorldBossConfig;
+
+		[GEDSheet("WorldBossSeasonDefinition")]
+		public WorldBossSeasonDefinition[] WorldBossSeasonDefinitions;
+
+		[GEDSheet("WorldBossCycleDefinition")]
+		public WorldBossCycleDefinition[] WorldBossCycleDefinitions;
+
+		[GEDSheet("WorldBossBattlegroundDefinition")]
+		public WorldBossBattlegroundDefinition[] WorldBossBattlegroundDefinitions;
+
+		[GEDSheet("WorldBossCellDefinition")]
+		public WorldBossCellDefinition[] WorldBossCellDefinitions;
+
+		[GEDSheet("WorldBossDifficultyDefinition")]
+		public WorldBossDifficultyDefinition[] WorldBossDifficultyDefinitions;
+
 		private Dictionary<string, int> BundleStoreDefinitionIndexCache = new Dictionary<string, int>();
 
 		private Dictionary<string, int> BundleTradefairDefinitionIndexCache = new Dictionary<string, int>();
@@ -790,6 +809,8 @@ namespace TWDModel
 		private IDictionary<string, SupportDefinition> supportDefinitionsMap;
 
 		private IDictionary<int, List<SupportTalentDefinition>> supportTalentDefinitionsMap;
+
+		private IDictionary<int, List<WorldBossBattlegroundDefinition>> worldBossBattlegroundDefinitionMap;
 
 		private static readonly Dictionary<EquipmentType, EquipmentCategory> equipmentTypesCategoryMap = new Dictionary<EquipmentType, EquipmentCategory>
 		{
@@ -4648,9 +4669,9 @@ namespace TWDModel
 
 		public RadioCallProbabilityData GetRadioCallProbabilities(DropEventDefinition.DropEventType eventType, DropEventDefinition.DropEventContext context, DropEventDefinition.DropEventTag tag, DropType dropType, int controlLevel, int callSlotNumber, long playerLifeTime, SpecialPhoneCallState callState = null)
 		{
-			RadioCallProbabilityData radioCallProbabilityData = new RadioCallProbabilityData();
 			PhoneCallDefinition phoneCallDefinition = GetPhoneCallDefinition(playerLifeTime, callSlotNumber);
 			int num = 0;
+			RadioCallProbabilityData radioCallProbabilityData = new RadioCallProbabilityData(phoneCallDefinition);
 			List<ItemAmountProbabilityData> list = new List<ItemAmountProbabilityData>();
 			if (phoneCallDefinition != null)
 			{
@@ -5982,7 +6003,11 @@ namespace TWDModel
 			SPTraitsRemoldDefinitions[] sPTraitsRemodeDefinition = SPTraitsRemodeDefinition;
 			foreach (SPTraitsRemoldDefinitions sPTraitsRemoldDefinitions in sPTraitsRemodeDefinition)
 			{
-				if (!SPTraitsRemodeDefinitionByTypes.ContainsKey(sPTraitsRemoldDefinitions.Type))
+				if (SPTraitsRemodeDefinitionByTypes.ContainsKey(sPTraitsRemoldDefinitions.Type))
+				{
+					DebugError("SPTraitsRemodeDefinitions with ID " + sPTraitsRemoldDefinitions.ID + " already exists!");
+				}
+				else
 				{
 					SPTraitsRemodeDefinitionByTypes.Add(sPTraitsRemoldDefinitions.Type, sPTraitsRemoldDefinitions);
 				}
@@ -7675,6 +7700,7 @@ namespace TWDModel
 			CalculateEndlassDebuff();
 			SetupGuildWar();
 			SetupGuildBattleDifficulty();
+			SetupWorldBoss();
 			UpdateSurvivalConfigCountsAndMasks(SurvivalMissionConfigs, SurvivalMissionConfig.Type.Survival);
 			SetupMapDefinitions();
 			SetupGuildBattleMissionPools();
@@ -8483,6 +8509,7 @@ namespace TWDModel
 					survivorToken.Amount = GetHeroTokenAmountForRarity(survivorToken.Type, num);
 					if (OfflineManager.IsLoadDataManager)
 					{
+						DebugTWD.LogError("Устарело");
 						var hashList = new List<CurrencyType>() { CurrencyType.PerlieToken, CurrencyType.GauntletAaronToken, CurrencyType.SimonToken, CurrencyType.ProtectorDarylToken, CurrencyType.LydiaToken };
 						if (survivorToken.Amount == 0 && hashList.Contains(survivorToken.Type))
 						{
@@ -9417,6 +9444,446 @@ namespace TWDModel
 			return null;
 		}
 
+		private void SetupWorldBoss()
+		{
+			if (WorldBossSeasonDefinitions != null)
+			{
+				DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToUniversalTime();
+				for (int i = 0; i < WorldBossSeasonDefinitions.Length; i++)
+				{
+					WorldBossSeasonDefinition worldBossSeasonDefinition = WorldBossSeasonDefinitions[i];
+					if (worldBossSeasonDefinition != null)
+					{
+						worldBossSeasonDefinition.SetStartTime(dateTime);
+						worldBossSeasonDefinition.SetEndTime(dateTime);
+					}
+				}
+			}
+			if (WorldBossCycleDefinitions != null)
+			{
+				DateTime dateTime2 = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToUniversalTime();
+				int signUpCloseMinutes = ((WorldBossConfig != null) ? WorldBossConfig.SignUpCloseTime : 120);
+				int difficultyCloseMinutes = ((WorldBossConfig != null) ? WorldBossConfig.SelectDiffcCloseTime : 60);
+				for (int j = 0; j < WorldBossCycleDefinitions.Length; j++)
+				{
+					WorldBossCycleDefinition worldBossCycleDefinition = WorldBossCycleDefinitions[j];
+					if (worldBossCycleDefinition != null)
+					{
+						worldBossCycleDefinition.SetStartTime(dateTime2);
+						worldBossCycleDefinition.SetEndTime(dateTime2);
+						worldBossCycleDefinition.SetSignUpCloseMinutes(signUpCloseMinutes);
+						worldBossCycleDefinition.SetDifficultyCloseMinutes(difficultyCloseMinutes);
+					}
+				}
+			}
+			SetupWorldBossBattlegroundDefinitions();
+		}
+
+		private void SetupWorldBossBattlegroundDefinitions()
+		{
+			worldBossBattlegroundDefinitionMap = new Dictionary<int, List<WorldBossBattlegroundDefinition>>();
+			if (WorldBossBattlegroundDefinitions == null || WorldBossBattlegroundDefinitions.Length == 0)
+			{
+				return;
+			}
+			WorldBossBattlegroundDefinition[] worldBossBattlegroundDefinitions = WorldBossBattlegroundDefinitions;
+			foreach (WorldBossBattlegroundDefinition worldBossBattlegroundDefinition in worldBossBattlegroundDefinitions)
+			{
+				if (!worldBossBattlegroundDefinitionMap.TryGetValue(worldBossBattlegroundDefinition.BgLevelGroup, out var value))
+				{
+					value = new List<WorldBossBattlegroundDefinition>();
+					worldBossBattlegroundDefinitionMap.Add(worldBossBattlegroundDefinition.BgLevelGroup, value);
+				}
+				value.Add(worldBossBattlegroundDefinition);
+				List<DifficultyIncrementalDebuff> list = new List<DifficultyIncrementalDebuff>();
+				if (worldBossBattlegroundDefinition.DeBuff != null)
+				{
+					foreach (string item in worldBossBattlegroundDefinition.DeBuff)
+					{
+						list.Add(GetChallengeDebuff(item));
+					}
+				}
+				worldBossBattlegroundDefinition.SetDebuffss(list);
+			}
+		}
+
+		public List<WorldBossBattlegroundDefinition> GetWorldBossBattlegroundDefinitionsByGroup(int bgLevelGroup)
+		{
+			if (worldBossBattlegroundDefinitionMap == null)
+			{
+				return null;
+			}
+			worldBossBattlegroundDefinitionMap.TryGetValue(bgLevelGroup, out var value);
+			return value;
+		}
+
+		public WorldBossSeasonDefinition FindWorldBossSeasonDefinition(int season)
+		{
+			if (WorldBossSeasonDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossSeasonDefinitions.Length; i++)
+			{
+				if (WorldBossSeasonDefinitions[i].Season == season)
+				{
+					return WorldBossSeasonDefinitions[i];
+				}
+			}
+			return null;
+		}
+
+		public WorldBossSeasonDefinition FindWorldBossSeasonWithTime(long utcTimeStamp)
+		{
+			if (WorldBossSeasonDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossSeasonDefinitions.Length; i++)
+			{
+				WorldBossSeasonDefinition worldBossSeasonDefinition = WorldBossSeasonDefinitions[i];
+				if (worldBossSeasonDefinition != null && worldBossSeasonDefinition.IsOpen(utcTimeStamp))
+				{
+					return worldBossSeasonDefinition;
+				}
+			}
+			return null;
+		}
+
+		public WorldBossSeasonDefinition FindNextWorldBossSeason(long currentEndTime, long playerLifeTime)
+		{
+			if (WorldBossSeasonDefinitions == null)
+			{
+				return null;
+			}
+			WorldBossSeasonDefinition worldBossSeasonDefinition = null;
+			for (int i = 0; i < WorldBossSeasonDefinitions.Length; i++)
+			{
+				WorldBossSeasonDefinition worldBossSeasonDefinition2 = WorldBossSeasonDefinitions[i];
+				if (worldBossSeasonDefinition2 != null && currentEndTime < worldBossSeasonDefinition2.StartTimeMilliseconds && playerLifeTime < worldBossSeasonDefinition2.EndTimeMilliseconds && (worldBossSeasonDefinition == null || worldBossSeasonDefinition2.StartTimeMilliseconds < worldBossSeasonDefinition.StartTimeMilliseconds))
+				{
+					worldBossSeasonDefinition = worldBossSeasonDefinition2;
+				}
+			}
+			return worldBossSeasonDefinition;
+		}
+
+		public WorldBossSeasonDefinition FindLastStartedWorldBossSeason(long utcTimeStamp)
+		{
+			if (WorldBossSeasonDefinitions == null || WorldBossSeasonDefinitions.Length == 0)
+			{
+				return null;
+			}
+			WorldBossSeasonDefinition result = WorldBossSeasonDefinitions[0];
+			for (int i = 0; i < WorldBossSeasonDefinitions.Length; i++)
+			{
+				WorldBossSeasonDefinition worldBossSeasonDefinition = WorldBossSeasonDefinitions[i];
+				if (worldBossSeasonDefinition != null && worldBossSeasonDefinition.StartTimeMilliseconds <= utcTimeStamp)
+				{
+					result = worldBossSeasonDefinition;
+				}
+			}
+			return result;
+		}
+
+		[Obsolete("CycleId 是 Cycle 轮次号而非代理键 ID，请使用 FindWorldBossCycleDefinition(seasonId, cycleId) 双键查找", true)]
+		public WorldBossCycleDefinition FindWorldBossCycleDefinition(int cycleDefinitionId)
+		{
+			return null;
+		}
+
+		public WorldBossCycleDefinition FindWorldBossCycleDefinition(int seasonId, int cycleId)
+		{
+			if (WorldBossCycleDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossCycleDefinitions.Length; i++)
+			{
+				WorldBossCycleDefinition worldBossCycleDefinition = WorldBossCycleDefinitions[i];
+				if (worldBossCycleDefinition != null && worldBossCycleDefinition.Season == seasonId && worldBossCycleDefinition.Cycle == cycleId)
+				{
+					return worldBossCycleDefinition;
+				}
+			}
+			return null;
+		}
+
+		public WorldBossCycleDefinition FindWorldBossCycleWithTime(long utcTimeStamp, int season)
+		{
+			if (WorldBossCycleDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossCycleDefinitions.Length; i++)
+			{
+				WorldBossCycleDefinition worldBossCycleDefinition = WorldBossCycleDefinitions[i];
+				if (worldBossCycleDefinition != null && worldBossCycleDefinition.Season == season && worldBossCycleDefinition.IsOpen(utcTimeStamp))
+				{
+					return worldBossCycleDefinition;
+				}
+			}
+			return null;
+		}
+
+		public WorldBossCycleDefinition FindNextWorldBossCycle(long currentEndTime, int season)
+		{
+			if (WorldBossCycleDefinitions == null)
+			{
+				return null;
+			}
+			WorldBossCycleDefinition worldBossCycleDefinition = null;
+			for (int i = 0; i < WorldBossCycleDefinitions.Length; i++)
+			{
+				WorldBossCycleDefinition worldBossCycleDefinition2 = WorldBossCycleDefinitions[i];
+				if (worldBossCycleDefinition2 != null && worldBossCycleDefinition2.Season == season && currentEndTime < worldBossCycleDefinition2.StartTimeMilliseconds && (worldBossCycleDefinition == null || worldBossCycleDefinition2.StartTimeMilliseconds < worldBossCycleDefinition.StartTimeMilliseconds))
+				{
+					worldBossCycleDefinition = worldBossCycleDefinition2;
+				}
+			}
+			return worldBossCycleDefinition;
+		}
+
+		public WorldBossCycleDefinition FindCurrentWorldBossCycle(long utcTimeStamp, int season)
+		{
+			return FindWorldBossCycleWithTime(utcTimeStamp, season);
+		}
+
+		public WorldBossBattlegroundDefinition[] FindWorldBossBattlegroundDefinitionsByDifficulty(int difficulty)
+		{
+			if (WorldBossBattlegroundDefinitions == null)
+			{
+				return Array.Empty<WorldBossBattlegroundDefinition>();
+			}
+			List<WorldBossBattlegroundDefinition> list = new List<WorldBossBattlegroundDefinition>();
+			for (int i = 0; i < WorldBossBattlegroundDefinitions.Length; i++)
+			{
+				WorldBossBattlegroundDefinition worldBossBattlegroundDefinition = WorldBossBattlegroundDefinitions[i];
+				if (worldBossBattlegroundDefinition != null && worldBossBattlegroundDefinition.WithinBgLevel(difficulty))
+				{
+					list.Add(worldBossBattlegroundDefinition);
+				}
+			}
+			return list.ToArray();
+		}
+
+		public WorldBossDifficultyDefinition FindWorldBossDifficultyDefinition(int season, int difficulty)
+		{
+			if (WorldBossDifficultyDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossDifficultyDefinitions.Length; i++)
+			{
+				WorldBossDifficultyDefinition worldBossDifficultyDefinition = WorldBossDifficultyDefinitions[i];
+				if (worldBossDifficultyDefinition != null && worldBossDifficultyDefinition.Season == season && worldBossDifficultyDefinition.Difficulty == difficulty)
+				{
+					return worldBossDifficultyDefinition;
+				}
+			}
+			return null;
+		}
+
+		public int FindWorldBossBgLevelGroupByDifficulty(int difficulty)
+		{
+			if (WorldBossBattlegroundDefinitions == null)
+			{
+				return 0;
+			}
+			for (int i = 0; i < WorldBossBattlegroundDefinitions.Length; i++)
+			{
+				WorldBossBattlegroundDefinition worldBossBattlegroundDefinition = WorldBossBattlegroundDefinitions[i];
+				if (worldBossBattlegroundDefinition != null && worldBossBattlegroundDefinition.WithinBgLevel(difficulty))
+				{
+					return worldBossBattlegroundDefinition.BgLevelGroup;
+				}
+			}
+			return 0;
+		}
+
+		public WorldBossBattlegroundDefinition FindWorldBossBattlegroundDefinitionByCapturePoint(string capturePoint, int difficultyLevel)
+		{
+			if (WorldBossBattlegroundDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossBattlegroundDefinitions.Length; i++)
+			{
+				WorldBossBattlegroundDefinition worldBossBattlegroundDefinition = WorldBossBattlegroundDefinitions[i];
+				if (worldBossBattlegroundDefinition != null && worldBossBattlegroundDefinition.CapturePoint == capturePoint && worldBossBattlegroundDefinition.WithinBgLevel(difficultyLevel))
+				{
+					return worldBossBattlegroundDefinition;
+				}
+			}
+			return null;
+		}
+
+		public WorldBossCellDefinition FindWorldBossCellDefinition(string capturePoint, string cell)
+		{
+			if (WorldBossCellDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossCellDefinitions.Length; i++)
+			{
+				WorldBossCellDefinition worldBossCellDefinition = WorldBossCellDefinitions[i];
+				if (worldBossCellDefinition != null && worldBossCellDefinition.CapturePoint == capturePoint && worldBossCellDefinition.Cell == cell)
+				{
+					return worldBossCellDefinition;
+				}
+			}
+			return null;
+		}
+
+		public List<WorldBossCellDefinition> GetWorldBossCellDefinitionsByCapturePoint(string capturePoint)
+		{
+			List<WorldBossCellDefinition> list = new List<WorldBossCellDefinition>();
+			if (WorldBossCellDefinitions == null || string.IsNullOrEmpty(capturePoint))
+			{
+				return list;
+			}
+			for (int i = 0; i < WorldBossCellDefinitions.Length; i++)
+			{
+				WorldBossCellDefinition worldBossCellDefinition = WorldBossCellDefinitions[i];
+				if (worldBossCellDefinition != null && worldBossCellDefinition.CapturePoint == capturePoint)
+				{
+					list.Add(worldBossCellDefinition);
+				}
+			}
+			return list;
+		}
+
+		public int GetWorldBossCapturePointTotalCells(string capturePoint)
+		{
+			if (WorldBossCellDefinitions == null || string.IsNullOrEmpty(capturePoint))
+			{
+				return 0;
+			}
+			int num = 0;
+			for (int i = 0; i < WorldBossCellDefinitions.Length; i++)
+			{
+				WorldBossCellDefinition worldBossCellDefinition = WorldBossCellDefinitions[i];
+				if (worldBossCellDefinition != null && worldBossCellDefinition.CapturePoint == capturePoint)
+				{
+					num++;
+				}
+			}
+			return num;
+		}
+
+		public List<string> GetWorldBossMapIds(WorldBossBattlegroundDefinition def)
+		{
+			List<string> list = new List<string>();
+			if (def == null || string.IsNullOrEmpty(def.MapIds))
+			{
+				return list;
+			}
+			string[] array = def.MapIds.Split(',');
+			for (int i = 0; i < array.Length; i++)
+			{
+				string text = ((array[i] != null) ? array[i].Trim() : null);
+				if (!string.IsNullOrEmpty(text))
+				{
+					list.Add(text);
+				}
+			}
+			return list;
+		}
+
+		public List<string> GetWorldBossMissionIds(WorldBossBattlegroundDefinition def)
+		{
+			List<string> list = new List<string>();
+			if (MissionSpawnPointData == null)
+			{
+				return list;
+			}
+			List<string> worldBossMapIds = GetWorldBossMapIds(def);
+			for (int i = 0; i < worldBossMapIds.Count; i++)
+			{
+				MissionSpawnPointGroup spawnPointGroupByMapId = MissionSpawnPointData.GetSpawnPointGroupByMapId(worldBossMapIds[i]);
+				if (spawnPointGroupByMapId?.MissionSpawnPoints == null)
+				{
+					continue;
+				}
+				for (int j = 0; j < spawnPointGroupByMapId.MissionSpawnPoints.Count; j++)
+				{
+					string text = spawnPointGroupByMapId.MissionSpawnPoints[j]?.MissionId;
+					if (!string.IsNullOrEmpty(text))
+					{
+						list.Add(text);
+					}
+				}
+			}
+			return list;
+		}
+
+		public string GetWorldBossMissionIdForCell(WorldBossBattlegroundDefinition def, string cell)
+		{
+			if (def == null || string.IsNullOrEmpty(cell))
+			{
+				return null;
+			}
+			int worldBossCellIndex = GetWorldBossCellIndex(def.CapturePoint, cell);
+			if (worldBossCellIndex < 0)
+			{
+				return null;
+			}
+			List<string> worldBossMissionIds = GetWorldBossMissionIds(def);
+			if (worldBossMissionIds.Count == 0)
+			{
+				return null;
+			}
+			return worldBossMissionIds[worldBossCellIndex % worldBossMissionIds.Count];
+		}
+
+		public string GetWorldBossMissionIdForTankBoss(WorldBossBattlegroundDefinition def)
+		{
+			List<string> worldBossMissionIds = GetWorldBossMissionIds(def);
+			if (worldBossMissionIds.Count == 0)
+			{
+				return null;
+			}
+			return worldBossMissionIds[0];
+		}
+
+		private int GetWorldBossCellIndex(string capturePoint, string cell)
+		{
+			if (WorldBossCellDefinitions == null)
+			{
+				return -1;
+			}
+			int num = 0;
+			for (int i = 0; i < WorldBossCellDefinitions.Length; i++)
+			{
+				WorldBossCellDefinition worldBossCellDefinition = WorldBossCellDefinitions[i];
+				if (worldBossCellDefinition != null && !(worldBossCellDefinition.CapturePoint != capturePoint))
+				{
+					if (worldBossCellDefinition.Cell == cell)
+					{
+						return num;
+					}
+					num++;
+				}
+			}
+			return -1;
+		}
+
+		public IEnumerable<DifficultyIncrementalDebuff> GetWorldBossBattlegroundDefinitionById(int definitionId)
+		{
+			if (WorldBossBattlegroundDefinitions == null)
+			{
+				return null;
+			}
+			for (int i = 0; i < WorldBossBattlegroundDefinitions.Length; i++)
+			{
+				WorldBossBattlegroundDefinition worldBossBattlegroundDefinition = WorldBossBattlegroundDefinitions[i];
+				if (worldBossBattlegroundDefinition != null && worldBossBattlegroundDefinition.ID == definitionId)
+				{
+					return worldBossBattlegroundDefinition.WorldBossDebuffs;
+				}
+			}
+			return null;
+		}
 
 
 		#region mycode

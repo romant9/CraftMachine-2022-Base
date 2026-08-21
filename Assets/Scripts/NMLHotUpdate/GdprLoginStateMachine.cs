@@ -110,6 +110,11 @@ public class GdprLoginStateMachine
 
 	private IEnumerator CheckCookieConsent()
 	{
+		if (AdConsentHelper.IsAdsConsentHandledByUmp)
+		{
+			State = States.IDFARequest;
+			yield break;
+		}
 		GameEconomyData gameEconomyData = GameManager.Instance.gameEconomyData;
 		TWDModelManager modelManager = GameManager.Instance.modelManager;
 		if (gameEconomyData != null && gameEconomyData.ConfigData.GdprAskCookieConsent && modelManager != null && !modelManager.Player.HasTakenGdprAction("CookieConsent"))
@@ -172,6 +177,11 @@ public class GdprLoginStateMachine
 	private IEnumerator ShowIDFAConsent()
 	{
 		if (Application.platform == RuntimePlatform.Android || !GameManager.Instance.IsIDFACheckEnabled())
+		{
+			State = States.End;
+			yield break;
+		}
+		if (AdConsentHelper.IsAdsConsentHandledByUmp)
 		{
 			State = States.End;
 			yield break;

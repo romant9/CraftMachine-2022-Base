@@ -7,6 +7,7 @@ using Client.Utils;
 using TWDModel;
 using TWDModel.ContentTypes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CombatHUD : HUDElement
 {
@@ -60,16 +61,16 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private GameObject enemyInfoContainer;
 
-	[SerializeField]
 	[Tooltip("Combat objectives container.")]
+	[SerializeField]
 	private GameObject objectivesContainer;
 
 	[Tooltip("Player ability button prefab")]
 	[SerializeField]
 	private GameObject abilityButtonPrefab;
 
-	[SerializeField]
 	[Tooltip("Objective button prefab.")]
+	[SerializeField]
 	private GameObject objectiveButtonPrefab;
 
 	[Tooltip("Endless Mode Info Container")]
@@ -83,16 +84,16 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private GameObject endlessModeExpertModeTagContainer;
 
-	[SerializeField]
 	[Tooltip("Passive ability button prefab.")]
+	[SerializeField]
 	private CombatPassiveAbilityButton passiveAbilityButtonPrefab;
 
-	[SerializeField]
 	[Tooltip("Container for screen notifications.")]
+	[SerializeField]
 	private GameObject notificationsContainer;
 
-	[SerializeField]
 	[Tooltip("SpeedUp Button.")]
+	[SerializeField]
 	private UIButtonToggle speedUpButton;
 
 	[Tooltip("Container for threat meter.")]
@@ -107,8 +108,8 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private GameObject waveNotificaitonContainer;
 
-	[Tooltip("Survivors health bar prefab.")]
 	[SerializeField]
+	[Tooltip("Survivors health bar prefab.")]
 	private GameObject survivorHealthBarPrefab;
 
 	[SerializeField]
@@ -118,6 +119,21 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	[Tooltip("Raiders health bar prefab.")]
 	private GameObject raiderHealthBarPrefab;
+
+	[FormerlySerializedAs("tankBossHealthBarPrefab")]
+	[SerializeField]
+	[Tooltip("Screen-top boss health bar prefab.")]
+	private GameObject bossTopHealthBarPrefab;
+
+	[SerializeField]
+	[Tooltip("Container for screen-top boss health bars.")]
+	private GameObject bossHealthBarContainer;
+
+	[SerializeField]
+	[Tooltip("Vertical anchor offset for boss top health bar. Negative moves it down from TopCenter.")]
+	private int bossTopHealthBarAnchorOffsetY = -100;
+
+	private readonly List<HealthIndicator> bossTopHealthBars = new List<HealthIndicator>();
 
 	[SerializeField]
 	[Tooltip("Actors notification element prefab for generic messages.")]
@@ -143,16 +159,16 @@ public class CombatHUD : HUDElement
 	[Tooltip("Actors notification element prefab for poison damage messages.")]
 	private GameObject actorDamageGrenadeFragmentNotificationElementPrefab;
 
-	[Tooltip("Actors notification element prefab for bleeding damage messages.")]
 	[SerializeField]
+	[Tooltip("Actors notification element prefab for bleeding damage messages.")]
 	private GameObject actorDamageBleedingNotificationElementPrefab;
 
 	[SerializeField]
 	[Tooltip("Actors notification element prefab for SP gain messages.")]
 	private GameObject actorCurrencySPNotificationElementPrefab;
 
-	[Tooltip("Actors notification element prefab for supply gain messages.")]
 	[SerializeField]
+	[Tooltip("Actors notification element prefab for supply gain messages.")]
 	private GameObject actorCurrencySuppliesNotificationElementPrefab;
 
 	[SerializeField]
@@ -167,12 +183,12 @@ public class CombatHUD : HUDElement
 	[Tooltip("Actors notification element prefab for silver loot found messages.")]
 	private GameObject actorLootGoldNotificationElementPrefab;
 
-	[Tooltip("Actors notification element prefab for Charge Point gained messages.")]
 	[SerializeField]
+	[Tooltip("Actors notification element prefab for Charge Point gained messages.")]
 	private GameObject actorChargePointNotificationElementPrefab;
 
-	[Tooltip("Actors notification prefab for Trait trigger messages.")]
 	[SerializeField]
+	[Tooltip("Actors notification prefab for Trait trigger messages.")]
 	private GameObject actorActionNotificationPrefab;
 
 	[SerializeField]
@@ -187,12 +203,12 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private GameObject moveActionIndicatorPrefab;
 
-	[SerializeField]
 	[Tooltip("Action Indicator prefab.")]
+	[SerializeField]
 	private GameObject moveGroundIndicatorPrefab;
 
-	[SerializeField]
 	[Tooltip("Cover move indicator prefab.")]
+	[SerializeField]
 	private GameObject coverMoveIndicatorPrefab;
 
 	[Tooltip("Actor info popup prefab.")]
@@ -207,21 +223,25 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private GameObject turnCountPrefab;
 
-	[SerializeField]
 	[Tooltip("Delayed action grenade turn count indicator prefab.")]
+	[SerializeField]
 	private GameObject grenadeTurnCountPrefab;
 
 	[SerializeField]
 	[Tooltip("Threat Meter prefab.")]
 	private GameObject threatMeterPrefab;
 
-	[Tooltip("Turn Panel prefab.")]
 	[SerializeField]
+	[Tooltip("Turn Panel prefab.")]
 	private GameObject turnPanelPrefab;
 
 	[SerializeField]
 	[Tooltip("Turn Panel prefab.")]
 	private GameObject endlessModeTurnPanel;
+
+	[SerializeField]
+	[Tooltip("Guild Boss Turn Panel prefab.")]
+	private GameObject guildBossTurnPanel;
 
 	[SerializeField]
 	[Tooltip("Threat Meter Overlay Indicator.")]
@@ -247,8 +267,8 @@ public class CombatHUD : HUDElement
 	[Tooltip("Combat end notification prefab.")]
 	private GameObject fadeOutNotificationPrefab;
 
-	[Tooltip("Walker turn notification prefab.")]
 	[SerializeField]
+	[Tooltip("Walker turn notification prefab.")]
 	private GameObject walkerTurnNotificationPrefab;
 
 	[SerializeField]
@@ -271,8 +291,8 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private UILabel EndlessModeScoreLabel;
 
-	[SerializeField]
 	[Tooltip("Endless Mode Wave Kill Score Multiplier")]
+	[SerializeField]
 	private UILabel EndlessModeKillScoreMultiplier;
 
 	[Tooltip("Endless Mode Expert Kill Multiplier tag")]
@@ -328,8 +348,8 @@ public class CombatHUD : HUDElement
 	[SerializeField]
 	private GameObject traitPart;
 
-	[Tooltip("Equipment sprite")]
 	[SerializeField]
+	[Tooltip("Equipment sprite")]
 	private UITexture EquipmentTexture;
 
 	[SerializeField]
@@ -453,6 +473,9 @@ public class CombatHUD : HUDElement
 	private UILabel EndlessLoseLabel;
 
 	[SerializeField]
+	private UILabel GuildBossKillLabel;
+
+	[SerializeField]
 	private GameObject DebuffDamagePerRoundTips;
 
 	private CommandSkillModelManager commandSkillModelManager;
@@ -469,6 +492,10 @@ public class CombatHUD : HUDElement
 	private bool activateChargeOnChange;
 
 	private bool isPopUpEndlessNormalModeExit;
+
+	private bool guildBossKillTipShown;
+
+	private float guildBossKillTipFadeInDelay;
 
 	public List<ActorModel> ActiveSkillActors = new List<ActorModel>();
 
@@ -504,6 +531,14 @@ public class CombatHUD : HUDElement
 	private bool endTurnEnabled = true;
 
 	private Dictionary<GameObject, IndicatorInstanceInfo> locationIndicators = new Dictionary<GameObject, IndicatorInstanceInfo>();
+
+	private const string FortificationsUseStateTipKey = "BattleNotice.FortificationsUseState";
+
+	private const string FortificationsRemoveTipKey = "BattleNotice.FortificationsRemove.Tips";
+
+	public GameObject NotificationsContainer => notificationsContainer;
+
+	public GameObject BossHealthBarContainer => bossHealthBarContainer;
 
 	public bool IsSkillSelectableStatus { get; private set; }
 
@@ -681,6 +716,7 @@ public class CombatHUD : HUDElement
 				skill1ShortAction.SetActive(value: true);
 				skill1ShortActionNum.text = baseCommandSkill3.LeftCooldownTurns.ToString();
 			}
+			ApplyFortificationsSkillShortOverride(baseCommandSkill3, actor, skill1Short, skill1ShortAP, skill1ShortAction);
 			break;
 		}
 		case 2:
@@ -736,6 +772,7 @@ public class CombatHUD : HUDElement
 				skill1ShortAction.SetActive(value: true);
 				skill1ShortActionNum.text = baseCommandSkill.LeftCooldownTurns.ToString();
 			}
+			ApplyFortificationsSkillShortOverride(baseCommandSkill, actor, skill1Short, skill1ShortAP, skill1ShortAction);
 			Skill2APNum.text = definition2.APCost.ToString();
 			skill2Icon1.spriteName = definition2.Icon;
 			toolTip2Name.text = LocalizationManager.GetText(definition2.Name);
@@ -782,8 +819,19 @@ public class CombatHUD : HUDElement
 				skill2ShortAction.SetActive(value: true);
 				skill2ShortActionNum.text = baseCommandSkill2.LeftCooldownTurns.ToString();
 			}
+			ApplyFortificationsSkillShortOverride(baseCommandSkill2, actor, skill2Short, skill2ShortAP, skill2ShortAction);
 			break;
 		}
+		}
+	}
+
+	private void ApplyFortificationsSkillShortOverride(BaseCommandSkill skill, ActorModel actor, GameObject shortRoot, GameObject shortAP, GameObject shortAction)
+	{
+		if ((skill is FortificationsSkill || skill is FortificationsRemoveSkill) && actor != null && skill.LeftCooldownTurns <= 0 && skill.CanExecuteWhereAPEnough() && ((skill is FortificationsSkill) ? actor.IsInFortifications : (!actor.IsInFortifications)))
+		{
+			shortAction.SetActive(value: false);
+			shortRoot.SetActive(value: true);
+			shortAP.SetActive(value: false);
 		}
 	}
 
@@ -1309,6 +1357,61 @@ public class CombatHUD : HUDElement
 		return Helpers.InstantiateToParent(prefab, notificationsContainer).GetComponent<HealthIndicator>();
 	}
 
+	public HealthIndicator CreateBossTopHealthIndicator()
+	{
+		if (bossTopHealthBarPrefab == null)
+		{
+			Debug.LogError("CombatHUD.bossTopHealthBarPrefab is not assigned.");
+			return null;
+		}
+		GameObject parent = ((bossHealthBarContainer != null) ? bossHealthBarContainer : notificationsContainer);
+		HealthIndicator component = Helpers.InstantiateToParent(bossTopHealthBarPrefab, parent).GetComponent<HealthIndicator>();
+		if (component == null || !component.IsScreenTopBossBar)
+		{
+			if (component != null)
+			{
+				Debug.LogError("ActorHealthBarBoss prefab root still uses HealthIndicator. In Unity, change the root component to BossTopHealthIndicator (subclass swap keeps serialized fields).");
+			}
+			else
+			{
+				Debug.LogError("ActorHealthBarBoss prefab is missing BossTopHealthIndicator on root.");
+			}
+			return null;
+		}
+		bossTopHealthBars.Add(component);
+		return component;
+	}
+
+	public void PinBossTopHealthIndicator(HealthIndicator indicator)
+	{
+		if (!(indicator == null))
+		{
+			GameObject hudAnchor = ((bossHealthBarContainer != null) ? bossHealthBarContainer : notificationsContainer);
+			int num = bossTopHealthBarAnchorOffsetY;
+			indicator.PinToHudAnchor(hudAnchor, 0, num, 0, num);
+		}
+	}
+
+	public void UnregisterBossTopHealthBar(HealthIndicator indicator)
+	{
+		if (!(indicator == null))
+		{
+			bossTopHealthBars.Remove(indicator);
+		}
+	}
+
+	public void DestroyBossTopHealthBars()
+	{
+		for (int num = bossTopHealthBars.Count - 1; num >= 0; num--)
+		{
+			if (bossTopHealthBars[num] != null)
+			{
+				UnityEngine.Object.Destroy(bossTopHealthBars[num].gameObject);
+			}
+		}
+		bossTopHealthBars.Clear();
+	}
+
 	public ActionIndicator CreateActionIndicator()
 	{
 		return Helpers.InstantiateToParent(actionIndicatorPrefab, notificationsContainer).GetComponent<ActionIndicator>();
@@ -1409,7 +1512,11 @@ public class CombatHUD : HUDElement
 
 	public CombatTurnPanel CreateTurnPanel()
 	{
-		return Helpers.InstantiateToParent(GameManager.Instance.playerModel.Combat.IsEndlessBattleMission ? endlessModeTurnPanel : turnPanelPrefab, threatMeterContainer).GetComponent<CombatTurnPanel>();
+		GameObject gameObject = null;
+		gameObject = ((GameManager.Instance.playerModel.Combat.IsGuildBossMission || GameManager.Instance.playerModel.Combat.IsGuildBossPVEMission || GameManager.Instance.playerModel.Combat.IsGuildBossPVPMission) ? guildBossTurnPanel : ((!GameManager.Instance.playerModel.Combat.IsEndlessBattleMission) ? turnPanelPrefab : endlessModeTurnPanel));
+		CombatTurnPanel component = Helpers.InstantiateToParent(gameObject, threatMeterContainer).GetComponent<CombatTurnPanel>();
+		component.ConfigureGuildBossModeContainers();
+		return component;
 	}
 
 	public ChargeMeterIndicator CreateChargeMeterIndicator()
@@ -1801,6 +1908,25 @@ public class CombatHUD : HUDElement
 		}
 	}
 
+	private void Awake()
+	{
+		BindSkillShortButton(skill1Short, OnClickSkillUse1);
+		BindSkillShortButton(skill2Short, OnClickSkillUse2);
+	}
+
+	private void BindSkillShortButton(GameObject shortRoot, EventDelegate.Callback onClick)
+	{
+		if (!(shortRoot == null))
+		{
+			UIButton uIButton = shortRoot.GetComponent<UIButton>();
+			if (uIButton == null)
+			{
+				uIButton = shortRoot.AddComponent<UIButton>();
+			}
+			EventDelegate.Add(uIButton.onClick, onClick);
+		}
+	}
+
 	private void OnEnable()
 	{
 		if (menuButton != null)
@@ -1846,6 +1972,8 @@ public class CombatHUD : HUDElement
 				ConsumableUnselected();
 			}
 		}
+		guildBossKillTipShown = false;
+		guildBossKillTipFadeInDelay = 0f;
 		combat.Changed += OnModelChange;
 		endlessModeInfoContainer.SetActive(combat.IsEndlessBattleMission);
 		consumablesPlightButton.SetActive(value: false);
@@ -1863,7 +1991,7 @@ public class CombatHUD : HUDElement
 				List<WeeklyChallengeApocalypseBuff> weeklyChallengeApocalypseBuffs = weeklyApocalypticChallengeModel.weeklyChallengeApocalypseBuffs;
 				if (weeklyChallengeApocalypseBuffs == null || weeklyChallengeApocalypseBuffs.Count <= 0)
 				{
-					goto IL_02b5;
+					goto IL_02c7;
 				}
 			}
 			if (combat.MapCategory == MapCategory.ApocalypticChallenge)
@@ -1871,10 +1999,10 @@ public class CombatHUD : HUDElement
 				consumablesPlightButton.SetActive(value: true);
 			}
 		}
-		goto IL_02b5;
-		IL_02b5:
+		goto IL_02c7;
+		IL_02c7:
 		endlessModeExpertModeTagContainer.SetActive(combat.IsEndlessBattleMission && EndlessModeHelpers.IsEndlessExpertMode());
-		objectivesContainer.SetActive(!combat.IsEndlessBattleMission);
+		objectivesContainer.SetActive(!combat.IsEndlessBattleMission && !combat.IsGuildBossMission);
 		if (combat.IsEndlessBattleMission)
 		{
 			RefreshEndlessModeScores(playAnimation: false);
@@ -1888,6 +2016,13 @@ public class CombatHUD : HUDElement
 		SingularityMonoBehaviour<LocalizationManager>.Instance.OnLocalizationLanguageChanged -= OnLocalizationLanguageChanged;
 		SingularityMonoBehaviour<LocalizationManager>.Instance.OnLocalizationLanguageChanged += OnLocalizationLanguageChanged;
 		CloseTraitInfoContainer();
+	}
+
+	public override void Close()
+	{
+		DestroyLocationIndicators();
+		DestroyBossTopHealthBars();
+		base.Close();
 	}
 
 	private void OnDisable()
@@ -1907,7 +2042,6 @@ public class CombatHUD : HUDElement
 			UIEventListener uIEventListener3 = UIEventListener.Get(completeMissionButton.gameObject);
 			uIEventListener3.onClick = (UIEventListener.VoidDelegate)Delegate.Remove(uIEventListener3.onClick, new UIEventListener.VoidDelegate(OnCompleteMission));
 		}
-		DestroyLocationIndicators();
 		for (int i = 0; i < actorInfoContainers.Count; i++)
 		{
 			actorInfoContainers[i].Clear();
@@ -1960,15 +2094,25 @@ public class CombatHUD : HUDElement
 				combatSupportsUIView.UpdateUI();
 			}));
 		}
+		if (changed == "actorKilled" && args is ActorModel actor)
+		{
+			CombatModel combat = GameManager.Instance.playerModel.Combat;
+			if (combat != null && !guildBossKillTipShown && IsGuildBossCombat(combat) && IsGuildBossKillTarget(actor))
+			{
+				guildBossKillTipShown = true;
+				guildBossKillTipFadeInDelay = GetGuildBossKillTipFadeInDuration();
+				VisualizationQueue.Instance.Add(new DelayedNotificationVisualizationTask(actor, ShowGuildBossKillTip));
+			}
+		}
 		if (!(changed == "turnEnded"))
 		{
 			return;
 		}
-		CombatModel combat = GameManager.Instance.playerModel.Combat;
-		if (combat.IsEndlessBattleMission)
+		CombatModel combat2 = GameManager.Instance.playerModel.Combat;
+		if (combat2.IsEndlessBattleMission)
 		{
 			int warningTextSpacesAmount = EndlessModeHelpers.EndlessModeConfig.WarningTextSpacesAmount;
-			int count = combat.Walkers.Count;
+			int count = combat2.Walkers.Count;
 			int num = ((!EndlessModeHelpers.IsEndlessExpertMode()) ? (GameManager.Instance.playerModel.EndlessModeManager.CurrentEndlessModeCalendarDefinition.MaxWalkerAmount - count) : (GameManager.Instance.playerModel.EndlessModeManager.CurrentEndlessModeCalendarDefinition.MaxWalkerAmountExpert - count));
 			if (num <= warningTextSpacesAmount)
 			{
@@ -2293,14 +2437,20 @@ public class CombatHUD : HUDElement
 	{
 		CurSkillType = SkillType.Weapon;
 		selectionSkillIndex = 0;
-		SetCommandSkillSelectableStatus(newSet: true);
+		if (!TryHandleDisabledCommandSkillClick())
+		{
+			SetCommandSkillSelectableStatus(newSet: true);
+		}
 	}
 
 	public void OnClickSkillUse2()
 	{
 		CurSkillType = SkillType.Weapon;
 		selectionSkillIndex = 1;
-		SetCommandSkillSelectableStatus(newSet: true);
+		if (!TryHandleDisabledCommandSkillClick())
+		{
+			SetCommandSkillSelectableStatus(newSet: true);
+		}
 	}
 
 	public WaveNotification DisplayWaveNotification(string heading, string body)
@@ -2606,6 +2756,33 @@ public class CombatHUD : HUDElement
 		}
 		Helpers.GameObjectSetActive(activeSkillOperate, newSet);
 		SetInfoTxt(newSet);
+		if (newSet)
+		{
+			TryAutoSelectActorItselfTarget();
+		}
+	}
+
+	private void TryAutoSelectActorItselfTarget()
+	{
+		BaseCommandSkill curBaseCommandSkill = GetCurBaseCommandSkill();
+		List<CommandSkillTargetType> list = curBaseCommandSkill?.Definition?.TargetType;
+		if (list == null || list.Count != 1 || list[0] != CommandSkillTargetType.ActorItself)
+		{
+			return;
+		}
+		ActorModel actorModel = curBaseCommandSkill.OwnActorModel ?? ActiveActor;
+		if (actorModel != null)
+		{
+			if (!curBaseCommandSkill.CanExecute(actorModel.GridCoordinate))
+			{
+				TryShowCommandSkillDisabledTip(curBaseCommandSkill, actorModel);
+				SetCommandSkillSelectableStatus(newSet: false);
+			}
+			else
+			{
+				SetActiveSkillActor(actorModel);
+			}
+		}
 	}
 
 	private void SetCommandSkillSelectableIndicator(bool newSet)
@@ -2702,14 +2879,15 @@ public class CombatHUD : HUDElement
 			return;
 		}
 		ActorView actorView = GameManager.Instance.GetViewForModel(actor) as ActorView;
-		if (actorView == null)
+		if (!(actorView == null))
 		{
-			return;
-		}
-		BaseCommandSkill curBaseCommandSkill = GetCurBaseCommandSkill();
-		GridCoordinate gridCoordinate = actor.GridCoordinate;
-		if (curBaseCommandSkill.CanExecute(gridCoordinate))
-		{
+			BaseCommandSkill curBaseCommandSkill = GetCurBaseCommandSkill();
+			GridCoordinate gridCoordinate = actor.GridCoordinate;
+			if (curBaseCommandSkill == null || !curBaseCommandSkill.CanExecute(gridCoordinate))
+			{
+				TryShowCommandSkillDisabledTip(curBaseCommandSkill, actor);
+				return;
+			}
 			if (actor == ActiveSkillActor)
 			{
 				OnClickSkillOk();
@@ -2946,6 +3124,71 @@ public class CombatHUD : HUDElement
 		}
 	}
 
+	private bool TryHandleDisabledCommandSkillClick()
+	{
+		BaseCommandSkill curBaseCommandSkill = GetCurBaseCommandSkill();
+		ActorModel actorModel = curBaseCommandSkill?.OwnActorModel ?? ActiveActor;
+		if (curBaseCommandSkill == null || actorModel == null)
+		{
+			return false;
+		}
+		if (curBaseCommandSkill.CanExecute(actorModel.GridCoordinate))
+		{
+			return false;
+		}
+		return TryShowCommandSkillDisabledTip(curBaseCommandSkill, actorModel);
+	}
+
+	private bool TryShowCommandSkillDisabledTip(BaseCommandSkill skill, ActorModel targetActor)
+	{
+		string commandSkillDisabledTipKey = GetCommandSkillDisabledTipKey(skill, targetActor);
+		if (string.IsNullOrEmpty(commandSkillDisabledTipKey))
+		{
+			return false;
+		}
+		string text = LocalizationManager.GetText(commandSkillDisabledTipKey);
+		ActorView actorView = ((targetActor != null) ? (GameManager.Instance.GetViewForModel(targetActor) as ActorView) : null);
+		if (actorView != null)
+		{
+			actorView.AddNotification(new ActorNotificationMessage(text));
+		}
+		else
+		{
+			DisplayWaveNotification(text, string.Empty);
+		}
+		return true;
+	}
+
+	private string GetCommandSkillDisabledTipKey(BaseCommandSkill skill, ActorModel targetActor)
+	{
+		if (skill == null)
+		{
+			return null;
+		}
+		ActorModel ownActorModel = skill.OwnActorModel;
+		if (targetActor != null && targetActor != ownActorModel)
+		{
+			return null;
+		}
+		if (skill is FortificationsSkill)
+		{
+			if (targetActor != null && targetActor.IsInFortifications)
+			{
+				return "BattleNotice.FortificationsUseState";
+			}
+			return null;
+		}
+		if (skill is FortificationsRemoveSkill)
+		{
+			if (targetActor == null || !targetActor.IsInFortifications)
+			{
+				return "BattleNotice.FortificationsRemove.Tips";
+			}
+			return null;
+		}
+		return null;
+	}
+
 	public void OnSupportClicked(int actorSlotIndex)
 	{
 		combatSupportsUIView.OnSupportClick(actorSlotIndex);
@@ -2957,6 +3200,60 @@ public class CombatHUD : HUDElement
 	{
 		Helpers.GameObjectSetActive(DebuffDamagePerRoundTips, value: true);
 		DebuffDamagePerRoundTips.GetComponent<UILabelShowAndFade>().StartFade();
+	}
+
+	public float GetGuildBossKillTipEndCombatDelay()
+	{
+		if (!guildBossKillTipShown || guildBossKillTipFadeInDelay <= 0f)
+		{
+			return 1f;
+		}
+		return guildBossKillTipFadeInDelay;
+	}
+
+	public void ShowGuildBossKillTip()
+	{
+		if (!(GuildBossKillLabel == null))
+		{
+			UILabelShowAndFade component = GuildBossKillLabel.GetComponent<UILabelShowAndFade>();
+			if (!(component == null))
+			{
+				Helpers.GameObjectSetActive(GuildBossKillLabel.gameObject, value: true);
+				component.StartFade();
+			}
+		}
+	}
+
+	private float GetGuildBossKillTipFadeInDuration()
+	{
+		if (GuildBossKillLabel == null)
+		{
+			return 1f;
+		}
+		UILabelShowAndFade component = GuildBossKillLabel.GetComponent<UILabelShowAndFade>();
+		if (!(component != null))
+		{
+			return 1f;
+		}
+		return component.fadeInDuration;
+	}
+
+	private static bool IsGuildBossCombat(CombatModel combat)
+	{
+		return combat.IsGuildBossMission;
+	}
+
+	private static bool IsGuildBossKillTarget(ActorModel actor)
+	{
+		if (actor != null)
+		{
+			if (!actor.IsBoss && !actor.IsBossWalker)
+			{
+				return actor.UsesScreenTopHealthBar;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public bool CheckSkillCD()

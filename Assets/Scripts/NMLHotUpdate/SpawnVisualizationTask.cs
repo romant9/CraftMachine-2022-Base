@@ -100,9 +100,15 @@ public class SpawnVisualizationTask : ActorVisualizationTask
 
 	public override void Start()
 	{
-		if (!(base.ActorView == null) && !(actorSpawnPointView == null))
+		if (!(base.ActorView == null))
 		{
-			if (actorSpawnPointView != null)
+			if (actorSpawnPointView == null)
+			{
+				Helpers.ExecuteCommand(new UpdateActorVisibilityCommand(base.Actor));
+				base.ActorView.CanUpdateVisibility = true;
+				base.ActorView.SetVisible(base.ActorView.Model.IsVisibleToSurvivors);
+			}
+			else if (actorSpawnPointView != null)
 			{
 				BeginAnimation(actorSpawnPointView.AnimationType);
 			}

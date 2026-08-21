@@ -73,6 +73,22 @@ namespace TWDModel
 
 		public CurrencyType TraitUpgradeCurrency;
 
+		public int FootprintWidth;
+
+		public int FootprintHeight;
+
+		public int FootprintAnchorX;
+
+		public int FootprintAnchorY;
+
+		public FacingDirection InitialFacingDirection;
+
+		public BossType BossType;
+
+		public List<string> TagDisplay;
+
+		public List<string> SkillShow;
+
 		public string UnlockDate;
 
 		[GEDType(GEDSpecialType.TimeSeconds)]

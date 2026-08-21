@@ -620,6 +620,10 @@ namespace TWDModel
 						manager.Metrics.TdEventPropertyTypes = new List<string> { "Mission", "GvG", "GvGBattle" };
 						manager.Metrics.SendTdEvent();
 					}
+					else if (item3.Key == PurchaseType.WorldBossAttackMission)
+					{
+						SendWorldBossStartMissionAnalyticsEvent();
+					}
 					else if (item3.Key == PurchaseType.EndlessPass)
 					{
 						string endlessModeGameModeType = manager.Player.EndlessModeManager.EndlessModeGameModeType.ToString();
@@ -708,6 +712,34 @@ namespace TWDModel
 				SubtractFromBoughtDiamonds(item3.Value, ref boughtDiamondsCount);
 				manager.Metrics.Reset();
 			}
+		}
+
+		private void SendWorldBossStartMissionAnalyticsEvent()
+		{
+			WorldBossModelManager worldBossModelManager = manager.Player.WorldBossModelManager;
+			WorldBossAttackTargetData worldBossAttackTargetData = worldBossModelManager?.AttackTarget;
+			WorldBossMissionModel worldBossMissionModel = manager.Player.GetAttackTargetMissionModel() as WorldBossMissionModel;
+			if (worldBossModelManager == null || worldBossAttackTargetData == null || worldBossMissionModel == null)
+			{
+				manager.Debug.LogError("Start_Mission WorldBoss analytics: attack target is missing");
+				return;
+			}
+			int currentBattleDifficulty = worldBossModelManager.GetCurrentBattleDifficulty();
+			WorldBossBattlegroundDefinition worldBossBattlegroundDefinition = manager.GameEconomyData.FindWorldBossBattlegroundDefinitionByCapturePoint(worldBossMissionModel.CapturePoint, currentBattleDifficulty);
+			WorldBossCycleDefinition worldBossCycleDefinition = manager.GameEconomyData.FindWorldBossCycleDefinition(worldBossAttackTargetData.SeasonId, worldBossAttackTargetData.CycleId);
+			if (worldBossBattlegroundDefinition == null || worldBossCycleDefinition == null)
+			{
+				manager.Debug.LogError("Start_Mission WorldBoss analytics: definition is missing. " + $"CapturePoint={worldBossMissionModel.CapturePoint}, Difficulty={currentBattleDifficulty}, " + $"SeasonId={worldBossAttackTargetData.SeasonId}, CycleId={worldBossAttackTargetData.CycleId}");
+				return;
+			}
+			manager.Metrics.ResetTdEvent().AddOriginalEventType();
+			manager.Metrics.AddSpend().AddResources(this).AddStart()
+				.AddMission()
+				.AddWorldBoss(worldBossBattlegroundDefinition, worldBossCycleDefinition, currentBattleDifficulty)
+				.Send();
+			manager.Metrics.TdEventType = "Start_Mission";
+			manager.Metrics.TdEventPropertyTypes = new List<string> { "Mission", "WorldBoss" };
+			manager.Metrics.SendTdEvent();
 		}
 
 		public void FakeSendPurchaseAnalyticsEvent()

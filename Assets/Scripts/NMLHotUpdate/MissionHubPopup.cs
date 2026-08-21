@@ -259,22 +259,80 @@ public class MissionHubPopup : HUDElement
 
 	private List<MissionHubContent> GetSortedContentList()
 	{
-		new List<MissionHubContent>();
+		List<MissionHubContent> list = new List<MissionHubContent>();
 		GameEconomyData gameEconomyData = GameManager.Instance.gameEconomyData;
 		if (Helpers.IsSeasonMapAllCompleted())
 		{
-			return GetSortedContentList_MissionEnterOrder(gameEconomyData.ConfigData.MissionEnterOrderEndSeason);
+			list = GetSortedContentList_MissionEnterOrder(gameEconomyData.ConfigData.MissionEnterOrderEndSeason);
+			AppendWorldBossMissionHubContent(list);
+			return list;
 		}
 		if (Helpers.IsStoryMapAllCompleted())
 		{
-			return GetSortedContentList_MissionEnterOrder(gameEconomyData.ConfigData.MissionEnterOrderEndStory);
+			list = GetSortedContentList_MissionEnterOrder(gameEconomyData.ConfigData.MissionEnterOrderEndStory);
+			AppendWorldBossMissionHubContent(list);
+			return list;
 		}
 		MissionEnterOrder missionEnterOrder = GameManager.Instance.gameEconomyData.MissionEnterOrder.FirstOrDefault((MissionEnterOrder t) => GameManager.Instance.playerModel.CouncilLevel >= t.minimal() && GameManager.Instance.playerModel.CouncilLevel <= t.max());
 		if (missionEnterOrder == null)
 		{
 			return null;
 		}
-		return GetSortedContentList_MissionEnterOrder(missionEnterOrder.SortInt);
+		list = GetSortedContentList_MissionEnterOrder(missionEnterOrder.SortInt);
+		AppendWorldBossMissionHubContent(list);
+		return list;
+	}
+
+	private void AppendWorldBossMissionHubContent(List<MissionHubContent> contentList)
+	{
+		if (contentList == null || !ShouldShowWorldBossInMissionHub())
+		{
+			return;
+		}
+		for (int i = 0; i < contentList.Count; i++)
+		{
+			if (contentList[i] != null && contentList[i].PrefabName == "Mission_Hub_Small_WorldBoss")
+			{
+				return;
+			}
+		}
+		MissionHubContent item = new MissionHubContent
+		{
+			Id = 9,
+			PrefabName = "Mission_Hub_Small_WorldBoss",
+			Placement = MissionHubContent.ListPlacement.Bottom,
+			SortInt = 3
+		};
+		int num = contentList.FindIndex((MissionHubContent c) => c != null && c.Id == 7);
+		if (num >= 0)
+		{
+			contentList.Insert(num + 1, item);
+		}
+		else
+		{
+			contentList.Add(item);
+		}
+	}
+
+	private static bool ShouldShowWorldBossInMissionHub()
+	{
+		PlayerModel playerModel = GameManager.Instance?.playerModel;
+		GameEconomyData gameEconomyData = GameManager.Instance?.gameEconomyData;
+		if (playerModel == null || gameEconomyData == null)
+		{
+			return false;
+		}
+		ConfigData configData = gameEconomyData.ConfigData;
+		if (configData == null || !configData.WorldBoss)
+		{
+			return false;
+		}
+		SystemOpen systemOpenById = gameEconomyData.GetSystemOpenById("SystemBase.WorldBoss");
+		if (systemOpenById != null && playerModel.CouncilLevel < systemOpenById.ShowCampLv)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private List<MissionHubContent> GetSortedContentList_MissionEnterOrder(List<int> sortInts)
@@ -295,8 +353,8 @@ public class MissionHubPopup : HUDElement
 		}
 		foreach (int sortInt in sortInts)
 		{
-			MissionHubContent missionHubContent = missionHubContentList.FirstOrDefault((MissionHubContent t) => t.Id == sortInt);
-			if (missionHubContent.Placement == MissionHubContent.ListPlacement.Bottom)
+			MissionHubContent missionHubContent = missionHubContentList.FirstOrDefault((MissionHubContent t) => t != null && t.Id == sortInt);
+			if (missionHubContent != null && missionHubContent.Placement == MissionHubContent.ListPlacement.Bottom)
 			{
 				list.Add(missionHubContent);
 			}

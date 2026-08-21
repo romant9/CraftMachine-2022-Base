@@ -34,9 +34,13 @@ public class GuildKickPopup : HUDElement
 	{
 		if (guildMemberInfo != null)
 		{
-			SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.IngameLoading).Open();
-			GameManager.Instance.GuildManager.KickOutGuildMember(guildMemberInfo.MemberId, softBan);
-			SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("global/member_kick");
+			string memberId = guildMemberInfo.MemberId;
+			GuildWorldBossMembershipLockUiGuard.ExecuteIfAllowed(delegate
+			{
+				SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.IngameLoading).Open();
+				GameManager.Instance.GuildManager.KickOutGuildMember(memberId, softBan);
+				SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("global/member_kick");
+			});
 		}
 	}
 }

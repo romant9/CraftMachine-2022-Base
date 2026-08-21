@@ -13,7 +13,7 @@ using UnityEngine;
 
 public class YandexAuth
 {
-	private YandexSettings _settings;
+	private CustomAuthSettings _settings;
 	// Лучше вынести в ScriptableObject / конфиг, но пока оставим здесь
 	private string ClientId = "aje0klo54cjknb5366dk";
 
@@ -28,9 +28,9 @@ public class YandexAuth
 	private TaskCompletionSource<string> _redirectTcs;
 	private bool isInitialized;
 
-	public YandexAuth(YandexSettings settings) { Initialize(settings); }
+	public YandexAuth(CustomAuthSettings settings) { Initialize(settings); }
 
-	private void Initialize(YandexSettings settings)
+	private void Initialize(CustomAuthSettings settings)
 	{
 		_settings = settings;
 		ClientId = _settings.ClientId;

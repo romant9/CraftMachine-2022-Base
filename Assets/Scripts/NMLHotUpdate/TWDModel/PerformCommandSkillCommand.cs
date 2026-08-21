@@ -18,7 +18,7 @@ namespace TWDModel
 
 		public static bool PerformCommandSkill(TWDModelManager manager, BaseCommandSkill commandSkill, GridCoordinate targetCell)
 		{
-			if (manager.CombatModel == null || commandSkill == null || !targetCell.IsValid)
+			if (manager?.CombatModel == null || commandSkill == null)
 			{
 				return false;
 			}

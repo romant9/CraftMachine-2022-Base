@@ -403,6 +403,8 @@ public class GameManager : MonoBehaviour
 
 	public IAttackTargetModel ForceGoThatDetailMap { get; set; }
 
+	public bool ForceOpenWorldBoss { get; set; }
+
 	public bool HasRatedApp
 	{
 		get
@@ -1098,6 +1100,12 @@ public class GameManager : MonoBehaviour
 			Debug.LogWarning(string.Concat(obj));
 			return;
 		}
+		case 70:
+			RollbackOptimisticWorldBossParticipation(sequenceId);
+			playerModel?.WorldBossModelManager?.RollbackOptimisticAttackCell(sequenceId);
+			HUDNotification.Info(LocalizationManager.GetText("World.Boss.Occupied.Tips"));
+			RequestWorldBossFullSnapshotRefresh();
+			return;
 		case 0:
 		case 42:
 			return;
@@ -1127,6 +1135,42 @@ public class GameManager : MonoBehaviour
 		{
 			LogReloadEvent("Reason: GameManager.HandleOnCommandCompletedMessage, Command execution failed on server with code = " + code);
 			ReloadGame();
+		}
+	}
+
+	private void RollbackOptimisticWorldBossParticipation(int sequenceId)
+	{
+		playerModel?.WorldBossModelManager?.RollbackOptimisticParticipation(sequenceId);
+	}
+
+	private void RequestWorldBossFullSnapshotRefresh()
+	{
+		PlayerModel playerModel = this.playerModel;
+		WorldBossModelManager worldBossModelManager = playerModel?.WorldBossModelManager;
+		if (playerModel != null && worldBossModelManager != null && !(SignalRClient.Instance == null))
+		{
+			WorldBossGetSnapshotRequest value = new WorldBossGetSnapshotRequest
+			{
+				GroupId = playerModel.GuildId,
+				SeasonId = worldBossModelManager.GetCurrentSeasonId(),
+				CycleId = (worldBossModelManager.IsOffSeason() ? worldBossModelManager.GetNextCycleId() : worldBossModelManager.GetCurrentCycleId())
+			};
+			string arg = jsonSerializer.Serialize(value);
+			SignalRClient.Instance.RequestCommand("WorldBossFullSnapshot", arg, OnWorldBossFullSnapshotRefreshResponse, waitForResponse: true);
+		}
+	}
+
+	private void OnWorldBossFullSnapshotRefreshResponse(string responseJson)
+	{
+		if (SignalRClient.Instance.HasError || string.IsNullOrEmpty(responseJson))
+		{
+			SignalRClient.Instance.ClearError();
+			return;
+		}
+		WorldBossGuildFullSnapshot worldBossGuildFullSnapshot = jsonSerializer.Deserialize<WorldBossGuildFullSnapshot>(responseJson);
+		if (worldBossGuildFullSnapshot != null)
+		{
+			modelManager.SetWorldBossGuildFullSnapshot(worldBossGuildFullSnapshot);
 		}
 	}
 
@@ -2862,7 +2906,11 @@ public class GameManager : MonoBehaviour
 			TransitionScreenHUD transitionScreenHUD = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.Transition) as TransitionScreenHUD;
 			if (IsLoadDataManager || TutorialView.Instance.Model.HasCompletedPart("InitialCombat"))
 			{
-				if (missionInfo.IsSurvival)
+				if (missionInfo.IsWorldBoss)
+				{
+					transitionScreenHUD.SceneToLoadAfterInAnimation = (missionInfo.IsPvP ? "LoadingScreenCombat_Outpost" : "LoadingScreenCombat_Mission");
+				}
+				else if (missionInfo.IsSurvival)
 				{
 					bool flag = false;
 					if (modelManager != null && modelManager.Player != null && modelManager.Player.WeeklySurvival != null && modelManager.Player.WeeklySurvival.CurrentDifficulty > SurvivalDifficulty.Normal)
@@ -3488,9 +3536,17 @@ public class GameManager : MonoBehaviour
 			}
 		}
 		ForceGoThatDetailMap = null;
+		ForceOpenWorldBoss = false;
 		if (playerModel.Combat != null && playerModel.Combat.IsGuildBattleMission && GuildWarHelper.GetGuildWarModel() != null)
 		{
 			ForceGoThatDetailMap = playerModel.GvGSeasonModelPlayer.GuildWarModelPlayer.GuildBattleModel.AttackTargetMissionModel;
+		}
+		else if (playerModel.Combat != null && playerModel.Combat.HasGuildBossRules)
+		{
+			if (CampManager.ShouldAutoOpenWorldBossUiAfterCombat())
+			{
+				ForceOpenWorldBoss = true;
+			}
 		}
 		else
 		{
@@ -4061,6 +4117,11 @@ public class GameManager : MonoBehaviour
 
 	public void AskForAdConsent(AdUsage adType, Action acceptedCallback, Action noAdsCallback)
 	{
+		if (AdConsentHelper.IsAdsConsentHandledByUmp)
+		{
+			ShowAdsLoading(adType, acceptedCallback, noAdsCallback);
+			return;
+		}
 		ConfirmationPopup obj = SingularityMonoBehaviour<HUDManager>.Instance.Get(UIType.ConfirmationPopup) as ConfirmationPopup;
 		obj.SetContent(LocalizationManager.GetText("Popup.TOS.AdConsent.Title"), LocalizationManager.GetText("Popup.TOS.AdConsent.Content"));
 		obj.SetOkButtonLabel(LocalizationManager.GetText("Popup.TOS.Button.Accept"));
@@ -4240,6 +4301,10 @@ public class GameManager : MonoBehaviour
 
 	public bool ShouldAskForAdConsent()
 	{
+		if (AdConsentHelper.IsAdsConsentHandledByUmp)
+		{
+			return false;
+		}
 		if (!HasAnsweredTargetedAdsConsentQuestion())
 		{
 			return playerModel.LifeTimeInDays >= gameEconomyData.ConfigData.NoAdsWaitingDays;
@@ -4249,6 +4314,10 @@ public class GameManager : MonoBehaviour
 
 	public bool HasAnsweredTargetedAdsConsentQuestion()
 	{
+		if (AdConsentHelper.IsAdsConsentHandledByUmp)
+		{
+			return true;
+		}
 		return playerModel.HasAcceptedGdprAction("TargetedAdsConsent");
 	}
 

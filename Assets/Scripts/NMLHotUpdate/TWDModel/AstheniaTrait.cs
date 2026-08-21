@@ -36,9 +36,18 @@ namespace TWDModel
 			}
 			if (action is PostDamageAction { DamagerActor: not null } postDamageAction && actor == postDamageAction.DamagerActor && postDamageAction.TargetActor.Faction != Faction.Environmental && postDamageAction.DamagerActor.Faction != Faction.Environmental && !postDamageAction.TargetActor.IsDead && postDamageAction.DamageAction.SourceSupport == null && !(postDamageAction.DamageAction is DamageConsumableAction))
 			{
-				FixedPoint value = 0.0;
-				base.manager.CombatModel.AbilityManager.VisitParameter("ExtendProbability", ref value, actor);
-				if (base.manager.Player.RollDice(RollDiceType.Asthenia, AddAstheniaPercentage, value) == PlayerRandomChanceResult.Failed)
+				FixedPoint fixedPoint = 0.0;
+				if (ResistNegativeEffectsTrait.TryResist(postDamageAction.TargetActor, "Asthenia"))
+				{
+					return ActionListClearFlag.Keep;
+				}
+				fixedPoint = 0.0;
+				base.manager.CombatModel.AbilityManager.VisitParameter("ExtendProbability", ref fixedPoint, actor);
+				if (base.manager.Player.RollDice(RollDiceType.Asthenia, AddAstheniaPercentage, fixedPoint) == PlayerRandomChanceResult.Failed)
+				{
+					return ActionListClearFlag.Keep;
+				}
+				if (EquipmentPassivePreventControlTrait.TryResistEffect(postDamageAction.TargetActor, "Asthenia", RollDiceType.Asthenia))
 				{
 					return ActionListClearFlag.Keep;
 				}

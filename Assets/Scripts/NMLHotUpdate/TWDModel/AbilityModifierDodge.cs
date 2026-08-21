@@ -91,11 +91,20 @@ namespace TWDModel
 								value2 -= value5;
 							}
 						}
-						if (damageAction.DamagerActor != null && damageAction.DamagerActor.SupportTalent_NoMoveHitrateFlag)
+						if (damageAction.DamagerActor != null)
 						{
 							FixedPoint value6 = 0.0;
-							base.manager.Player.AbilityManager.VisitParameter("SupportTalent_NoMoveHitrateParm1", ref value6, damageAction.DamagerActor);
-							value2 -= value6;
+							base.manager.CombatModel.AbilityManager.VisitParameter("AbilityModifierBoostHitRatePercentage", ref value6, damageAction.DamagerActor);
+							if (value6 > 0L)
+							{
+								value2 -= value6;
+							}
+						}
+						if (damageAction.DamagerActor != null && damageAction.DamagerActor.SupportTalent_NoMoveHitrateFlag)
+						{
+							FixedPoint value7 = 0.0;
+							base.manager.Player.AbilityManager.VisitParameter("SupportTalent_NoMoveHitrateParm1", ref value7, damageAction.DamagerActor);
+							value2 -= value7;
 						}
 						if (damageAction.DamagerActor != null && damageAction.DamagerActor.BlindLeftTurns > 0)
 						{
@@ -105,8 +114,8 @@ namespace TWDModel
 						{
 							value2 = 0L;
 						}
-						MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
-						if (mapMissionModel != null && actor.Faction == Faction.Survivor)
+						IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
+						if (challengeDebuffProvider != null && actor.Faction == Faction.Survivor)
 						{
 							TraitEntry traitAnyLevel2 = actor.TraitContainer.GetTraitAnyLevel("LeaderBuffMysteriousWays");
 							if (traitAnyLevel2 == null)
@@ -125,7 +134,7 @@ namespace TWDModel
 							}
 							if (traitAnyLevel2 != null)
 							{
-								FixedPoint minDebuffParamPercentageByTraitId = ChallengeDebufHelps.GetMinDebuffParamPercentageByTraitId(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffGabrielLT, traitAnyLevel2.TraitIdentifier);
+								FixedPoint minDebuffParamPercentageByTraitId = ChallengeDebufHelps.GetMinDebuffParamPercentageByTraitId(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffGabrielLT, traitAnyLevel2.TraitIdentifier);
 								if (minDebuffParamPercentageByTraitId > 0L && minDebuffParamPercentageByTraitId < value + value2)
 								{
 									value = 0L;

@@ -31,10 +31,10 @@ namespace TWDModel
 					FixedPoint successProbability = 0L;
 					if (base.TargetActor.Faction == Faction.Walker || base.TargetActor.Faction == Faction.Raider)
 					{
-						MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(tWDModelManager);
-						if (mapMissionModel != null)
+						IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(tWDModelManager);
+						if (challengeDebuffProvider != null)
 						{
-							List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+							List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 							if (ChallengeDebufHelps.GetDebufConfig(challengeDebuffs, ChallengeDebuffType.WalkerStateRefSpecialStun) != null)
 							{
 								successProbability = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.WalkerStateRefSpecialStun);

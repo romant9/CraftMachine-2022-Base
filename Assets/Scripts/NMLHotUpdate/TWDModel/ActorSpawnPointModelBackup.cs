@@ -50,6 +50,10 @@ namespace TWDModel
 
 		public MissionFailCondition MissionFailCondition { get; set; }
 
+		public bool UseSpawnRotationOverride { get; set; }
+
+		public float SpawnRotationY { get; set; }
+
 		public override bool IsValid()
 		{
 			return true;
@@ -78,6 +82,8 @@ namespace TWDModel
 			AdditionalTraits = ((model.AdditionalTraits == null) ? null : new List<string>(model.AdditionalTraits));
 			Gender = model.Gender;
 			MissionFailCondition = model.MissionFailCondition;
+			UseSpawnRotationOverride = model.UseSpawnRotationOverride;
+			SpawnRotationY = model.SpawnRotationY;
 			getSpawnCoordinatesAmountLocal = model.getSpawnCoordinatesAmountLocal;
 		}
 
@@ -103,6 +109,8 @@ namespace TWDModel
 			Model.AdditionalTraits = ((AdditionalTraits == null) ? null : new List<string>(AdditionalTraits));
 			Model.Gender = Gender;
 			Model.MissionFailCondition = MissionFailCondition;
+			Model.UseSpawnRotationOverride = UseSpawnRotationOverride;
+			Model.SpawnRotationY = SpawnRotationY;
 			Model.getSpawnCoordinatesAmountLocal = getSpawnCoordinatesAmountLocal;
 		}
 	}

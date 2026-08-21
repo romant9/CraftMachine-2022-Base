@@ -62,7 +62,7 @@ namespace TWDModel
 					for (int i = 0; i < Math.Min(canMarkAmount, targets.Count); i++)
 					{
 						ActorModel actorModel = targets[i];
-						if (actorModel != null)
+						if (actorModel != null && !EquipmentPassivePreventControlTrait.TryResistEffect(actorModel, "DebuffMarkEnemy"))
 						{
 							string tag = actor.Faction.ToString();
 							actorModel.AddTemporaryTrait(traitIdentifier, default(FixedPoint), null, 0L, tag);

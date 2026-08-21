@@ -28,9 +28,9 @@ namespace TWDModel
 
 		public override bool CanExecute()
 		{
-			if (base.CanExecute() && !base.Actor.IsStruggling && !base.Actor.IsBleedingOut && !base.Actor.IsStunned && !base.Actor.IsElectricShocked && !base.Actor.IsEatingLure && !base.Actor.IsRooted)
+			if (base.CanExecute() && !base.Actor.IsStruggling && !base.Actor.IsBleedingOut && !base.Actor.IsStunned && !base.Actor.IsElectricShocked && !base.Actor.IsEatingLure && !base.Actor.IsRooted && !base.Actor.IsABTesterAed)
 			{
-				return !base.Actor.IsABTesterAed;
+				return !base.Actor.IsInFortifications;
 			}
 			return false;
 		}

@@ -1227,10 +1227,10 @@ namespace TWDModel
 			}
 			if (base.Faction == Faction.Survivor)
 			{
-				MapMissionModel mapMissionModel2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel2 != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null)
 				{
-					List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel2.GetChallengeDebuffs();
+					List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 					base.MoveRange = Math.Max(1, base.MoveRange - (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.DebuffMoveShorten));
 				}
 			}

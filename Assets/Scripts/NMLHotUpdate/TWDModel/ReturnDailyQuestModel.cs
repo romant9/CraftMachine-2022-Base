@@ -228,6 +228,7 @@ namespace TWDModel
 			}
 			returnDailyQuestItemModel.Definition.RewardEntries.Give(base.manager);
 			returnDailyQuestItemModel.Claimed = true;
+			ReturnerAnalytics.SendTask(base.manager, definitionId);
 			NotifyChange("ReturnDailyQuestChanged");
 			return true;
 		}

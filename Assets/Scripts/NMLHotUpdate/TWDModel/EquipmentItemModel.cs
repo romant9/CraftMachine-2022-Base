@@ -1756,7 +1756,7 @@ namespace TWDModel
 			{
 				return;
 			}
-			List<TraitDefinition> passiveTraits = GetPassiveTraits();
+			List<TraitDefinition> passiveTraits = GetPassiveTraits(isRemove: true);
 			if (passiveTraits == null || passiveTraits.Count == 0)
 			{
 				return;
@@ -1987,7 +1987,7 @@ namespace TWDModel
 			return true;
 		}
 
-		public List<TraitDefinition> GetPassiveTraits()
+		public List<TraitDefinition> GetPassiveTraits(bool isRemove = false)
 		{
 			List<TraitDefinition> list = new List<TraitDefinition>();
 			if (base.manager == null || base.manager.Player == null)
@@ -2001,6 +2001,11 @@ namespace TWDModel
 			for (int i = 0; i < ModSkillSlots.Length; i++)
 			{
 				if (ModSkillSlots[i].ModSkillMode == null)
+				{
+					continue;
+				}
+				SPTraitsRemoldDefinitions spTraitsDefaultTrait = ModSkillSlots[i].ModSkillMode.GetSpTraitsDefaultTrait();
+				if (!isRemove && spTraitsDefaultTrait?.EquipType != null && spTraitsDefaultTrait.EquipType.Count > 0 && !spTraitsDefaultTrait.EquipType.Contains(Definition.Type.ToString()))
 				{
 					continue;
 				}
@@ -2039,6 +2044,11 @@ namespace TWDModel
 				{
 					continue;
 				}
+				SPTraitsRemoldDefinitions spTraitsDefaultTrait = ModSkillSlots[i].ModSkillMode.GetSpTraitsDefaultTrait();
+				if (spTraitsDefaultTrait?.EquipType != null && spTraitsDefaultTrait.EquipType.Count > 0 && !spTraitsDefaultTrait.EquipType.Contains(Definition.Type.ToString()))
+				{
+					continue;
+				}
 				ModSkillMode modSkillMode = ModSkillSlots[i].ModSkillMode;
 				SPTraitsRemoldDefinitions sPTraitsRemodeDefinition = base.gameEconomyData.GetSPTraitsRemodeDefinition(modSkillMode.ID);
 				if (sPTraitsRemodeDefinition == null || sPTraitsRemodeDefinition.ActiveTraits == null)
@@ -2071,6 +2081,11 @@ namespace TWDModel
 			for (int i = 0; i < ModSkillSlots.Length; i++)
 			{
 				if (ModSkillSlots[i].ModSkillMode == null)
+				{
+					continue;
+				}
+				SPTraitsRemoldDefinitions spTraitsDefaultTrait = ModSkillSlots[i].ModSkillMode.GetSpTraitsDefaultTrait();
+				if (spTraitsDefaultTrait?.EquipType != null && spTraitsDefaultTrait.EquipType.Count > 0 && !spTraitsDefaultTrait.EquipType.Contains(Definition.Type.ToString()))
 				{
 					continue;
 				}

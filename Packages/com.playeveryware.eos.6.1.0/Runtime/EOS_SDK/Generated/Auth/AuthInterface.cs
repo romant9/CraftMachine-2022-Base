@@ -580,5 +580,15 @@ namespace Epic.OnlineServices.Auth
 
 			Helper.Dispose(ref optionsInternal);
 		}
+
+		public void AddNotifyLoginStatusChanged(ref AddNotifyLoginStatusChangedOptions options, object hHJ)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void AddNotifyLoginStatusChanged(ref AddNotifyLoginStatusChangedOptions options, Action hHJ)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

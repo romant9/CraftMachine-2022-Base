@@ -20,6 +20,10 @@ namespace TWDModel
 
 		public override ActionListClearFlag VisitActions(ModelAction action, ActorModel actor, List<ModelAction> addedActions)
 		{
+			if (actor != null && actor.IsBoss)
+			{
+				return ActionListClearFlag.Keep;
+			}
 			CombatModel combatModel = base.manager.CombatModel;
 			PlayerRandomChanceResult playerRandomChanceResult = PlayerRandomChanceResult.Failed;
 			bool hadActionPointsAtEndOfTurn = actor.HadActionPointsAtEndOfTurn;
@@ -207,10 +211,10 @@ namespace TWDModel
 								combatModel.AbilityManager.VisitParameter("ExtendProbability", ref value5, actor);
 								flag6 = (overwatchAttackAction.Interrupted = base.manager.Player.RollDice(RollDiceType.InterruptAttack, value4, value5) != PlayerRandomChanceResult.Failed);
 							}
-							MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-							if (mapMissionModel != null)
+							IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+							if (challengeDebuffProvider != null)
 							{
-								List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+								List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 								if (moveAction2.Actor.IsWalker)
 								{
 									int chance = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.DebuffInterruptRate);

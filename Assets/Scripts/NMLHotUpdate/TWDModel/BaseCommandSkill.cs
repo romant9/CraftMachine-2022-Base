@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BaseModel;
 using Newtonsoft.Json;
 
@@ -13,11 +14,14 @@ namespace TWDModel
 		public ActorModel OwnActorModel { get; private set; }
 
 		[JsonIgnore]
-		public CommandSkillDefinition Definition => base.manager.GameEconomyData.GetCommandSkillDefinition(SkillID);
+		public CommandSkillDefinition Definition => base.manager?.GameEconomyData?.GetCommandSkillDefinition(SkillID);
 
 		public abstract CommandSkillType Type { get; }
 
 		public virtual Faction CooldownLeftTurnCheckFaction => Faction.Survivor;
+
+		[JsonIgnore]
+		protected virtual bool EnterCooldownOnCast => true;
 
 		public BaseCommandSkill()
 		{
@@ -37,6 +41,11 @@ namespace TWDModel
 
 		public virtual bool CanExecute(GridCoordinate targetCell)
 		{
+			CommandSkillDefinition definition = Definition;
+			if (OwnActorModel == null || base.manager?.CombatModel == null || definition == null || definition.TargetType == null)
+			{
+				return false;
+			}
 			if (LeftCooldownTurns > 0)
 			{
 				return false;
@@ -58,6 +67,11 @@ namespace TWDModel
 
 		public bool ReleaseSkillToTargetCell(GridCoordinate targetCell)
 		{
+			targetCell = ResolveTargetCell(targetCell);
+			if (!targetCell.IsValid)
+			{
+				return false;
+			}
 			if (!CanExecute(targetCell))
 			{
 				return false;
@@ -67,13 +81,45 @@ namespace TWDModel
 			return true;
 		}
 
-		public void OnFactionChangeReduceCooldownLeftTurns()
+		public GridCoordinate ResolveTargetCell(GridCoordinate targetCell)
+		{
+			if (OwnActorModel == null || base.manager == null || base.manager.GameEconomyData == null)
+			{
+				return targetCell;
+			}
+			CommandSkillDefinition definition = Definition;
+			if (definition?.TargetType != null && definition.TargetType.Count == 1 && definition.TargetType[0] == CommandSkillTargetType.ActorItself)
+			{
+				return OwnActorModel.GridCoordinate;
+			}
+			return targetCell;
+		}
+
+		public virtual void OnFactionChangeReduceCooldownLeftTurns()
 		{
 			if (LeftCooldownTurns > 0)
 			{
 				LeftCooldownTurns--;
 				OwnActorModel.NotifyChange("CooldownLeftTurnUpdate");
 			}
+		}
+
+		protected List<string> ApplySelfTraitsApply(long duration = 0L)
+		{
+			if (base.manager == null || Definition == null)
+			{
+				return new List<string>();
+			}
+			return CommandSkillTraitsApply.ApplyToSelf(OwnActorModel, Definition.SelfTraitsApply, duration);
+		}
+
+		protected List<string> ApplyTargetTraitsApply(ActorModel target)
+		{
+			if (base.manager == null || Definition == null)
+			{
+				return new List<string>();
+			}
+			return CommandSkillTraitsApply.ApplyToTarget(base.manager, target, Definition.TargetTraitsApply);
 		}
 
 		public abstract void OnExecute(GridCoordinate targetCell);
@@ -84,8 +130,11 @@ namespace TWDModel
 			{
 				return;
 			}
-			LeftCooldownTurns = Definition.Cooldown;
-			OwnActorModel.NotifyChange("CooldownLeftTurnUpdate");
+			if (EnterCooldownOnCast)
+			{
+				LeftCooldownTurns = Definition.Cooldown;
+				OwnActorModel.NotifyChange("CooldownLeftTurnUpdate");
+			}
 			if (Definition.APCost == 1)
 			{
 				if (OwnActorModel.AbilityCompleted)
@@ -127,11 +176,16 @@ namespace TWDModel
 
 		public bool CanExecuteWhereAPEnough()
 		{
-			if (Definition.APCost == 0)
+			CommandSkillDefinition definition = Definition;
+			if (OwnActorModel == null || definition == null)
+			{
+				return false;
+			}
+			if (definition.APCost == 0)
 			{
 				return true;
 			}
-			if (Definition.APCost == 1)
+			if (definition.APCost == 1)
 			{
 				if (!OwnActorModel.MoveCompleted || !OwnActorModel.SecondMoveCompleted)
 				{

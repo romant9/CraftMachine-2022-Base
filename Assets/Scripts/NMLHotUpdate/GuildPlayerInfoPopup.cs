@@ -82,6 +82,10 @@ public class GuildPlayerInfoPopup : HUDElement
 	public override void Open()
 	{
 		base.Open();
+		if (defaultPopup != null)
+		{
+			defaultPopup.AllowNormalClosing(active: false);
+		}
 		CurrentGuild = GameManager.Instance.guildModel;
 		if (CurrentGuild != null)
 		{

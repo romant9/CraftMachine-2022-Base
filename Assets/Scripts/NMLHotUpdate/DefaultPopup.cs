@@ -242,8 +242,8 @@ public class DefaultPopup : HUDElement
 
 	public void AllowNormalClosing(bool active)
 	{
-		closeArea.SetActive(active);
-		closeButton.gameObject.SetActive(active);
+		Helpers.GameObjectSetActive(closeArea, active);
+		Helpers.GameObjectSetActive(closeButton, active);
 	}
 
 	public void ShowLockedPanel(string text)

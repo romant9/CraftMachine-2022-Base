@@ -11,5 +11,12 @@ namespace TWDModel
 		public List<ItemAmountProbabilityData> Probabilities;
 
 		public bool GuaranteedHero;
+
+		public PhoneCallDefinition CallDefinition { get; private set; }
+
+		public RadioCallProbabilityData(PhoneCallDefinition definition)
+		{
+			CallDefinition = definition;
+		}
 	}
 }

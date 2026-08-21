@@ -131,6 +131,14 @@ public class WeaponRangeVisualization : MonoBehaviour
 		UpdateMesh();
 	}
 
+	public void SetDiamond(Vector3 center, float radius)
+	{
+		shape = WeaponRangeVisualizationShape.Diamond;
+		StartPoint = center;
+		EndPoint = center + new Vector3(radius, 0f, 0f);
+		UpdateMesh();
+	}
+
 	public void SetCircle(Vector3 start, float radius)
 	{
 		shape = WeaponRangeVisualizationShape.Circle;
@@ -220,6 +228,14 @@ public class WeaponRangeVisualization : MonoBehaviour
 				list.Add(item2);
 			}
 		}
+		else if (shape == WeaponRangeVisualizationShape.Diamond)
+		{
+			float magnitude2 = vector3.magnitude;
+			list.Add(vector + new Vector3(0f, 0f, magnitude2));
+			list.Add(vector + new Vector3(magnitude2, 0f, 0f));
+			list.Add(vector + new Vector3(0f, 0f, 0f - magnitude2));
+			list.Add(vector + new Vector3(0f - magnitude2, 0f, 0f));
+		}
 		List<Vector2> list2 = new List<Vector2>(list.Count);
 		for (int l = 0; l < list.Count; l++)
 		{
@@ -292,6 +308,11 @@ public class WeaponRangeVisualization : MonoBehaviour
 	{
 		fillMesh.GetComponent<MeshRenderer>().material.SetColor("_TintColor", normalFillColor);
 		borderMesh.GetComponent<MeshRenderer>().material.SetColor("_TintColor", normalBorderColor);
+	}
+
+	public Color GetFillColor()
+	{
+		return normalFillColor;
 	}
 
 	public void SetHerdIndicator()

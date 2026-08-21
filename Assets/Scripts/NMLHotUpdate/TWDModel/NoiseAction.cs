@@ -23,7 +23,7 @@ namespace TWDModel
 			CombatModel combatModel = (manager as TWDModelManager).CombatModel;
 			if (combatModel != null)
 			{
-				if (!combatModel.IsEndlessBattleMission)
+				if (!combatModel.IsEndlessBattleMission && !(base.Actor is TankActorModel))
 				{
 					base.Actor.NotifyChange("actorCreateThreat", ThreatValue);
 				}

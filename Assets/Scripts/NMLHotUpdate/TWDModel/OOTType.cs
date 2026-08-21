@@ -11,6 +11,7 @@ namespace TWDModel
 		ParryRiposteRetaliation = 6,
 		AutoAttack = 7,
 		MultiAttacks = 8,
-		FreeShooting = 9
+		FreeShooting = 9,
+		FightBack = 10
 	}
 }

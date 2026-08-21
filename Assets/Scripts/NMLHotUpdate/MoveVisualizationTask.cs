@@ -174,7 +174,7 @@ public class MoveVisualizationTask : ActorVisualizationTask
 		}
 		if (State == MoveVisualizationState.StartingToMove)
 		{
-			if (CharacterAnimationController.IsIdle)
+			if (CharacterAnimationController.IsIdle || base.Actor is CampDefenseWalkerModel)
 			{
 				CharacterAnimationController.StartMove((MoveSpeed == MoveSpeed.Jog) ? 1f : 0f);
 				if (CharacterAnimationController.IsMoveRequested)

@@ -1,10 +1,10 @@
-using BaseModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TwdCustomMod;
+using BaseModel;
 using TWDModel;
 using UnityEngine;
+using TwdCustomMod;
 
 public class EquipmentUpgradePopup : HUDElement
 {
@@ -258,6 +258,10 @@ public class EquipmentUpgradePopup : HUDElement
 	public override void OpenForModel(ModelObject model)
 	{
 		base.OpenForModel(model);
+		if (defaultPopup != null)
+		{
+			defaultPopup.AllowNormalClosing(active: false);
+		}
 		equipmentIsNotAcquired = false;
 		isRemoldOperateContainerOpen = false;
 		equipmentItemModel = model as EquipmentItemModel;
@@ -289,7 +293,6 @@ public class EquipmentUpgradePopup : HUDElement
 		}
 		if (defaultPopup != null)
 		{
-			//defaultPopup.transform.SetChildLayer(20);
 			if (OfflineManager.IsLoadDataManager)
 			{
 				closeAreaBackground.gameObject.SetActive(false);
@@ -297,6 +300,7 @@ public class EquipmentUpgradePopup : HUDElement
 				defaultPopup.transform.SetChildLayer(this.gameObject.layer);
 				defaultPopup.transform.localScale = Vector3.one;
 			}
+			else defaultPopup.transform.SetChildLayer(20);
 		}
 		nameLabel.text = HelpersLocalization.GetEquipmentName(equipmentItemModel);
 		rarityColorEntry = GameManager.Instance.GetRarityColorData(equipmentItemModel.RarityLevel);

@@ -1,10 +1,10 @@
-using BaseModel;
-using Client.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using BaseModel;
+using Client.Utils;
 using TWDModel;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -262,6 +262,11 @@ public class CombatView : ModelView<CombatModel>
 			ECombatResult pvpResult = base.Model.GetPvpResult(survivorsIncapacitated, base.Model.Survivors.Count);
 			combatHUD.ChangeMissionButtonState(pvpResult != ECombatResult.Failed, pvpResult);
 		}
+		else if ((base.Model.IsGuildBossMission || base.Model.IsGuildBossPVEMission || base.Model.IsGuildBossPVPMission) && TurnPanel != null && TurnPanel.HasGuildBossUi)
+		{
+			StartCombatTimer();
+			TurnPanel.InitializeGuildBossUi(GetGuildBossCombatTimeLimitSeconds());
+		}
 		if (base.Model.CombatRetryChoicePendingState != MissionRetryState.None)
 		{
 			combatHUD.SetupSurvivorPortraits();
@@ -272,6 +277,7 @@ public class CombatView : ModelView<CombatModel>
 		{
 			SpawnModelView(model2);
 		}
+		ShowExistingDelayedActionGrenadeGroundModels();
 		if (base.Model.IsEndlessBattleMission)
 		{
 			InitWaveIndicators();
@@ -311,6 +317,15 @@ public class CombatView : ModelView<CombatModel>
 		}
 	}
 
+	private long GetGuildBossCombatTimeLimitSeconds()
+	{
+		if (base.Model.WorldBossTimeLimitSeconds > 0)
+		{
+			return base.Model.WorldBossTimeLimitSeconds;
+		}
+		return base.Model.MaxTime;
+	}
+
 	private long GetCombatTimeSinceStartup()
 	{
 		if (base.Model.CombatStartTime > 0)
@@ -325,6 +340,10 @@ public class CombatView : ModelView<CombatModel>
 		if (missionObjectiveView != null)
 		{
 			missionObjectiveView.Reset();
+		}
+		if (TurnPanel != null)
+		{
+			TurnPanel.ResetGuildBossTimer();
 		}
 	}
 
@@ -735,7 +754,12 @@ public class CombatView : ModelView<CombatModel>
 		gameObject = ((!HasModularCharacter(actorModel)) ? CreateActorsResourceCharacter(actorModel) : CreateModularCharacter(actorModel));
 		if (!(gameObject == null))
 		{
-			FixedVec3 position = GridView.Instance.GetPosition(actorModel.GridCoordinate);
+			GridCoordinate gridCoordinate = actorModel.GridCoordinate;
+			if (actorModel is TankActorModel tankActorModel)
+			{
+				gridCoordinate = tankActorModel.GetVisualCenterCell();
+			}
+			FixedVec3 position = GridView.Instance.GetPosition(gridCoordinate);
 			gameObject.transform.parent = UnityEngine.Object.FindObjectOfType<Scenario>().transform;
 			gameObject.transform.localPosition = position.ToVector3();
 			ActorView component = gameObject.GetComponent<ActorView>();
@@ -743,7 +767,7 @@ public class CombatView : ModelView<CombatModel>
 			actorViews.Add(component);
 			if (actorModel.Faction == Faction.Raider)
 			{
-				component.SetVisible(visible: false);
+				component.SetVisible(IsActorViewVisible(actorModel, gridCoordinate));
 			}
 			ChargeMeterView chargeMeterView = new GameObject("ChargeMeterView").AddComponent<ChargeMeterView>();
 			chargeMeterView.Initialize(actorModel.ChargeMeter);
@@ -904,7 +928,7 @@ public class CombatView : ModelView<CombatModel>
 	{
 		TurnPanel = CombatHUD.CreateTurnPanel();
 		TurnPanel.CreateTurnWarningNotification();
-		TurnPanel.SetTurnCount(base.Model.TurnsToWave);
+		TurnPanel.SetTurnCount(GetTurnPanelCounterValue());
 		TurnPanel.SetRedactCount(base.Model.RedactTimedEffect?.Layers ?? 0);
 		TurnPanel.SetMaxTurnCount(base.Model.AfterAlarmTurns);
 		TurnPanel.SetMaxTurnCountEnabled(base.Model.AfterAlarmTurns > 0 && base.Model.TurnTimerActivationTurn > 0);
@@ -1263,12 +1287,15 @@ public class CombatView : ModelView<CombatModel>
 			break;
 		case "survivorTurnEnd":
 		{
-			DelayedNotificationVisualizationTask task = new DelayedNotificationVisualizationTask(null, delegate
+			DelayedNotificationVisualizationTask task2 = new DelayedNotificationVisualizationTask(null, delegate
 			{
-				TurnPanel.ChangeTurnCount(base.Model.TurnsToWave);
+				if (!IsGuildBossTurnPanelMode())
+				{
+					TurnPanel.ChangeTurnCount(GetTurnPanelCounterValue());
+				}
 				TurnPanel.SetEndTurnButtonHighlight(enabled: false);
 			});
-			VisualizationQueue.Instance.Add(task);
+			VisualizationQueue.Instance.Add(task2);
 			if (GameManager.Instance.gameEconomyData.GetFeature("CombatOfflineModeFix").Enabled && !GameManager.Instance.CheckConnectionReachability(showPopup: true, "PlayerEndedTurn"))
 			{
 				DebugTWD.LogError("GameDisconnected - проверить случаи появления", DebugType.Error);
@@ -1301,15 +1328,21 @@ public class CombatView : ModelView<CombatModel>
 		case "EndlessModeMultiplierReduced":
 			CombatHUD.RefreshEndlessModeScores(playAnimation: true);
 			break;
+		case "GuildBossPointChanged":
+			if (base.Model.IsGuildBossMission && TurnPanel != null && TurnPanel.HasGuildBossUi)
+			{
+				TurnPanel.RefreshGuildBossScoreFromModel();
+			}
+			break;
 		case "PvPMissonObjectiveCompleted":
 		{
-			DelayedNotificationVisualizationTask task2 = new DelayedNotificationVisualizationTask(null, delegate
+			DelayedNotificationVisualizationTask task = new DelayedNotificationVisualizationTask(null, delegate
 			{
 				ECombatResult currentResult = (ECombatResult)args;
 				combatHUD.ChangeMissionButtonState(enabled: true, currentResult);
 				SingularityMonoBehaviour<AudioManager>.Instance.PlayEvent("combat_ui/exit_ready");
 			});
-			VisualizationQueue.Instance.Add(task2);
+			VisualizationQueue.Instance.Add(task);
 			break;
 		}
 		case "TurnTimerActivated":
@@ -1371,7 +1404,7 @@ public class CombatView : ModelView<CombatModel>
 			break;
 		}
 		case "FlushthreatTurn":
-			TurnPanel.ChangeTurnCount(base.Model.TurnsToWave);
+			TurnPanel.ChangeTurnCount(GetTurnPanelCounterValue());
 			break;
 		case "DebuffDamagePerRound":
 			CombatHUD.ShowDebuffDamagePerRoundTips();
@@ -1453,6 +1486,19 @@ public class CombatView : ModelView<CombatModel>
 		}
 	}
 
+	private bool IsActorViewVisible(ActorModel actor, GridCoordinate transformCell)
+	{
+		if (actor.IsFriendlyHuman || actor.IsFlare)
+		{
+			return true;
+		}
+		if (actor.IsMultiCell)
+		{
+			return base.Model.IsActorVisibleByAnySurvivor(actor);
+		}
+		return IsGridCellVisibleByAnySurvivor(transformCell);
+	}
+
 	private bool IsGridCellVisibleByAnySurvivor(GridCoordinate targetLocation)
 	{
 		GridModel grid = base.Model.Grid;
@@ -1480,16 +1526,15 @@ public class CombatView : ModelView<CombatModel>
 			{
 				ActorView actorView = actorViews[i];
 				GridCoordinate coordinate = model.Grid.GetCoordinate(new FixedVec3(actorView.transform.position.x, actorView.transform.position.y, actorView.transform.position.z));
-				bool visible = actorView.Model.IsFriendlyHuman || actorView.Model.IsFlare || IsGridCellVisibleByAnySurvivor(coordinate);
-				actorView.SetVisible(visible);
+				actorView.SetVisible(IsActorViewVisible(actorView.Model, coordinate));
 			}
 			List<InteractiveObjectView> views = GameManager.Instance.GetViews<InteractiveObjectView>();
 			for (int j = 0; j < views.Count; j++)
 			{
 				InteractiveObjectView interactiveObjectView = views[j];
 				GridCoordinate coordinate2 = model.Grid.GetCoordinate(new FixedVec3(interactiveObjectView.transform.position.x, interactiveObjectView.transform.position.y, interactiveObjectView.transform.position.z));
-				bool visible2 = model.IsGridCellVisibleByAnySurvivor(coordinate2) || interactiveObjectView.Model.Location.Edge >= 0 || interactiveObjectView.Model.VisibleInFog;
-				interactiveObjectView.SetVisible(visible2);
+				bool visible = model.IsGridCellVisibleByAnySurvivor(coordinate2) || interactiveObjectView.Model.Location.Edge >= 0 || interactiveObjectView.Model.VisibleInFog;
+				interactiveObjectView.SetVisible(visible);
 			}
 		}
 	}
@@ -1541,7 +1586,12 @@ public class CombatView : ModelView<CombatModel>
 			{
 				VisualizationQueue.Instance.Add(new ActionCameraVisualizationTask(actorViews[0].Model, actorViews[0].Model));
 			}
-			VisualizationQueue.Instance.Add(new EndCombatVisualizationTask(combatEndResult));
+			float delay = 1f;
+			if (combatHUD != null && combatEndResult == ECombatResult.Successful)
+			{
+				delay = combatHUD.GetGuildBossKillTipEndCombatDelay();
+			}
+			VisualizationQueue.Instance.Add(new EndCombatVisualizationTask(combatEndResult, delay));
 			missionEndedPending = false;
 		}
 		if (combatEndRequested)
@@ -1578,6 +1628,21 @@ public class CombatView : ModelView<CombatModel>
 						{
 						});
 					}
+				}
+			}
+		}
+		else if ((base.Model.IsGuildBossMission || base.Model.IsGuildBossPVEMission || base.Model.IsGuildBossPVPMission) && TurnPanel != null && TurnPanel.HasGuildBossUi)
+		{
+			long guildBossCombatTimeLimitSeconds = GetGuildBossCombatTimeLimitSeconds();
+			long combatTimeSinceStartup2 = GetCombatTimeSinceStartup();
+			if (combatTimeSinceStartup2 > 0)
+			{
+				long combatTimeLeft2 = guildBossCombatTimeLimitSeconds - combatTimeSinceStartup2;
+				TurnPanel.SetCombatTimeLeft(combatTimeLeft2);
+				if (guildBossCombatTimeLimitSeconds > 0 && combatTimeSinceStartup2 >= guildBossCombatTimeLimitSeconds && combatStartUpTime != 0L)
+				{
+					combatStartUpTime = 0L;
+					EndCombatTimer(forceFailure: false);
 				}
 			}
 		}
@@ -1636,9 +1701,16 @@ public class CombatView : ModelView<CombatModel>
 				}
 				if (base.Model.TurnsToWave == 0 && !base.Model.IsEndlessBattleMission)
 				{
-					TurnPanel.ChangeTurnCount(base.Model.ThreatMeter.InitialTurnCountToWave + 1);
+					if (!IsGuildBossTurnPanelMode())
+					{
+						TurnPanel.ChangeTurnCount(base.Model.ThreatMeter.InitialTurnCountToWave + 1);
+					}
 					TurnPanel.SetMonsterCloset(base.Model.ThreatMeter.ThreatLevel);
 					TurnPanel.UpdateThreatOverCount(base.Model.ThreatMeter.ThreatLevel);
+				}
+				if (IsGuildBossTurnPanelMode())
+				{
+					TurnPanel.ChangeTurnCount(GetTurnPanelCounterValue());
 				}
 				TurnPanel.ChangeTurnsLeft(base.Model.TurnsToFlee);
 				if (base.Model.HasPvPRules && !base.Model.IsPVPMission && base.Model.OutOfTurns && !outOfTurnsPopupShown)
@@ -1741,7 +1813,7 @@ public class CombatView : ModelView<CombatModel>
 
 	public void CheckForExplosiveWalkerSmartTutorial(ActorModel actor = null)
 	{
-		if (OfflineManager.IsLoadDataManager && OfflineManager.IsTutorialDisable) return;
+		if (OfflineManager.IsTutorialDisable) return;
 		if (tutorialStarting || GameManager.Instance.SmartTutorialData.HasShown(SmartTutorialType.ExplosiveWalker))
 		{
 			return;
@@ -1775,7 +1847,7 @@ public class CombatView : ModelView<CombatModel>
 
 	private void CheckForBossWalkerSmartTutorial(ActorModel actor)
 	{
-		if (OfflineManager.IsLoadDataManager && OfflineManager.IsTutorialDisable) return;
+		if (OfflineManager.IsTutorialDisable) return;
 		if (!tutorialStarting && !GameManager.Instance.SmartTutorialData.HasShown(SmartTutorialType.BossWalker) && actor != null && actor.IsVisibleToSurvivors && actor.IsBossWalker)
 		{
 			DelayedNotificationVisualizationTask task = new DelayedNotificationVisualizationTask(null, delegate
@@ -1825,10 +1897,10 @@ public class CombatView : ModelView<CombatModel>
 		combatStartUpTime = (long)Time.realtimeSinceStartup;
 	}
 
-	private void EndCombatTimer(bool failed)
+	private void EndCombatTimer(bool forceFailure)
 	{
 		ranOutOfTime = true;
-		Helpers.ExecuteCommand(new EndCombatCommand());
+		Helpers.ExecuteCommand(new EndCombatCommand(forceFailure));
 	}
 
 	private void OnWalkerTurnNotificationCompleted()
@@ -1850,6 +1922,21 @@ public class CombatView : ModelView<CombatModel>
 		if (resources != null && GameManager.Instance.GetViewForModel(model) == null)
 		{
 			UnityEngine.Object.Instantiate(UnityUtils.LoadFromAssetBundle<PrefabResource>(resources.ResourceAddress, "scriptableobjects").GetPrefab()).GetComponent<CombatModelView>().Initialize(model);
+		}
+	}
+
+	private void ShowExistingDelayedActionGrenadeGroundModels()
+	{
+		if (base.Model?.Models?.Models == null)
+		{
+			return;
+		}
+		foreach (TWDModelObject model in base.Model.Models.Models)
+		{
+			if (model is DelayedActionGrenadeArea)
+			{
+				(GameManager.Instance.GetViewForModel(model) as DelayedActionGrenadeAreaView)?.ShowGroundModel();
+			}
 		}
 	}
 
@@ -1904,6 +1991,38 @@ public class CombatView : ModelView<CombatModel>
 			int episodeDifficultyLevel = attackTargetMissionModel.MissionSpawnPointGroup.EpisodeDifficultyLevel;
 			SingularityMonoBehaviour<SDKManager>.Instance.StoryMissionCompleted(result, missionNumber, episodeDifficultyLevel);
 		}
+	}
+
+	private bool IsGuildBossTurnPanelMode()
+	{
+		if (base.Model != null)
+		{
+			if (!base.Model.IsGuildBossMission && !base.Model.IsGuildBossPVEMission)
+			{
+				return base.Model.IsGuildBossPVPMission;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private int GetTurnPanelCounterValue()
+	{
+		if (!IsGuildBossTurnPanelMode())
+		{
+			return base.Model.TurnsToWave;
+		}
+		int orResolveMissionLogicFailTurnLimit = base.Model.GetOrResolveMissionLogicFailTurnLimit();
+		if (orResolveMissionLogicFailTurnLimit >= 0)
+		{
+			int num = ((base.Model.TurnManager != null) ? base.Model.TurnManager.TurnCount : 0);
+			return Mathf.Max(0, orResolveMissionLogicFailTurnLimit - num);
+		}
+		if (base.Model.InitialTurnCountToWave > 0 && base.Model.InitialTurnCountToWave < 999 && base.Model.MissionStatistics != null)
+		{
+			return Mathf.Max(0, base.Model.InitialTurnCountToWave - base.Model.MissionStatistics.Turns);
+		}
+		return base.Model.TurnsToWave;
 	}
 
 	private void OnEndlessWaveSpawned(int spawnCount)

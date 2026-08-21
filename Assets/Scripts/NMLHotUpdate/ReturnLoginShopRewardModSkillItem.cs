@@ -54,7 +54,7 @@ public class ReturnLoginShopRewardModSkillItem : MonoBehaviour
 		}
 		if (classIcon != null)
 		{
-			classIcon.spriteName = HelpersGfx.GetSurvivorEventIconName(_definition.AvailableClass.ToString());
+			classIcon.spriteName = HelpersGfx.GetSurvivorClassSmallIconName(_definition.AvailableClass);
 		}
 		if (starList != null)
 		{

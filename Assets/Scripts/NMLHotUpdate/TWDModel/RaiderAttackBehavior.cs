@@ -19,7 +19,9 @@ namespace TWDModel
 				if (actorModel != null)
 				{
 					EquipmentItemModel weaponEquipment = base.Actor.GetWeaponEquipment();
-					if (weaponEquipment == null || weaponEquipment.Ability.CanAbilityBePerformedOnGridCell(base.Controller.CombatModel, base.Actor, base.Actor.GridCoordinate, actorModel.GridCoordinate) != AbilityResult.Success)
+					GridCoordinate attackOriginCell = base.Actor.GetAttackOriginCell();
+					GridCoordinate closestOccupiedCell = actorModel.GetClosestOccupiedCell(attackOriginCell);
+					if (weaponEquipment == null || weaponEquipment.Ability.CanAbilityBePerformedOnGridCell(base.Controller.CombatModel, base.Actor, attackOriginCell, closestOccupiedCell) != AbilityResult.Success)
 					{
 						actorModel = null;
 					}
@@ -42,7 +44,9 @@ namespace TWDModel
 				EquipmentItemModel weaponEquipment = base.Actor.GetWeaponEquipment();
 				if (weaponEquipment != null)
 				{
-					AbilityCommand.PerformActions(base.Actor.manager, base.Actor, weaponEquipment.Ability, currentTarget.GridCoordinate);
+					GridCoordinate attackOriginCell = base.Actor.GetAttackOriginCell();
+					GridCoordinate closestOccupiedCell = currentTarget.GetClosestOccupiedCell(attackOriginCell);
+					AbilityCommand.PerformActions(base.Actor.manager, base.Actor, weaponEquipment.Ability, closestOccupiedCell);
 				}
 				else
 				{

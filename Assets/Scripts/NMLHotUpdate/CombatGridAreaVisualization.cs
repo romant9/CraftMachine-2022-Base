@@ -105,7 +105,6 @@ public class CombatGridAreaVisualization : GridAreaVisualization
 	private void Start()
 	{
 		base.transform.localPosition = -base.transform.parent.position;
-		DebugTWD.Log("CombatGridAreaVisualization: " + gameObject.name);
 	}
 
 	protected override void ClearAreaVisualization()
@@ -360,10 +359,10 @@ public class CombatGridAreaVisualization : GridAreaVisualization
 			Vector3 vector7 = vector6 - vector5;
 			vector7.Normalize();
 			float num2 = DrawnPathThickness * 1.1f;
-			GridCoordinate firstNonPenetrableCoordinate = GameManager.Instance.playerModel.Combat.GetFirstNonPenetrableCoordinate(path.End, path.TargetCoordinate);
-			if ((PlayerInputManager.Instance.ControlledActor?.SelectedAbility?.Definition.CanBeBlocked ?? true) && firstNonPenetrableCoordinate != GridCoordinate.Invalid && firstNonPenetrableCoordinate != path.TargetCoordinate)
+			GridCoordinate gridCoordinate = GameManager.Instance.playerModel.Combat.GetFirstAimTrajectoryBlockCoordinate(includeImpenetrable: PlayerInputManager.Instance.ControlledActor?.SelectedAbility?.Definition.CanBeBlocked ?? true, sourceActor: PlayerInputManager.Instance.ControlledActor, from: path.End, to: path.TargetCoordinate);
+			if (gridCoordinate != GridCoordinate.Invalid && gridCoordinate != path.TargetCoordinate)
 			{
-				float num3 = Vector3.Dot(gridModel.GetPosition(firstNonPenetrableCoordinate).ToVector3() - vector5, vector6 - vector5) / (vector6 - vector5).sqrMagnitude;
+				float num3 = Vector3.Dot(gridModel.GetPosition(gridCoordinate).ToVector3() - vector5, vector6 - vector5) / (vector6 - vector5).sqrMagnitude;
 				MeshGenerator.CreateMultiPartRectangle(vector5 - vector7 * num2 * 0.5f, vector6 + vector7 * num2 * 0.5f, num2, new float[3] { 1.4f, num3, 0.5f }, new float[3] { 0.48f, 0.7012f, 0.8f }, onDrawnPathChangedVertices, onDrawnPathChangedUvs, onDrawnPathChangedTriangles);
 				DrawnPathEnd.GetComponent<Renderer>().sharedMaterial = DrawnPathEndMaterialBlocked;
 			}

@@ -18,7 +18,7 @@ namespace TWDModel
 
 		public static bool PerformActorCommandSkill(TWDModelManager manager, BaseCommandSkill commandSkill, GridCoordinate targetCell)
 		{
-			if (manager.CombatModel == null || commandSkill == null || !targetCell.IsValid)
+			if (manager?.CombatModel == null || commandSkill == null)
 			{
 				return false;
 			}
@@ -27,7 +27,7 @@ namespace TWDModel
 
 		public override IModelCommandRespond Execute(ModelManager manager)
 		{
-			BaseCommandSkill baseCommandSkill = manager.GetModel<ActorModel>(base.ModelId).CommandSkillModelManager?.ActorCommandSkill;
+			BaseCommandSkill baseCommandSkill = manager.GetModel<ActorModel>(base.ModelId)?.CommandSkillModelManager?.ActorCommandSkill;
 			if (baseCommandSkill == null)
 			{
 				return new NGModelCommandRespond(this, TWDModelResult.ModelObjectNotFound);

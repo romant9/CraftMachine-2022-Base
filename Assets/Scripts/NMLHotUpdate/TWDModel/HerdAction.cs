@@ -25,10 +25,10 @@ namespace TWDModel
 			{
 				if (!base.Avoided && !base.TargetActor.IsDead && !base.TargetActor.IsStruggling && !base.TargetActor.IsPitfalled && !base.TargetActor.IsStunned && !base.TargetActor.IsElectricShocked && !base.TargetActor.IsEatingLure && base.TargetActor.Faction == Faction.Walker && !base.TargetActor.IsDisoriented && !base.TargetActor.IsDisorientedLock && !base.TargetActor.IsABTesterA2ed && !base.TargetActor.IsABTesterAed)
 				{
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(combatModel.manager);
+					if (challengeDebuffProvider != null)
 					{
-						List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+						List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 						if (base.TargetActor.IsWalker)
 						{
 							int chance = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.DebuffHerdRate);

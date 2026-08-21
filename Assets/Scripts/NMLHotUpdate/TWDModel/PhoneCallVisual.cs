@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace TWDModel
 {
@@ -18,5 +19,9 @@ namespace TWDModel
 		public string Title2Color;
 
 		public string LocalisationKey;
+
+		public string HeroUp;
+
+		public List<string> AmountEffect;
 	}
 }

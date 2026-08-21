@@ -33,18 +33,18 @@ namespace TWDModel
 				FixedPoint fixedPoint = 0.0;
 				if (postDamageAction.TargetActor.IsWalker)
 				{
-					MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-					if (mapMissionModel != null)
+					IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+					if (challengeDebuffProvider != null)
 					{
-						fixedPoint = (float)(int)ChallengeDebufHelps.GetDebufTotalFirstParam(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunRate) / 100f;
+						fixedPoint = (float)(int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunRate) / 100f;
 					}
 				}
 				else if (postDamageAction.TargetActor.IsWalker)
 				{
-					MapMissionModel mapMissionModel2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-					if (mapMissionModel2 != null)
+					IChallengeDebuffProvider challengeDebuffProvider2 = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+					if (challengeDebuffProvider2 != null)
 					{
-						fixedPoint = (float)(int)ChallengeDebufHelps.GetDebufTotalFirstParam(mapMissionModel2.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunRateRaider) / 100f;
+						fixedPoint = (float)(int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffProvider2.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunRateRaider) / 100f;
 					}
 				}
 				FixedPoint successProbability = ((AddQuantunPercentage - fixedPoint > 0L) ? (AddQuantunPercentage - fixedPoint) : ((FixedPoint)0L));

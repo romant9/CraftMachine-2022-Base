@@ -91,6 +91,7 @@ namespace TWDModel
 				actor.SetHitPoints(actor.MaxHitPoints, actor.MaxHitPoints);
 				actor.OnRedHealthBar = true;
 				actor.StrugglesLeft--;
+				actor.EndFortifications(interrupted: true);
 			}
 		}
 	}

@@ -158,7 +158,7 @@ namespace Assets.PlayId.Examples
 
 			if (authService.IsSignedIn) authService.SignOut();
 
-			var yandexSettings = Resources.Load<YandexSettings>("YandexSettings");
+			var yandexSettings = Resources.Load<CustomAuthSettings>("YandexSettings");
 #if UNITY_EDITOR
 			string idToken = await new YandexAuth(yandexSettings).GetIdTokenFromYandex();
 #else
@@ -327,53 +327,6 @@ namespace Assets.PlayId.Examples
 				PlayerAccountService.Instance.SignedIn -= OnPlayerAccountSignedIn;
 			}
 		}
-
-		public static JObject DecodeIdToken(string idToken)
-		{
-			if (string.IsNullOrEmpty(idToken))
-				throw new ArgumentException("id_token не может быть пустым");
-
-			string[] parts = idToken.Split('.');
-			if (parts.Length != 3)
-				throw new FormatException("Некорректный JWT: ожидается 3 части (header.payload.signature)");
-
-			string payloadBase64Url = parts[1];
-
-			// Base64Url → обычный Base64
-			string payloadBase64 = payloadBase64Url
-				.Replace('-', '+')
-				.Replace('_', '/');
-
-			// Добавляем padding '=' если нужно
-			int padding = payloadBase64.Length % 4;
-			if (padding != 0)
-				payloadBase64 += new string('=', 4 - padding);
-
-			byte[] payloadBytes = Convert.FromBase64String(payloadBase64);
-			string payloadJson = Encoding.UTF8.GetString(payloadBytes);
-
-			return JObject.Parse(payloadJson);
-		}
-
-		private void ParsePayload(string idToken)
-		{
-			try
-			{
-				JObject payload = DecodeIdToken(idToken);
-
-				// Примеры получения полей
-				string sub = payload.Value<string>("sub");           // уникальный ID пользователя
-				string email = payload.Value<string>("email");       // email
-				string name = payload.Value<string>("name");         // имя
-				string givenName = payload.Value<string>("given_name");
-				string familyName = payload.Value<string>("family_name");
-
-				Debug.Log($"User: {name} ({email}), sub={sub}");
-			}
-			catch (Exception e)
-			{
-				Debug.LogError("Ошибка декодирования JWT: " + e.Message);
-			}
-		}
+		
 	}
 }

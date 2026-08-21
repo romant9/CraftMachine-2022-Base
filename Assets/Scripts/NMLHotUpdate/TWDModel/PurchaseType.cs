@@ -91,6 +91,8 @@ namespace TWDModel
 		SPEquipmentRemoldTraits = 83,
 		MakeModSkill = 84,
 		UpgradeModSkill = 85,
-		ReturnExchangeStore = 86
+		ReturnExchangeStore = 86,
+		WorldBossInstantReturn = 87,
+		WorldBossAttackMission = 88
 	}
 }

@@ -1,11 +1,23 @@
 using Gree.UnityWebView;
+using PlayId.Scripts.Data;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public class WebViewAuthHandler : MonoBehaviour
 {
     public string AuthUrl { get; set; }
-    public OidcTokenExchangeAsync tokenExchange;
+	private CustomAuthSettings _settings;
+
+    public enum AuthSettingsType
+    {
+        YandexSettings,
+        GoogleSettings
+    }
+
+    public AuthSettingsType _AuthSettingsType;
+
+	private OidcTokenExchangeAsync tokenExchange;
 
     private WebViewObject _webViewObj;
     [SerializeField]
@@ -21,7 +33,17 @@ public class WebViewAuthHandler : MonoBehaviour
     public void OnClickLogin(OnTokenRecieved callback)
     {
         onTokenRecieved = callback;
-		AuthUrl = !string.IsNullOrEmpty(altUrl) ? altUrl : tokenExchange.GetAuthUrl();
+
+        if (string.IsNullOrEmpty(altUrl))
+        {
+            AuthUrl = altUrl;
+		}
+        else
+        {
+			_settings = Resources.Load<CustomAuthSettings>(Enum.GetName(typeof(AuthSettingsType), _AuthSettingsType));
+			tokenExchange = new OidcTokenExchangeAsync(_settings);
+            tokenExchange.GetAuthUrl();
+		}
 
 		Debug.Log("[WebViewAuth] URL авторизации подготовлен. WebView откроется при инициализации.");
 
@@ -30,12 +52,6 @@ public class WebViewAuthHandler : MonoBehaviour
 
 	private async void StartURL()
     {
-        if (tokenExchange == null)
-        {
-            Debug.LogError("[WebViewAuth] tokenExchange не назначен в инспекторе!");
-            return;
-        }
-
         if (_webViewObj == null)
         {
 			_webViewObj = new GameObject("WebViewObject").AddComponent<WebViewObject>();

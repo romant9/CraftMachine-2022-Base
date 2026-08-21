@@ -86,6 +86,7 @@ namespace TWDModel
 		EquipmentBloodMarkSplash = 81,
 		EquipmentPassiveRemoveNegative = 82,
 		GuardianVowPursuit = 83,
-		DeathsDoorPursuit = 84
+		DeathsDoorPursuit = 84,
+		FightBack = 85
 	}
 }

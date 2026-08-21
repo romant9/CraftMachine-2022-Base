@@ -42,10 +42,10 @@ public class PreEmptiveStrikeTrait : ActionModifier
 									preAttackAction.DamagerActor.EndAction();
 								}
 							}
-							MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-							if (mapMissionModel != null)
+							IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+							if (challengeDebuffProvider != null)
 							{
-								List<DifficultyIncrementalDebuff> challengeDebuffs = mapMissionModel.GetChallengeDebuffs();
+								List<DifficultyIncrementalDebuff> challengeDebuffs = challengeDebuffProvider.GetChallengeDebuffs();
 								if (preAttackAction.TargetActor.IsWalker)
 								{
 									int chance = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffs, ChallengeDebuffType.DebuffInterruptRate);

@@ -51,7 +51,7 @@ namespace TWDModel
 
 		public FixedPoint GetHealthPercentageForTarget(ActorModel target)
 		{
-			if (target != null && target.Definition != null && target.Definition.Class == "boss")
+			if (string.Equals(target?.Definition?.Class, "boss", StringComparison.OrdinalIgnoreCase))
 			{
 				return healthPercentageBoss;
 			}

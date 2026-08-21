@@ -97,10 +97,10 @@ public class WalkerAnimationController : CharacterAnimationController
 		}
 		return alertness switch
 		{
-			Alertness.Idle => 0f, 
-			Alertness.Alert => 1f, 
-			Alertness.Aggressive => 2f, 
-			_ => 0f, 
+			Alertness.Idle => 0f,
+			Alertness.Alert => 1f,
+			Alertness.Aggressive => 2f,
+			_ => 0f,
 		};
 	}
 
@@ -196,7 +196,7 @@ public class WalkerAnimationController : CharacterAnimationController
 	{
 		base.Update();
 		UpdateAlertness();
-		if (base.IsIdle)
+		if (IsIdle)
 		{
 			if (idleSpeed == 0f)
 			{

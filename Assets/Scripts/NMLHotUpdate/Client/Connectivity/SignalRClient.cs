@@ -199,6 +199,10 @@ namespace Client.Connectivity
 
 		public event ServerMessage OnBananaMessage;
 
+		public event ServerMessage OnWorldBossBaseSnapshotMessage;
+
+		public event ServerMessage OnWorldBossFullSnapshotMessage;
+
 		public event ServerMessage OnBuySubscriptionMessage;
 
 		public event ServerMessage OnGuildBattleHighScoresMessage;
@@ -1015,10 +1019,28 @@ namespace Client.Connectivity
 					this.OnBananaMessage?.Invoke(text2, text);
 					return;
 				}
+				if (text.StartsWith("WorldBossBaseSnapshotChanged"))
+				{
+					Log("WorldBossBaseSnapshot [" + text + "] - " + text2 + " (" + text3 + ")");
+					this.OnWorldBossBaseSnapshotMessage?.Invoke(text2, text);
+					return;
+				}
+				if (text.StartsWith("WorldBossFullSnapshotChanged"))
+				{
+					Log("WorldBossFullSnapshot [" + text + "] - " + text2 + " (" + text3 + ")");
+					this.OnWorldBossFullSnapshotMessage?.Invoke(text2, text);
+					return;
+				}
 				if (text.StartsWith("BuySubscription"))
 				{
 					Log("BuySubscription [" + text + "] - " + text2 + " (" + text3 + ")");
 					this.OnBuySubscriptionMessage?.Invoke(text2, text);
+					return;
+				}
+				if (text.StartsWith("GuildBattleHighScoresChanged"))
+				{
+					Log("GuildBattleHighScoresChanged [" + text + "] - " + text2 + " (" + text3 + ")");
+					this.OnGuildBattleHighScoresMessage?.Invoke(text2, text);
 					return;
 				}
 				if (!string.IsNullOrEmpty(text3))

@@ -69,10 +69,10 @@ namespace TWDModel
 			if (newFaction == actorModel.Faction && CurrentLayer > 0)
 			{
 				int num = 0;
-				MapMissionModel mapMissionModel = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
-				if (mapMissionModel != null)
+				IChallengeDebuffProvider challengeDebuffProvider = MapMissionDebuffHelper.CanUseDebuffMission(base.manager);
+				if (challengeDebuffProvider != null)
 				{
-					num = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(mapMissionModel.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunDmgReduction);
+					num = (int)ChallengeDebufHelps.GetDebufTotalFirstParam(challengeDebuffProvider.GetChallengeDebuffs(), ChallengeDebuffType.DebuffQuantunDmgReduction);
 				}
 				FixedPoint fixedPoint = BaseDamagePercentage + (CurrentLayer - 1) * AdditionalDamagePercentage - num / 100;
 				fixedPoint = ((fixedPoint > 0L) ? fixedPoint : ((FixedPoint)0L));
