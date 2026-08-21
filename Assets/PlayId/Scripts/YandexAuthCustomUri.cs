@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using PlayId.Scripts.Data;
+using PlayId.Scripts.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,7 +63,7 @@ public class YandexAuthCustomUri
 		string authUrl = BuildAuthorizationUrl(challenge);
 		Debug.Log($"[Auth] Открываем браузер: {authUrl}");
 
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
         WindowsDeepLinking.Initialize(_settings.RedirectUriScheme, OnDeepLinkActivated);
 #endif
 		Application.OpenURL(authUrl);

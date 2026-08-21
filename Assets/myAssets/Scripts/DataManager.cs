@@ -17,12 +17,11 @@ using Client.Connectivity;
 using Supabase.TWD;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using Unity.Services.Authentication;
 using TaskStatus = UnityAuth.TaskStatus;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using Unity.Services.Authentication;
-
 #endif
 
 namespace TwdCustomMod
